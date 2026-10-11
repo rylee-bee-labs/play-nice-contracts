@@ -1,6 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/rylee-bee-labs/play-nice-contracts/schema/library.schema.json",
+  "$id": "https://github.com/Rylee-Bee/play-nice-contracts/schema/library.schema.json",
+  "$comment": "$id is a stable contract identifier from before the 2026-10-09 org move; it is compared as a string, not fetched.",
   "title": "library/0",
   "description": "A keeper's shelves of layered books (contract: library). Served at GET /room/library by a room that lists `library` in its offers.",
   "type": "object",
