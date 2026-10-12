@@ -227,7 +227,7 @@ def test_assume_unknown_case_study_preserves_evidence_boundary():
     assert "reported case study" in text
     assert "UNVERIFIED" in text
     assert "counterfactual" in text
-    assert "ASSUME_UNKNOWN.md" in text
+    assert "contracts/everyone/TRUTH_AND_EVIDENCE.md" in text  # assume-unknown lives here in v2
     assert not re.search(r"[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}", text)
     assert "figma.com/" not in text
 
