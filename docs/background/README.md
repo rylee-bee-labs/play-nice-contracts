@@ -74,5 +74,5 @@ history or the evidence behind a contract.
 | [../../harness/](../../harness/) | **Experimental.** Candidate harness laws with their evidence, not rules |
 
 These files lived directly under `docs/` (and `docs/research/` and so on)
-until 2026-10-12. A one-line pointer stays at each old path, so older links
-still work.
+until 2026-10-12. A one-line pointer stays at each old path until library
+2.1.0, so older links still work until then.

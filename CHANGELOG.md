@@ -14,7 +14,8 @@ All notable changes to the play-nice-contracts library. Per-contract semver: PAT
   already broken (wrong `../` depth) were corrected. New
   `tests/test_doc_links.py` fails on any broken relative link, except links in
   background docs to the v1 contract folders that v2 renamed (history, kept
-  as written).
+  as written). The pointers at the old paths will be removed in 2.1.0; link
+  to the `docs/background/` paths instead.
 - `playnice` with no command prints the full help and where to start,
   instead of a one-line argparse error (still exit 2). `playnice rules`
   says when no word in the task matched a trigger, so seven "always"
