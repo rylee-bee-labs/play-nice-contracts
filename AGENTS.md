@@ -28,21 +28,28 @@ in a pack may go below the floor.
 ## Two version numbers, on purpose
 
 The **library** is `2.0.0` (`VERSION`); the **floor** has its own version
-(`1.0.0`), and that is the one the proof line names.
+(`1.0.0`), and that is the one the proof line names. `playnice --version`
+prints both, with the tool's own version.
 
-## Proving you read it
+## The proof line
 
 Agents put one line at the top of their handoff —
 `Play-Nice floor <version> · receipt <word> · read <contract ids>` — and check
-it with `playnice verify`, which prints `CURRENT` (exit 0), `OUT_OF_DATE`
+it with `playnice verify`, which prints `CURRENT` (exit 0), `OUT OF DATE`
 (exit 1) or `INVALID` (exit 2). The receipt word is in the floor's source.
+`playnice rules "<task>"` lists the contract ids that apply.
+
+A Play Nice receipt records the contract floor and applicable rules an agent
+declares it has consulted. Verification checks the receipt's validity and
+currency; it does not independently prove comprehension or compliance.
 
 ## The bee badge
 
 `playnice check` writes a badge — **plays nice**, **behind** (a newer version is
-out), or **fix needed**. It links to the check that made it; a copied picture
-proves nothing. Run `check --badge playnice-badge.svg` yourself to write the
-file and commit it.
+out), or **fix needed**. When `playnice start` can write the CI workflow, the
+README badge links to that check's runs; otherwise it links to the library.
+A copied picture proves nothing. Run `check --badge playnice-badge.svg`
+yourself to write the file and commit it.
 
 `playnice check` also takes a website: `playnice.py check https://example.org`
 reads its `/.well-known/play-nice.json` (see

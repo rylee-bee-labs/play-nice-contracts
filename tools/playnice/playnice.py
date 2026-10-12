@@ -1892,6 +1892,8 @@ def cmd_status(args) -> int:
     else:
         fr = play_nice_check(manifest_path, lib, cfg)
         out["play_nice"] = fr
+    out["checks"] = _status_checks(repo)
+    out["readiness"] = work_readiness(manifest_path, out.get("play_nice") or {})
     rs = collect_repo_state(repo, cfg)
     out["repository"] = rs
     gh = None
@@ -1917,7 +1919,18 @@ def cmd_status(args) -> int:
         return 0
     fr = out.get("play_nice") or {}
     fr = {**fr, "status": fr.get("status", "UNKNOWN")}
-    print(f"PLAY NICE: {fr.get('status')} (enforced={bool(fr.get('enforced'))})")
+    ck = out["checks"]
+    print(f"CHECKS: {ck['state']} — {ck['words']}")
+    if manifest_path is None:
+        print("ADOPTION: not configured — no adoption manifest, so contracts are "
+              "not enforced here (that is fine for ordinary use)")
+    else:
+        mode = "enforced" if fr.get("enforced") else "not enforced"
+        print(f"ADOPTION: {fr.get('status')} ({mode}) — {fr.get('detail') or 'no detail'}")
+    rd = out["readiness"]
+    print(f"WORK READINESS: {rd['state']} — {rd['words']}")
+    if rd.get("next"):
+        print(f"  next: {rd['next']}")
     print(
         f"REPOSITORY: {out['repository'].get('status')} ({out['repository'].get('branch')} @{str(out['repository'].get('head') or '')[:12]}, dirty={bool(out['repository'].get('dirty'))})"
     )
@@ -1946,6 +1959,95 @@ def cmd_status(args) -> int:
     else:
         print("WORK PERMIT: none on file")
     return 0
+
+
+def cmd_rules(args) -> int:
+    """`playnice rules TASK`: the resolver, from the front door."""
+    repo = Path(args.repo).expanduser().resolve()
+    try:
+        lib = v2_library_root(repo)
+        cc = import_contractctl(lib)
+    except (CheckUnavailable, PlayNiceError) as e:
+        print(f"error: {e}\n  next: set PLAY_NICE_LIBRARY to a play-nice-contracts checkout")
+        return 2
+    mp = find_adoption_manifest(repo)
+    try:
+        m = cc.load_adoption(mp) if mp else {
+            "always": list(cc.ROLE_BASE_SETS["agent"]), "triggers": {}}
+    except cc.CTError as e:
+        print(f"error: {e}")
+        return 1
+    res = cc.resolve_set(m, args.task, args.tag)
+    titles = {c["front_matter"]["contract_id"]: c["front_matter"].get("title", "")
+              for c in cc.load_library()}
+    if args.json_output:
+        print(json.dumps({
+            "command": "rules", "task": args.task, "manifest": str(mp) if mp else None,
+            "contracts": [{"id": cid, "title": titles.get(cid, ""),
+                           "reasons": res["reasons"].get(cid, [])}
+                          for cid in sorted(res["selected"])],
+            "errors": res["errors"], "exit": 1 if res["errors"] else 0,
+        }, indent=2, sort_keys=True))
+        return 1 if res["errors"] else 0
+    if res["errors"]:
+        for e in res["errors"]:
+            print(f"error: {e}")
+        return 1
+    src = f"from {mp.relative_to(repo)}" if mp else "from the library defaults (no adoption manifest)"
+    print(f"RULES for {args.task!r} — {len(res['selected'])} contracts, {src}")
+    for cid in sorted(res["selected"]):
+        why = []
+        for r in res["reasons"].get(cid, []):
+            if r["trigger"]:
+                why.append(f"{r['trigger']!r}" + (" (tag)" if r["via"] == "tag" else ""))
+            else:
+                why.append(r["source"])
+        print(f"  {cid:28s} {titles.get(cid, '')} — {', '.join(dict.fromkeys(why))}")
+    print("next: read each one, then start your handoff with the proof line")
+    return 0
+
+
+def _status_checks(repo: Path) -> dict:
+    """The same verdict `playnice check` gives, summarized for `status`."""
+    try:
+        res = run_repo_check(repo, None)
+    except Exception as e:  # status is read-only inspection: never crash on it
+        return {"state": "unknown", "words": f"could not run the checks: {e}"}
+    if res.get("state") == "unknown":
+        return {"state": "unknown", "words": res.get("error") or "could not run the checks"}
+    failing = [c["name"] for c in res.get("checks", []) if c["state"] == "needs_fix"]
+    words = ("every baseline check passed" if not failing
+             else "needs a fix: " + "; ".join(failing) + " (run playnice check)")
+    return {"state": res["label"], "words": words}
+
+
+def work_readiness(manifest_path: Path | None, fr: dict) -> dict:
+    """Can `playnice work` proceed here, and if not, what blocks it?
+
+    Mirrors the gates in cmd_work: an adoption manifest is required, and
+    under enforcement the contracts must be CURRENT, unless the manifest's
+    update: automatic lets work refresh the pin itself first.
+    """
+    if manifest_path is None:
+        return {"state": "blocked",
+                "words": "playnice work needs an adoption manifest; checks and "
+                         "verify do not",
+                "next": "contractctl init-adoption"}
+    if not freshness_blocked(fr):
+        return {"state": "ready", "words": "playnice work can start", "next": None}
+    auto = (fr.get("manifest_update") == "automatic"
+            and fr.get("manifest_policy") == "require-current"
+            and fr.get("status") in ("BEHIND", "DIVERGED")
+            and fr.get("remote_revision"))
+    if auto:
+        return {"state": "ready",
+                "words": f"contracts are {fr['status']}; playnice work refreshes the "
+                         "pin first (update: automatic)",
+                "next": None}
+    return {"state": "blocked",
+            "words": f"contracts are {fr.get('status')} and enforced"
+                     + (f" ({fr['detail']})" if fr.get("detail") else ""),
+            "next": "contractctl upgrade-check"}
 
 
 def cmd_reconcile(args) -> int:
@@ -3010,7 +3112,7 @@ def cmd_start(args) -> int:
         lines = text.splitlines()
         at = next((i for i, ln in enumerate(lines) if ln.startswith("# ")), None)
         insert = at + 1 if at is not None else 0
-        snippet = ["", f"[![Play-Nice](playnice-badge.svg)]({_badge_link(target)})"]
+        snippet = ["", f"[![Play-Nice](playnice-badge.svg)]({_badge_link(target, has_github)})"]
         lines[insert:insert] = snippet
         readme.write_text("\n".join(lines) + "\n", encoding="utf-8")
         actions.append("added the badge line to README.md")
@@ -3044,48 +3146,36 @@ def cmd_start(args) -> int:
     return 0
 
 
-def _badge_link(target: Path) -> str:
-    origin = repo_identity(target) if is_git_repo(target) else None
+def _badge_link(target: Path, has_workflow: bool) -> str:
+    """Where the README badge points: the check run that draws it, when start
+    writes that workflow and the repo has a GitHub origin; otherwise the
+    library, because there is no check run to link to yet."""
+    origin = repo_identity(target) if (has_workflow and is_git_repo(target)) else None
     if origin:
         return f"https://github.com/{origin}/actions/workflows/playnice.yml"
     return LIBRARY_URL
 
 
+def _version_line() -> str:
+    """playnice's own version plus the library and floor it is running with."""
+    try:
+        lib = v2_library_root(Path.cwd())
+        return import_contractctl(lib).version_line("playnice", PLAYNICE_VERSION)
+    except Exception:
+        return f"playnice {PLAYNICE_VERSION} · library unknown · floor unknown"
+
+
 def build_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(
         prog="playnice",
-        description="Global agent-work entry point: refresh truth, reconcile old work, "
-        "load Play Nice, launch the agent, verify and clean up afterward.",
+        description="Play-Nice from one command. Most people need start, check, "
+        "verify, rules and status. work and reconcile run agent work end to end "
+        "for orchestrators. contractctl is the lower-level engine underneath.",
     )
     ap.add_argument(
-        "--version", action="version", version=f"playnice {PLAYNICE_VERSION}"
+        "--version", action="version", version=_version_line()
     )
     sub = ap.add_subparsers(dest="command", required=True)
-
-    p = sub.add_parser("work", help="run the full lifecycle for a task")
-    p.add_argument(
-        "task", nargs="?", help='the work to do, e.g. "fix the settings page"'
-    )
-    p.add_argument(
-        "--repo", default=".", help="target repository (default: current directory)"
-    )
-    p.add_argument("--config", default=None, help="path to the global play-nice config")
-    p.add_argument("--manifest", default=None, help="path to the adoption manifest")
-    p.add_argument(
-        "--agent", default=None, help="override agent command (e.g. codex, kilo, aider)"
-    )
-    p.add_argument(
-        "--no-launch",
-        action="store_true",
-        help="preflight + permit only; do not launch the agent",
-    )
-    p.add_argument(
-        "--no-github",
-        action="store_true",
-        help="disable GitHub inspection and mutations",
-    )
-    p.add_argument("--json", action="store_true", dest="json_output")
-    p.set_defaults(func=cmd_work)
 
     p = sub.add_parser(
         "verify",
@@ -3120,7 +3210,23 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--json", action="store_true", dest="json_output")
     p.set_defaults(func=cmd_start)
 
-    p = sub.add_parser("status", help="read-only current-state inspection")
+    p = sub.add_parser(
+        "rules",
+        help="which contracts apply to a task, and why (exit 0/1)",
+        description="Resolves the contracts for a task from this repo's adoption "
+        "manifest, or from the library defaults when there is none. The same "
+        "resolver `playnice work` and `contractctl resolve` use.",
+    )
+    p.add_argument("task", help='the work, in plain words, e.g. "add a settings page"')
+    p.add_argument("--repo", default=".", help="repo whose manifest to use (default: .)")
+    p.add_argument("--tag", action="append", default=[], help="explicit surface tag (repeatable)")
+    p.add_argument("--json", action="store_true", dest="json_output")
+    p.set_defaults(func=cmd_rules)
+
+    p = sub.add_parser(
+        "status",
+        help="read-only: repository checks, contract adoption, and work readiness",
+    )
     p.add_argument("--repo", default=".")
     p.add_argument("--config", default=None)
     p.add_argument("--manifest", default=None)
@@ -3128,8 +3234,34 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--json", action="store_true", dest="json_output")
     p.set_defaults(func=cmd_status)
 
+    p = sub.add_parser("work", help="orchestrators: run the full agent lifecycle for a task")
+    p.add_argument(
+        "task", nargs="?", help='the work to do, e.g. "fix the settings page"'
+    )
+    p.add_argument(
+        "--repo", default=".", help="target repository (default: current directory)"
+    )
+    p.add_argument("--config", default=None, help="path to the global play-nice config")
+    p.add_argument("--manifest", default=None, help="path to the adoption manifest")
+    p.add_argument(
+        "--agent", default=None, help="override agent command (e.g. codex, kilo, aider)"
+    )
+    p.add_argument(
+        "--no-launch",
+        action="store_true",
+        help="preflight + permit only; do not launch the agent",
+    )
+    p.add_argument(
+        "--no-github",
+        action="store_true",
+        help="disable GitHub inspection and mutations",
+    )
+    p.add_argument("--json", action="store_true", dest="json_output")
+    p.set_defaults(func=cmd_work)
+
     p = sub.add_parser(
-        "reconcile", help="carryover + auto-finish (mutations need an ACTIVE permit)"
+        "reconcile",
+        help="orchestrators: carryover + auto-finish (mutations need an ACTIVE permit)",
     )
     p.add_argument("--repo", default=".")
     p.add_argument("--config", default=None)

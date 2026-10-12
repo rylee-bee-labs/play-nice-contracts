@@ -777,6 +777,37 @@ def load_adoption(manifest_path: Path) -> dict:
     return data
 
 
+# ---------------------------------------------------------------- manifest discovery
+# One search order for every command that needs an adoption manifest, shared
+# with `playnice` (tools/playnice/playnice.py find_adoption_manifest).
+MANIFEST_CANDIDATES = (
+    ".contracts/adoption.yaml",
+    ".project/contracts/adoption.yaml",
+    ".contracts/adoption.yml",
+    ".project/contracts/adoption.yml",
+)
+MANIFEST_DEFAULT_NOTE = (
+    "(default: the first of .contracts/adoption.yaml, "
+    ".project/contracts/adoption.yaml found here)"
+)
+MANIFEST_HELP = "adoption manifest " + MANIFEST_DEFAULT_NOTE
+# commands that cannot run without a manifest: --manifest defaults by discovery
+NEEDS_MANIFEST = ("upgrade-check", "attest", "commit", "adopt", "freshness", "sync")
+
+
+def discover_manifest(base: Path | None = None) -> Path:
+    """The adoption manifest under `base` (default: the current directory).
+
+    Returns the first existing candidate, or the primary path when none
+    exists, so a "not found" error names the expected place.
+    """
+    base = base or Path(".")
+    for rel in MANIFEST_CANDIDATES:
+        if (base / rel).is_file():
+            return base / rel
+    return base / MANIFEST_CANDIDATES[0]
+
+
 # ---------------------------------------------------------------- task matching
 #
 # One matcher for both resolution paths (manifest surfaces and the library's
@@ -2061,6 +2092,27 @@ def library_version() -> str:
     return "unknown"
 
 
+def floor_version() -> str:
+    """Version of the floor (contracts/everyone/FLOOR.md) — the number proof lines name."""
+    floor = REPO_ROOT / "contracts" / "everyone" / "FLOOR.md"
+    try:
+        m = re.search(r"(?m)^version:\s*(\S+)", floor.read_text(encoding="utf-8"))
+    except OSError:
+        m = None
+    return m.group(1) if m else "unknown"
+
+
+def version_line(tool: str, tool_version: str | None = None) -> str:
+    """One --version line naming each number and what it versions.
+
+    The library (VERSION) versions the contract set, the floor is what proof
+    lines name, and a tool may carry its own version. They are different
+    things on purpose, so each is labeled rather than merged.
+    """
+    head = f"{tool} {tool_version}" if tool_version else tool
+    return f"{head} · library {library_version()} · floor {floor_version()}"
+
+
 def library_revision() -> str:
     """Adopted Git revision of the library (commit SHA when available, else VERSION)."""
     import subprocess
@@ -3302,7 +3354,7 @@ ROLE_BASE_SETS = {
 
 def cmd_resolve(args) -> int:
     explicit = args.manifest is not None
-    manifest = Path(args.manifest) if explicit else Path(".contracts/adoption.yaml")
+    manifest = Path(args.manifest) if explicit else discover_manifest()
     if manifest.is_file():
         m = load_adoption(manifest)
     elif explicit:
@@ -4239,7 +4291,7 @@ def main(argv=None) -> int:
     ap.add_argument(
         "--version",
         action="version",
-        version=f"contractctl {library_version()}",
+        version=version_line("contractctl", library_version()),
         help="print contractctl and library version, then exit",
     )
     sub = ap.add_subparsers(dest="command", required=True)
@@ -4258,8 +4310,7 @@ def main(argv=None) -> int:
     p.add_argument(
         "--manifest",
         default=None,
-        help="adoption manifest (default: .contracts/adoption.yaml when present; "
-        "without any manifest, resolve from the library defaults)",
+        help=MANIFEST_HELP + "; without any manifest, resolve from the library defaults",
     )
     p.add_argument(
         "--task", default="", help="task description matched against trigger surfaces"
@@ -4344,7 +4395,7 @@ def main(argv=None) -> int:
         "upgrade-check",
         help="one answer: is my pin current, what changed, and what do I run next?",
     )
-    p.add_argument("--manifest", required=True, help="adoption manifest to check")
+    p.add_argument("--manifest", default=None, help=MANIFEST_HELP)
     p.add_argument(
         "--json", action="store_true", dest="json_output", help="machine-readable JSON"
     )
@@ -4352,7 +4403,7 @@ def main(argv=None) -> int:
 
     p = sub.add_parser("attest", help="produce CONTRACT_ATTESTATION v1")
     p.add_argument(
-        "--manifest", required=True, help="adoption manifest of this project"
+        "--manifest", default=None, help=MANIFEST_HELP
     )
     p.add_argument(
         "--task", required=True, help="the task being attested (one description)"
@@ -4380,7 +4431,7 @@ def main(argv=None) -> int:
 
     p = sub.add_parser("commit", help="activate CONTRACT OPERATIONAL COMMITMENT v1")
     p.add_argument(
-        "--manifest", required=True, help="adoption manifest of this project"
+        "--manifest", default=None, help=MANIFEST_HELP
     )
     p.add_argument(
         "--task", required=True, help="the task being committed (one description)"
@@ -4509,14 +4560,15 @@ def main(argv=None) -> int:
 
     p = sub.add_parser("adopt", help="validate a project adoption manifest")
     p.add_argument(
-        "--manifest", required=True, help="adoption manifest to validate"
+        "--manifest", default=None,
+        help="adoption manifest to validate " + MANIFEST_DEFAULT_NOTE,
     )
     p.set_defaults(func=cmd_adopt)
 
     p = sub.add_parser("onboard", help="guided onboarding plan for a role")
     p.add_argument(
         "--role",
-        required=True,
+        default="worker",
         choices=[
             "orchestrator",
             "worker",
@@ -4527,7 +4579,7 @@ def main(argv=None) -> int:
             "human",
             "maintainer",
         ],
-        help="participant role determining reading order and emphasis ('agent' is an alias for 'worker')",
+        help="participant role determining reading order and emphasis (default: worker; 'agent' is an alias for 'worker')",
     )
     p.add_argument(
         "--json",
@@ -4551,8 +4603,8 @@ def main(argv=None) -> int:
     )
     p.add_argument(
         "--manifest",
-        default=".contracts/adoption.yaml",
-        help="adoption manifest whose pin to check (default: .contracts/adoption.yaml)",
+        default=None,
+        help=MANIFEST_HELP,
     )
     p.add_argument(
         "--json",
@@ -4573,8 +4625,8 @@ def main(argv=None) -> int:
     )
     p.add_argument(
         "--manifest",
-        default=".contracts/adoption.yaml",
-        help="adoption manifest whose pin to update (default: .contracts/adoption.yaml)",
+        default=None,
+        help=MANIFEST_HELP,
     )
     p.set_defaults(func=cmd_sync)
 
@@ -4602,6 +4654,8 @@ def main(argv=None) -> int:
             )
             return 2
         ap.error(f"unrecognized arguments: {' '.join(extras)}")
+    if args.command in NEEDS_MANIFEST and getattr(args, "manifest", None) is None:
+        args.manifest = str(discover_manifest())
     try:
         return args.func(args)
     except CTError as e:

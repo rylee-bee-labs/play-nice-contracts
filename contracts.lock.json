@@ -78,9 +78,9 @@
     },
     {
       "id": "contract-proof",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "path": "contracts/work/CONTRACT_PROOF.md",
-      "sha256": "8ff1cbfa459d730b377f7abfe7d1b2a2a375bf3b1b3d77ff80f4d039a0782556",
+      "sha256": "5e5729b4427fb39d0e61ee3b27f0060ebed7dd23fcbf260d85bdeab80ba5acf5",
       "receipt": "aspen-nimbus-reef",
       "status": "canonical"
     },

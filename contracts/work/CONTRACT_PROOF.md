@@ -1,7 +1,7 @@
 ---
 contract_id: contract-proof
 title: Contract Proof
-version: 2.0.0
+version: 2.0.1
 status: canonical
 layer: work
 applies: [agents, projects, sites, tools]
@@ -42,10 +42,12 @@ apply to a task (the resolver and the packs say).
    receipt word change, and older lines stop verifying. That is the
    whole staleness signal: the check tells you, you re-read, you
    continue.
-4. The line proves you read the rules. It grants nothing: authority
-   for a specific action still comes from the task (see the floor,
-   rule 5), and inventing a receipt word is a lie about reading (see
-   the floor, rule 1).
+4. The line is a versioned declaration: it records the floor and the
+   applicable rules you declare you consulted. `playnice verify` checks
+   that the line is valid and current; it does not prove comprehension
+   or compliance. It grants nothing: authority for a specific action
+   still comes from the task (see the floor, rule 5), and inventing a
+   receipt word is a false declaration (see the floor, rule 1).
 5. A project shows its proof as the bee badge, produced by
    `playnice check` in the project's own CI. The badge links to the
    check run that drew it; a copied picture is decoration, not proof.

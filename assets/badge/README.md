@@ -3,15 +3,15 @@
 > **Status:** Current · the badge and sticker, with the lines to copy.
 
 A bee in a honeycomb cell: this project is part of the hive. The badge is
-drawn by `playnice check` from the project's own check, and links to it, so a
-copied picture proves nothing on its own.
+drawn by `playnice check` from the project's own check. A copied picture
+proves nothing on its own: trust the check run, not the image.
 
 ## The badge, in its three states
 
 | State | Badge | When |
 |---|---|---|
 | Plays nice | ![Play-Nice: plays nice · v2.0](badge-current.svg) | the project follows the current version and every check passed |
-| Behind | ![Play-Nice: behind · v2.1 is out](badge-behind.svg) | a newer Play-Nice is out; run `playnice upgrade` (or bump the pin) |
+| Behind | ![Play-Nice: behind · v2.1 is out](badge-behind.svg) | a newer floor is out; run `playnice start` to refresh the AGENTS.md block |
 | Fix needed | ![Play-Nice: fix needed](badge-fix.svg) | a check failed; the check's log says what to fix |
 
 The state is always written on the badge, never shown by colour alone, and
@@ -20,11 +20,18 @@ every colour pair meets WCAG AA contrast (7.2, 5.5 and 5.2 to 1).
 ## Show it
 
 `playnice start` adds this line under your README's title and writes
-`playnice-badge.svg`; your CI (or `playnice check --badge
-playnice-badge.svg`) keeps it current:
+`playnice-badge.svg`. Where the badge links depends on what start could set
+up:
+
+- **Your repo has `.github/` and a GitHub origin:** start writes
+  `.github/workflows/playnice.yml`, which re-runs the check on every push,
+  and the badge links to that workflow's runs.
+- **Otherwise:** the badge links to the Play-Nice library, because there is
+  no check run to link to. Run `playnice check --badge playnice-badge.svg`
+  yourself to redraw it.
 
 ```markdown
-[![Play-Nice](playnice-badge.svg)](https://github.com/rylee-bee-labs/play-nice-contracts)
+[![Play-Nice](playnice-badge.svg)](https://github.com/OWNER/REPO/actions/workflows/playnice.yml)
 ```
 
 ## The sticker
