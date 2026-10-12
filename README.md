@@ -1,6 +1,6 @@
 # Play-Nice
 
-[![Play-Nice](assets/badge/badge-current.svg)](assets/badge/README.md)
+[![Play-Nice](playnice-badge.svg)](https://github.com/rylee-bee-labs/play-nice-contracts/actions/workflows/ci.yml)
 
 ## What this is
 

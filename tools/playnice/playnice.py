@@ -2585,6 +2585,26 @@ def check_secrets(cc, target: Path) -> dict:
                        "remove the values; names and where they are stored are fine (floor rule 11)")
 
 
+def _self_pin_relation(lib: Path, pin: str) -> tuple[str, str | None]:
+    """(words, problem) for a self-adoption pin: it must be in HEAD's history."""
+    if not pin:
+        return "", "self-adoption manifest pins no revision"
+    exists = git0(lib, "cat-file", "-e", f"{pin}^{{commit}}")
+    if exists.returncode != 0:
+        shallow = git0(lib, "rev-parse", "--is-shallow-repository").stdout.strip() == "true"
+        if shallow:
+            return "", (f"cannot prove pin {pin[:12]} is in this history: the clone is "
+                        "shallow (fetch full history)")
+        return "", (f"pin {pin[:12]} is not a commit in this repository "
+                    "(a squash-merged branch commit?)")
+    anc = git0(lib, "merge-base", "--is-ancestor", pin, "HEAD")
+    if anc.returncode != 0:
+        return "", f"pin {pin[:12]} is not in the history of this checkout"
+    ahead = git0(lib, "rev-list", "--count", f"{pin}..HEAD").stdout.strip() or "?"
+    return (f"self-adoption: pin {pin[:12]} is in this checkout's history "
+            f"({ahead} commit(s) since)"), None
+
+
 def check_adoption(cc, target: Path, lib: Path, index: dict) -> dict:
     name = "Adoption manifest"
     mf = target / ".contracts" / "adoption.yaml"
@@ -2612,12 +2632,28 @@ def check_adoption(cc, target: Path, lib: Path, index: dict) -> dict:
     pin = str((manifest.get("source") or {}).get("revision") or "")
     head = git0(lib, "rev-parse", "HEAD")
     head_rev = head.stdout.strip() if head.returncode == 0 else ""
-    if head_rev and pin and pin != head_rev:
-        problems.append(f"pin {pin[:12]} is not the current library revision {head_rev[:12]}")
+    claim = cc.self_adoption_claim(manifest, mf, lib)
+    is_library = target.resolve() == lib.resolve()
+    pin_words = "pin matches this library checkout"
+    fix = "update the ids and re-pin the revision (contractctl sync)"
+    if claim is not None and claim != "ok":
+        problems.append(claim)
+        fix = "drop source.self from this manifest"
+    elif claim == "ok":
+        # Self-adoption: a commit cannot carry its own SHA, so the pin must be
+        # in this checkout's history rather than equal to HEAD.
+        pin_words, problem = _self_pin_relation(lib, pin)
+        if problem:
+            problems.append(problem)
+            fix = "pin a commit that is already on main"
+    elif head_rev and pin and pin != head_rev:
+        msg = f"pin {pin[:12]} is not the current library revision {head_rev[:12]}"
+        if is_library:
+            msg += " (this is the library itself: set source.self: true to check by ancestry)"
+        problems.append(msg)
     if problems:
-        return _check_item("adoption", name, "needs_fix", "; ".join(problems),
-                           "update the ids and re-pin the revision (contractctl sync)")
-    words = "all manifest ids resolve; pin matches this library checkout"
+        return _check_item("adoption", name, "needs_fix", "; ".join(problems), fix)
+    words = f"all manifest ids resolve; {pin_words}"
     if suggestions:
         words += " — retired ids: " + "; ".join(sorted(set(suggestions)))
     return _check_item("adoption", name, "worked", words)

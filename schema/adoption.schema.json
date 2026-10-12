@@ -30,6 +30,10 @@
           "minLength": 7,
           "maxLength": 64,
           "description": "Pinned revision (commit SHA preferred). Drift from this pin is reported as stale."
+        },
+        "self": {
+          "type": "boolean",
+          "description": "true only in the library's own .contracts/adoption.yaml: the library adopting itself. Checked by ancestry (the pin must be in the history being checked), because a commit cannot pin its own SHA."
         }
       }
     },
