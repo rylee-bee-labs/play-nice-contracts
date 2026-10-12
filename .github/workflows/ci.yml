@@ -56,7 +56,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install test runner
-        run: pip install pytest
+        run: pip install pytest pytest-xdist
 
       - name: Validate CI workflow YAML parses and defines the expected job
         run: |
@@ -98,7 +98,7 @@ jobs:
 
 
       - name: Full test suite
-        run: python3 -m pytest tests/ -q
+        run: python3 -m pytest tests/ -q -n auto
 
       - name: Secret / private-material scan (library surfaces)
         run: python3 tools/contractctl/contractctl.py scan

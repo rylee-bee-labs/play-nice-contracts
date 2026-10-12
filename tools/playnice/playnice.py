@@ -950,6 +950,8 @@ def collect_github_state(repo: Path, cfg: dict, env: dict | None = None) -> dict
                 out["issues"] = issues
         if out["note"]:
             out["available"] = False
+            out["note"] = (out["note"].rstrip("; ")
+                           + " — next: run `gh auth status` to check gh can reach this repo")
     except (OSError, subprocess.TimeoutExpired) as e:
         out["available"] = False
         out["note"] = f"github inspection failed: {e}"
@@ -1980,6 +1982,8 @@ def cmd_rules(args) -> int:
     res = cc.resolve_set(m, args.task, args.tag)
     titles = {c["front_matter"]["contract_id"]: c["front_matter"].get("title", "")
               for c in cc.load_library()}
+    task_matched = any(r["trigger"] and r["via"] != "tag"
+                       for rs in res["reasons"].values() for r in rs)
     if args.json_output:
         print(json.dumps({
             "command": "rules", "task": args.task, "manifest": str(mp) if mp else None,
@@ -1987,6 +1991,7 @@ def cmd_rules(args) -> int:
                            "reasons": res["reasons"].get(cid, [])}
                           for cid in sorted(res["selected"])],
             "errors": res["errors"], "exit": 1 if res["errors"] else 0,
+            "task_matched": task_matched,
         }, indent=2, sort_keys=True))
         return 1 if res["errors"] else 0
     if res["errors"]:
@@ -2003,6 +2008,10 @@ def cmd_rules(args) -> int:
             else:
                 why.append(r["source"])
         print(f"  {cid:28s} {titles.get(cid, '')} — {', '.join(dict.fromkeys(why))}")
+    if not task_matched:
+        print("note: no word in the task matched a trigger; these are the contracts "
+              "that always apply. Name what you are building (page, API, login, "
+              "secret...) to get the specific ones.")
     print("next: read each one, then start your handoff with the proof line")
     return 0
 
@@ -3273,7 +3282,13 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
-    args = build_parser().parse_args(argv)
+    parser = build_parser()
+    if not (sys.argv[1:] if argv is None else argv):
+        parser.print_help(sys.stderr)
+        print("\nstart here: playnice start (set a repo up) or playnice check .",
+              file=sys.stderr)
+        return 2
+    args = parser.parse_args(argv)
     try:
         return args.func(args)
     except ConfigError as e:
