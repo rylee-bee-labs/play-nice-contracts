@@ -171,7 +171,8 @@ One-command local verify (mirrors CI): `./tools/check.sh`.
 | `CONTRACT_INDEX.md` | registry: routes, does not govern | maintain with contracts |
 | `tools/contractctl/`, `tools/playnice/` | reference CLI + orchestrator (`docs/PLAYNICE.md`) | code change |
 | `tests/` | hermetic suite (CI job name is `library`) | must accompany changes |
-| `docs/` | non-normative: principles, quick reference, research | prose; never above `contracts/` |
+| `docs/` | non-normative: maintainer guides, quick reference, decisions | prose; never above `contracts/` |
+| `docs/background/` | non-normative: the Opus, principles, roles, research, participant notes; old paths keep one-line pointers | prose; never above `contracts/` |
 | `harness/` | **EXPERIMENTAL** research — candidate laws are hypotheses with evidence, NOT rules | evidence changes only |
 | `profiles/`, `examples/` | preference layer + real adoption manifests | keep schema-valid |
 | `VERSION`, `CHANGELOG.md` | library semver, distinct from git revision pins | bump per release rules |

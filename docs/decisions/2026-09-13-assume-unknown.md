@@ -5,7 +5,7 @@ Requested by the repository owner; translated into the library model by Codex.
 
 AUTHORITY: the owner's explicit request to add this principle to Play Nice.
 EVIDENCE: the existing core contract model, resolver, attestation and lock rules,
-and the [attributed Workshop case study](../research/workshop-v3-v1-shell.md).
+and the [attributed Workshop case study](../background/research/workshop-v3-v1-shell.md).
 INTERPRETATION: truthful evidence retrieval does not establish correct meaning.
 The highest-impact unproven belief in this change was that existing truth and
 attestation rules already required a disconfirmation check before execution.

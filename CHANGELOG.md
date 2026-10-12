@@ -5,6 +5,16 @@ All notable changes to the play-nice-contracts library. Per-contract semver: PAT
 ## [Unreleased]
 
 ### Changed
+- Background docs moved into `docs/background/`: the Opus, `principles/`,
+  `roles/`, `research/` and `participant-notes/`. Its README opens with the
+  Opus TLDR and lists what is there. Nothing was deleted; each old path is a
+  one-line pointer to the new one. `docs/decisions/` and the maintainer docs
+  stay in `docs/`; `harness/` stays at the root, linked from the background
+  README. Links were rewritten to the new paths, and nine links that were
+  already broken (wrong `../` depth) were corrected. New
+  `tests/test_doc_links.py` fails on any broken relative link, except links in
+  background docs to the v1 contract folders that v2 renamed (history, kept
+  as written).
 - `playnice` with no command prints the full help and where to start,
   instead of a one-line argparse error (still exit 2). `playnice rules`
   says when no word in the task matched a trigger, so seven "always"

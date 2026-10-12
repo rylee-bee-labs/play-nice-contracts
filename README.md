@@ -44,7 +44,8 @@ playnice status                     # checks, contract adoption, and work readin
 orchestrators ([docs/PLAYNICE.md](docs/PLAYNICE.md)). `contractctl` is the
 lower-level engine underneath (attest, lock, diff, freshness and more); you
 only need it to maintain the library or to drive the gate by hand
-([docs/MAINTAINING.md](docs/MAINTAINING.md)).
+([docs/MAINTAINING.md](docs/MAINTAINING.md)). Why it is shaped this way, with
+the research behind it: [docs/background/](docs/background/).
 
 ## Proof lines are declarations
 
