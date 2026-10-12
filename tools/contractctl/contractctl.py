@@ -2340,6 +2340,36 @@ def contract_set_equivalent(repo: Path, pin: str, remote: str, url: str) -> tupl
     return "EQUIVALENT", "contracts/ and schema/ are byte-identical between pin and remote"
 
 
+def self_adoption_claim(
+    manifest: dict, manifest_path: Path, library_root: Path | None = None
+) -> str | None:
+    """Is this the library adopting itself?
+
+    None   the manifest makes no self-adoption claim (`source.self` unset/false)
+    "ok"   `source.self: true` in the library's own .contracts/adoption.yaml
+    other  the claim is invalid; the string says why
+
+    A commit cannot pin its own final SHA, so self-adoption is checked by
+    ancestry (the pin is in the history being checked), never by equality.
+    The claim is only honored at the library root, so a consumer cannot use
+    it to step around the strict external pin check.
+    """
+    src = manifest.get("source") or {}
+    if src.get("self") is not True:
+        return None
+    root = (library_root or REPO_ROOT).resolve()
+    try:
+        where = Path(manifest_path).resolve()
+    except OSError:
+        where = Path(manifest_path)
+    if where != root / ".contracts" / "adoption.yaml":
+        return (
+            "source.self: true is only valid in the library's own "
+            ".contracts/adoption.yaml"
+        )
+    return "ok"
+
+
 def _is_ancestor_library(repo: Path, a: str, b: str) -> bool | None:
     """True/False when ancestry is provable with local objects, else None."""
     try:
@@ -2451,6 +2481,10 @@ def check_freshness(manifest_path: Path) -> dict:
     out["adopted_revision"] = adopted
     out["library_revision"] = local
 
+    claim = self_adoption_claim(manifest, manifest_path)
+    if claim is not None:
+        return _self_freshness(out, claim, adopted, local, remote)
+
     pins = {adopted, local}
     if pins == {remote}:  # every pin equals the remote head
         out["status"] = "CURRENT"
@@ -2501,6 +2535,53 @@ def check_freshness(manifest_path: Path) -> dict:
         "the contract set being used has not been reviewed at the remote revision"
         if out["status"] == "BEHIND"
         else f"remote {out['ref']} is {remote[:12]}; no proven fast-forward from the adopted revision {adopted[:12]}"
+    )
+    return out
+
+
+def _self_freshness(out: dict, claim: str, adopted: str, local: str, remote: str) -> dict:
+    """Freshness for the library adopting itself (see self_adoption_claim).
+
+    CURRENT  the pin is in remote history and this checkout contains the
+             remote head (main itself, or a branch that has merged main)
+    BEHIND   this checkout is an ancestor of the remote head (pull)
+    DIVERGED the pin is not in remote history, or the branch lacks main
+    UNKNOWN  the claim is invalid, or ancestry cannot be proven locally
+    """
+    out["self_adoption"] = True
+    if claim != "ok":
+        out["detail"] = claim
+        return out
+    pin_in = _is_ancestor_library(REPO_ROOT, adopted, remote)
+    has_remote = _is_ancestor_library(REPO_ROOT, remote, local)
+    if pin_in is None or has_remote is None:
+        out["detail"] = (
+            f"cannot prove ancestry with local objects (fetch {out['ref']} and "
+            "full history, then re-run)"
+        )
+        return out
+    if not pin_in:
+        out["status"] = "DIVERGED"
+        out["detail"] = (
+            f"self-adoption pin {adopted[:12]} is not in the history of "
+            f"{out['ref']} {remote[:12]} (a squash-merged branch commit?); "
+            "pin a commit that is on main"
+        )
+        return out
+    if has_remote:
+        out["status"] = "CURRENT"
+        out["detail"] = (
+            f"self-adoption: this checkout contains {out['ref']} {remote[:12]}; "
+            f"pin {adopted[:12]} is in its history"
+        )
+        return out
+    behind = _is_ancestor_library(REPO_ROOT, local, remote) is True
+    out["status"] = "BEHIND" if behind else "DIVERGED"
+    out["detail"] = (
+        f"self-adoption: {out['ref']} {remote[:12]} is ahead of this checkout; pull it"
+        if behind
+        else f"self-adoption: this branch does not contain {out['ref']} "
+        f"{remote[:12]}; merge main into it"
     )
     return out
 

@@ -1,15 +1,16 @@
 # Adoption manifest — play-nice-contracts consumes its own library.
 # The contract gate is dogfooded here: substantial mutating work in this
 # repo runs freshness -> resolve -> read -> attest -> commit like any
-# consumer. `update: automatic` because revisions are reviewed as they
-# merge through PRs — the human review is the PR approval, so the pin
-# advances mechanically and the gate never blocks on self-inflicted
-# staleness. Full rulebook: AGENTS.md.
+# consumer. `source.self: true` marks this as the library adopting itself:
+# a commit cannot pin its own SHA, so the pin only has to be a reviewed
+# commit already in main's history (checked by ancestry), not HEAD. It
+# never needs bumping after a merge. Full rulebook: docs/MAINTAINING.md.
 schema: play-nice/adoption-v1
 project: play-nice-contracts
 source:
   repository: rylee-bee-labs/play-nice-contracts
-  revision: e570e2630702ddb6c61f7d1d89ab0ce439cdc608
+  revision: 2969685e38458a65e29bc8f63f3b38a3ab4a4556
+  self: true
 
 freshness:
   policy: require-current

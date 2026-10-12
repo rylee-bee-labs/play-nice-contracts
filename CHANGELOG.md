@@ -18,6 +18,20 @@ All notable changes to the play-nice-contracts library. Per-contract semver: PAT
   everyday trigger words (page, button, menu, modal, dialog, a11y; auth,
   log in, sign up, OIDC, SAML, SSO, MFA), so "add a settings page" finds the
   web UI and accessibility rules. Routing metadata only; no rule changed.
+- The library passes its own `playnice check .`, truthfully. Its adoption
+  manifest is now marked `source.self: true` (new optional field in
+  `schema/adoption.schema.json`). Self-adoption is checked by ancestry,
+  because a commit cannot pin its own SHA: the pin must be a commit in the
+  history being checked. `contractctl freshness` reads CURRENT for the
+  library when the checkout contains remote main, including on a feature
+  branch. External adopters keep the strict pin check. The old pin
+  (`e570e26`) was a squash-merged branch commit that no longer existed, so
+  freshness could never pass; it now pins `2969685`, which is on main.
+- AGENTS.md carries the play-nice block (added below the maintainer
+  signpost, which is unchanged).
+- The README badge is `playnice-badge.svg`, written by `playnice check .
+  --badge`, and links to CI. CI and `./tools/check.sh` run the self-check,
+  and a test fails if the committed badge differs from the check result.
 
 ### Added
 - `contractctl resolve --json` (`play-nice/resolve-v1`): every selected

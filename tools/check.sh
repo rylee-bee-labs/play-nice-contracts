@@ -35,6 +35,9 @@ fi
 echo "==> secret / private-material scan (library surfaces)"
 python3 tools/contractctl/contractctl.py scan
 
+echo "==> Play-Nice self-check (what the README badge shows)"
+python3 tools/playnice/playnice.py check .
+
 echo "==> commit identity guard (last 20 commits vs allowed classes)"
 # Mirrors CI's guard: a commit whose committer is exactly the GitHub
 # wrapper (noreply@github.com) is skipped wholesale — its author email was

@@ -176,11 +176,27 @@ One-command local verify (mirrors CI): `./tools/check.sh`.
 
 ## The contract gate is dogfooded here
 
-This repo adopts its own library via `.contracts/adoption.yaml`
-(`require-current`, `update: automatic`: revisions are reviewed as
-they merge through PRs, so the pin advances mechanically afterward;
-the gate still re-runs fresh every session). Before substantial
-mutating work here, run the consumer gate:
+This repo adopts its own library via `.contracts/adoption.yaml`, marked
+`source.self: true`. A commit cannot pin its own SHA, so a pin that had
+to equal HEAD would be stale again after every merge. Self-adoption is
+checked by ancestry instead:
+
+- `playnice check .` passes when the pin is a commit in this checkout's
+  history. It fails when the pin is not a commit here (for example a
+  branch commit that a squash merge threw away) or is off this history.
+- `contractctl freshness` reads CURRENT when the pin is in the history of
+  remote `main` and this checkout contains remote `main` (main itself, or
+  a branch that has merged it). BEHIND means pull; DIVERGED means merge
+  main, or re-pin to a commit on main.
+- `source.self` is only honored in the library's own manifest. External
+  adopters keep the strict pin check.
+
+The pin never needs bumping after a merge. Re-pin only to a commit that
+is already on `main`. CI and `./tools/check.sh` run `playnice check .`,
+and a test keeps the committed `playnice-badge.svg` equal to its result,
+so the README badge always says what the check says.
+
+Before substantial mutating work here, run the consumer gate:
 
 ```bash
 contractctl freshness   # CURRENT expected; then:
