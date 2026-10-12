@@ -4,7 +4,7 @@ Rewritten 2026-09-26 per the [v2 plan](../../../decisions/2026-09-26-play-nice-v
 step 3. 14 old contracts (4,586 body words total, per the contracts map) became
 7 new ones (3,791 words including front matter; bodies 467–642 words each, all
 under the 800-word and 15-rule caps). Shape and voice follow
-[contracts/core/FLOOR.md](../../../../contracts/core/FLOOR.md). All new files live in
+[contracts/core/FLOOR.md](../../../../contracts/everyone/FLOOR.md). All new files live in
 `contracts/people/` at version 2.0.0 with rotated receipts. No commits made
 (work rule); source deletions are staged via `git rm`.
 

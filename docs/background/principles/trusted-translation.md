@@ -125,7 +125,7 @@ A trusted translator:
 - preserves provenance
 - distinguishes observation from inference
 - admits uncertainty
-- says `UNKNOWN` when appropriate (see [Ask for Help](../../../contracts/core/ASK_FOR_HELP.md))
+- says `UNKNOWN` when appropriate (see [Ask for Help](../../../contracts/everyone/ASK_FOR_HELP.md))
 - asks for help when translation cannot be made safely
 - does not silently rewrite intent
 - does not turn interpretation into authorization
@@ -285,10 +285,10 @@ Then answer with evidence.
 
 This connects directly to existing Play-Nice concepts:
 
-- `UNKNOWN` is a valid state (see [Truth and Evidence](../../../contracts/core/TRUTH_AND_EVIDENCE.md))
-- Ask the participant who owns the answer (see [Ask for Help](../../../contracts/core/ASK_FOR_HELP.md))
-- Recover and roll back when translation layers disappear (see [Recovery and Reversibility](../../../contracts/core/RECOVERY_AND_REVERSIBILITY.md))
-- Negotiate the contribution rather than guess (see [Mutual Contribution by Agreement](../../../contracts/core/MUTUAL_CONTRIBUTION.md))
+- `UNKNOWN` is a valid state (see [Truth and Evidence](../../../contracts/everyone/TRUTH_AND_EVIDENCE.md))
+- Ask the participant who owns the answer (see [Ask for Help](../../../contracts/everyone/ASK_FOR_HELP.md))
+- Recover and roll back when translation layers disappear (see [Recovery and Reversibility](../../../contracts/everyone/RECOVERY_AND_HISTORY.md))
+- Negotiate the contribution rather than guess (see [Mutual Contribution by Agreement](../../../contracts/everyone/WORKING_TOGETHER.md))
 
 Again: this section **links**, it does not create redundant contracts.
 
@@ -342,15 +342,15 @@ Cross-link map (interpretive, not authoritative — see canonical contracts for 
 
 | # | Theme | Canonical contracts it echoes |
 |---|---|---|
-| 1 | Participant authority | [Portability and Ownership](../../../contracts/core/PORTABILITY_AND_OWNERSHIP.md), [Capability First](../../../contracts/interoperability/CAPABILITY_FIRST.md), [Authorization](../../../contracts/security/AUTHORIZATION.md) |
-| 2 | Faithful translation | [Stable Truth, Replaceable Machinery](../../../contracts/core/STABLE_TRUTH_REPLACEABLE_MACHINERY.md), [Friendly API Client](../../../contracts/interoperability/FRIENDLY_API_CLIENT.md) |
-| 3 | Provenance | [Provenance and Audit](../../../contracts/core/PROVENANCE_AND_AUDIT.md) |
-| 4 | Fact vs. inference vs. UNKNOWN | [Truth and Evidence](../../../contracts/core/TRUTH_AND_EVIDENCE.md), [Explicit State](../../../contracts/core/EXPLICIT_STATE.md) |
-| 5 | Translation ≠ authorization | [Authorization](../../../contracts/security/AUTHORIZATION.md), [Ask for Help](../../../contracts/core/ASK_FOR_HELP.md) |
-| 6 | Interoperability over uniformity | [Play Nice Together](../../../contracts/core/PLAY_NICE_TOGETHER.md), [Provider Neutrality](../../../contracts/interoperability/PROVIDER_NEUTRALITY.md) |
-| 7 | Inspectable native interfaces | [Human and Machine Parity](../../../contracts/interfaces/HUMAN_AND_MACHINE_PARITY.md), [Machine Readable Output](../../../contracts/interfaces/MACHINE_READABLE_OUTPUT.md) |
-| 8 | Recoverable failures | [Recovery and Reversibility](../../../contracts/core/RECOVERY_AND_REVERSIBILITY.md), [Failure and Degradation](../../../contracts/interoperability/FAILURE_AND_DEGRADATION.md) |
-| 9 | Earned trust | [Collaborative Good Faith](../../../contracts/core/COLLABORATIVE_GOOD_FAITH.md), [Mutual Contribution by Agreement](../../../contracts/core/MUTUAL_CONTRIBUTION.md) |
+| 1 | Participant authority | [Portability and Ownership](../../../contracts/everyone/OWNERSHIP_AND_PORTABILITY.md), [Capability First](../../../contracts/integration/CAPABILITIES_NOT_VENDORS.md), [Authorization](../../../contracts/access/IDENTITY_AND_ROLES.md) |
+| 2 | Faithful translation | [Stable Truth, Replaceable Machinery](../../../contracts/everyone/OWNERSHIP_AND_PORTABILITY.md), [Friendly API Client](../../../contracts/integration/CALLING_OTHER_SERVICES.md) |
+| 3 | Provenance | [Provenance and Audit](../../../contracts/everyone/RECOVERY_AND_HISTORY.md) |
+| 4 | Fact vs. inference vs. UNKNOWN | [Truth and Evidence](../../../contracts/everyone/TRUTH_AND_EVIDENCE.md), [Explicit State](../../../contracts/everyone/STATUS_AND_STATE.md) |
+| 5 | Translation ≠ authorization | [Authorization](../../../contracts/access/IDENTITY_AND_ROLES.md), [Ask for Help](../../../contracts/everyone/ASK_FOR_HELP.md) |
+| 6 | Interoperability over uniformity | [Play Nice Together](../../../contracts/everyone/WORKING_TOGETHER.md), [Provider Neutrality](../../../contracts/integration/CAPABILITIES_NOT_VENDORS.md) |
+| 7 | Inspectable native interfaces | [Human and Machine Parity](../../../contracts/surfaces/ONE_TRUTH_TWO_VIEWS.md), [Machine Readable Output](../../../contracts/surfaces/ONE_TRUTH_TWO_VIEWS.md) |
+| 8 | Recoverable failures | [Recovery and Reversibility](../../../contracts/everyone/RECOVERY_AND_HISTORY.md), [Failure and Degradation](../../../contracts/everyone/STATUS_AND_STATE.md) |
+| 9 | Earned trust | [Collaborative Good Faith](../../../contracts/everyone/WORKING_TOGETHER.md), [Mutual Contribution by Agreement](../../../contracts/everyone/WORKING_TOGETHER.md) |
 | 10 | Inspiration stays inspiration | This document itself (non-normative) |
 
 ---
@@ -361,14 +361,14 @@ This document deliberately **links** rather than **duplicates**. The following c
 
 | Play-Nice principle | Canonical contract(s) |
 |---|---|
-| Settings Reconciler translates intent faithfully | [Capability First](../../../contracts/interoperability/CAPABILITY_FIRST.md), [Provider Neutrality](../../../contracts/interoperability/PROVIDER_NEUTRALITY.md), [Stable Truth, Replaceable Machinery](../../../contracts/core/STABLE_TRUTH_REPLACEABLE_MACHINERY.md) |
-| Participants retain authority and difference | [Portability and Ownership](../../../contracts/core/PORTABILITY_AND_OWNERSHIP.md), [Capability First](../../../contracts/interoperability/CAPABILITY_FIRST.md), [Discovery and Negotiation](../../../contracts/interoperability/DISCOVERY_AND_NEGOTIATION.md) |
-| Trust is earned, not positional | [Collaborative Good Faith](../../../contracts/core/COLLABORATIVE_GOOD_FAITH.md), [Mutual Contribution by Agreement](../../../contracts/core/MUTUAL_CONTRIBUTION.md), [Participation and Contribution](../../../contracts/core/PARTICIPATION_AND_CONTRIBUTION.md) |
-| Translation is not authorization | [Authorization](../../../contracts/security/AUTHORIZATION.md), [Ask for Help](../../../contracts/core/ASK_FOR_HELP.md) |
-| Failures stay recoverable | [Recovery and Reversibility](../../../contracts/core/RECOVERY_AND_REVERSIBILITY.md), [Failure and Degradation](../../../contracts/interoperability/FAILURE_AND_DEGRADATION.md), [Stable Truth, Replaceable Machinery](../../../contracts/core/STABLE_TRUTH_REPLACEABLE_MACHINERY.md) |
-| `UNKNOWN` is valid | [Truth and Evidence](../../../contracts/core/TRUTH_AND_EVIDENCE.md), [Explicit State](../../../contracts/core/EXPLICIT_STATE.md) |
-| Coordinator = Saru-like, not owner | [Orchestration](../../../contracts/agents/ORCHESTRATION.md), [Project Context and Participant Packs](../../../contracts/core/PROJECT_CONTEXT_AND_PARTICIPANT_PACKS.md) |
-| Future Rylee should not have to remember | [Documentation and Continuity](../../../contracts/engineering/DOCUMENTATION_AND_CONTINUITY.md), [Provenance and Audit](../../../contracts/core/PROVENANCE_AND_AUDIT.md), [Handoff](../../../contracts/agents/HANDOFF.md) |
+| Settings Reconciler translates intent faithfully | [Capability First](../../../contracts/integration/CAPABILITIES_NOT_VENDORS.md), [Provider Neutrality](../../../contracts/integration/CAPABILITIES_NOT_VENDORS.md), [Stable Truth, Replaceable Machinery](../../../contracts/everyone/OWNERSHIP_AND_PORTABILITY.md) |
+| Participants retain authority and difference | [Portability and Ownership](../../../contracts/everyone/OWNERSHIP_AND_PORTABILITY.md), [Capability First](../../../contracts/integration/CAPABILITIES_NOT_VENDORS.md), [Discovery and Negotiation](../../../contracts/integration/VERSIONS_AND_DISCOVERY.md) |
+| Trust is earned, not positional | [Collaborative Good Faith](../../../contracts/everyone/WORKING_TOGETHER.md), [Mutual Contribution by Agreement](../../../contracts/everyone/WORKING_TOGETHER.md), [Participation and Contribution](../../../contracts/everyone/WORKING_TOGETHER.md) |
+| Translation is not authorization | [Authorization](../../../contracts/access/IDENTITY_AND_ROLES.md), [Ask for Help](../../../contracts/everyone/ASK_FOR_HELP.md) |
+| Failures stay recoverable | [Recovery and Reversibility](../../../contracts/everyone/RECOVERY_AND_HISTORY.md), [Failure and Degradation](../../../contracts/everyone/STATUS_AND_STATE.md), [Stable Truth, Replaceable Machinery](../../../contracts/everyone/OWNERSHIP_AND_PORTABILITY.md) |
+| `UNKNOWN` is valid | [Truth and Evidence](../../../contracts/everyone/TRUTH_AND_EVIDENCE.md), [Explicit State](../../../contracts/everyone/STATUS_AND_STATE.md) |
+| Coordinator = Saru-like, not owner | [Orchestration](../../../contracts/work/ORCHESTRATION.md), [Project Context and Participant Packs](../../../contracts/everyone/PROJECT_CONTEXT.md) |
+| Future Rylee should not have to remember | [Documentation and Continuity](../../../contracts/work/HANDOFF_AND_CONTINUITY.md), [Provenance and Audit](../../../contracts/everyone/RECOVERY_AND_HISTORY.md), [Handoff](../../../contracts/work/HANDOFF_AND_CONTINUITY.md) |
 
 No duplicate contracts are introduced by this document. Adding `docs/principles/trusted-translation.md` does not change the contract count (65), the lockfile, or any contract receipt.
 
@@ -544,12 +544,12 @@ LIMIT:          The novel is broad and religious / philosophical. The
 
 | Work | Useful lens | Primary Play-Nice echo |
 |---|---|---|
-| *Star Trek: Discovery* — "An Obol for Charon" | Trusted translation; graceful failure of a shared abstraction | [Play Nice Together](../../../contracts/core/PLAY_NICE_TOGETHER.md), [Capability First](../../../contracts/interoperability/CAPABILITY_FIRST.md) |
-| *The Left Hand of Darkness* (Le Guin) | Understanding without requiring sameness | [Capability First](../../../contracts/interoperability/CAPABILITY_FIRST.md), [Provider Neutrality](../../../contracts/interoperability/PROVIDER_NEUTRALITY.md) |
-| "Story of Your Life" (Chiang) | Translation of meaning and conceptual models | [Stable Truth, Replaceable Machinery](../../../contracts/core/STABLE_TRUTH_REPLACEABLE_MACHINERY.md), [Friendly API Client](../../../contracts/interoperability/FRIENDLY_API_CLIENT.md) |
-| *Embassytown* (Miéville) | Translation layers as critical infrastructure | [Recovery and Reversibility](../../../contracts/core/RECOVERY_AND_REVERSIBILITY.md), [External Mutations](../../../contracts/interoperability/EXTERNAL_MUTATIONS.md) |
-| *Babel-17* (Delany) | Translation can alter or distort meaning | [Provenance and Audit](../../../contracts/core/PROVENANCE_AND_AUDIT.md), [Truth and Evidence](../../../contracts/core/TRUTH_AND_EVIDENCE.md) |
-| *A Canticle for Leibowitz* (Miller) | Knowledge must survive the current knower | [Documentation and Continuity](../../../contracts/engineering/DOCUMENTATION_AND_CONTINUITY.md), [Handoff](../../../contracts/agents/HANDOFF.md) |
+| *Star Trek: Discovery* — "An Obol for Charon" | Trusted translation; graceful failure of a shared abstraction | [Play Nice Together](../../../contracts/everyone/WORKING_TOGETHER.md), [Capability First](../../../contracts/integration/CAPABILITIES_NOT_VENDORS.md) |
+| *The Left Hand of Darkness* (Le Guin) | Understanding without requiring sameness | [Capability First](../../../contracts/integration/CAPABILITIES_NOT_VENDORS.md), [Provider Neutrality](../../../contracts/integration/CAPABILITIES_NOT_VENDORS.md) |
+| "Story of Your Life" (Chiang) | Translation of meaning and conceptual models | [Stable Truth, Replaceable Machinery](../../../contracts/everyone/OWNERSHIP_AND_PORTABILITY.md), [Friendly API Client](../../../contracts/integration/CALLING_OTHER_SERVICES.md) |
+| *Embassytown* (Miéville) | Translation layers as critical infrastructure | [Recovery and Reversibility](../../../contracts/everyone/RECOVERY_AND_HISTORY.md), [External Mutations](../../../contracts/integration/CALLING_OTHER_SERVICES.md) |
+| *Babel-17* (Delany) | Translation can alter or distort meaning | [Provenance and Audit](../../../contracts/everyone/RECOVERY_AND_HISTORY.md), [Truth and Evidence](../../../contracts/everyone/TRUTH_AND_EVIDENCE.md) |
+| *A Canticle for Leibowitz* (Miller) | Knowledge must survive the current knower | [Documentation and Continuity](../../../contracts/work/HANDOFF_AND_CONTINUITY.md), [Handoff](../../../contracts/work/HANDOFF_AND_CONTINUITY.md) |
 
 None of the authors or creators above endorse Play-Nice. Their works appear here because they illuminate ideas that the Play-Nice contracts already capture in normative form.
 

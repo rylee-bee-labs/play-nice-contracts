@@ -120,7 +120,7 @@ hard-won, burned once. This is the place those lessons come to rest, in a
 form a human can read and an agent can execute.
 
 Where this lives in the contracts: the constitution itself is
-[Play Nice Together](../../contracts/core/PLAY_NICE_TOGETHER.md). The four
+[Play Nice Together](../../contracts/everyone/WORKING_TOGETHER.md). The four
 qualities are worked out by every other contract in the library.
 
 ---
@@ -172,9 +172,9 @@ The design value can be written as a quiet motto:
 Where this lives in the contracts: the layering model in the
 [README](../../README.md) treats Rylee's preferred experience as one first-class
 [profile](../../profiles/), never a hidden global requirement; the
-[Accessibility Floor](../../contracts/human/ACCESSIBILITY_FLOOR.md) makes
+[Accessibility Floor](../../contracts/people/ACCESSIBILITY.md) makes
 "architecturally accessible" a default, not a mode; and
-[Participation and Contribution](../../contracts/core/PARTICIPATION_AND_CONTRIBUTION.md)
+[Participation and Contribution](../../contracts/everyone/WORKING_TOGETHER.md)
 insists importance is not size, cost, or prestige.
 
 ---
@@ -192,7 +192,7 @@ and the nightmare it tries to prevent is specific and familiar:
 `source_control == Gitea`, such that removing Gitea removes the *concept* of
 source control from the world entirely.
 
-The rule that prevents this is [Capability First](../../contracts/interoperability/CAPABILITY_FIRST.md):
+The rule that prevents this is [Capability First](../../contracts/integration/CAPABILITIES_NOT_VENDORS.md):
 intent maps to a capability the system owns; a provider is an optional
 implementation of it.
 
@@ -231,9 +231,9 @@ Just because a participant understands a system does not mean it owns it.
 Just because it can explain a system does not mean it may act on it. Just
 because it sits in the middle does not make it the system.
 
-Where this lives in the contracts: [Capability First](../../contracts/interoperability/CAPABILITY_FIRST.md),
-[Stable Truth, Replaceable Machinery](../../contracts/core/STABLE_TRUTH_REPLACEABLE_MACHINERY.md),
-[Provider Neutrality](../../contracts/interoperability/PROVIDER_NEUTRALITY.md).
+Where this lives in the contracts: [Capability First](../../contracts/integration/CAPABILITIES_NOT_VENDORS.md),
+[Stable Truth, Replaceable Machinery](../../contracts/everyone/OWNERSHIP_AND_PORTABILITY.md),
+[Provider Neutrality](../../contracts/integration/CAPABILITIES_NOT_VENDORS.md).
 
 ---
 
@@ -253,7 +253,7 @@ Evidence is:
 - the state that was actually observed, at a timestamp, from a named source,
 - and the conditions under which it all happened.
 
-[Truth and Evidence](../../contracts/core/TRUTH_AND_EVIDENCE.md) encodes the
+[Truth and Evidence](../../contracts/everyone/TRUTH_AND_EVIDENCE.md) encodes the
 contract's version of this with memorable terseness:
 
 > Running is not working. Implemented is not verified. HTTP 200 is not proof
@@ -294,9 +294,9 @@ profile separates **OBSERVED** (what we watched it do), **SELF-REPORTED**
 while behaving well on bounded tests produces a record that preserves both
 facts — without resolving a tension that the evidence has not yet resolved.
 
-Where this lives in the contracts: [Truth and Evidence](../../contracts/core/TRUTH_AND_EVIDENCE.md),
-[Testing and Verification](../../contracts/engineering/TESTING_AND_VERIFICATION.md),
-[Provenance and Audit](../../contracts/core/PROVENANCE_AND_AUDIT.md).
+Where this lives in the contracts: [Truth and Evidence](../../contracts/everyone/TRUTH_AND_EVIDENCE.md),
+[Testing and Verification](../../contracts/work/TESTING_AND_EVIDENCE.md),
+[Provenance and Audit](../../contracts/everyone/RECOVERY_AND_HISTORY.md).
 
 ---
 
@@ -324,7 +324,7 @@ Three commonsense consequences follow:
 2. **History is not a witness.** A check that ran yesterday and passed does
    not authorize today's `healthy`. Familiarity breeds `stale`, not `fresh`.
 
-3. **"I don't know" is a beginning, not an ending.** [Ask for Help](../../contracts/core/ASK_FOR_HELP.md)
+3. **"I don't know" is a beginning, not an ending.** [Ask for Help](../../contracts/everyone/ASK_FOR_HELP.md)
    turns `UNKNOWN` into the first step of a ladder:
 
    ```text
@@ -356,9 +356,9 @@ disasters. So the canonical response to honest uncertainty is:
 
 > "Thanks — who or what is most likely to know?"
 
-Where this lives in the contracts: [Truth and Evidence](../../contracts/core/TRUTH_AND_EVIDENCE.md),
-[Explicit State](../../contracts/core/EXPLICIT_STATE.md),
-[Ask for Help](../../contracts/core/ASK_FOR_HELP.md).
+Where this lives in the contracts: [Truth and Evidence](../../contracts/everyone/TRUTH_AND_EVIDENCE.md),
+[Explicit State](../../contracts/everyone/STATUS_AND_STATE.md),
+[Ask for Help](../../contracts/everyone/ASK_FOR_HELP.md).
 
 ---
 
@@ -378,7 +378,7 @@ request with an HTTP error. The model never even got to answer.
 
 The first lesson of failure is attribution. **What failed?**
 
-[Failure and Degradation](../../contracts/interoperability/FAILURE_AND_DEGRADATION.md)
+[Failure and Degradation](../../contracts/everyone/STATUS_AND_STATE.md)
 demands that an error answer six questions — what failed, why, what still
 works, is anything unsafe, can it be retried, what next. This document
 points the same discipline at the movement of blame — six targets worth
@@ -413,17 +413,17 @@ records, and runtime only.* The contestants were never the ones who needed
 reform.
 
 Winner of the failure-attribution game: **A culture that punishes failure
-learns nothing from it.** [Recovery and Reversibility](../../contracts/core/RECOVERY_AND_REVERSIBILITY.md)
+learns nothing from it.** [Recovery and Reversibility](../../contracts/everyone/RECOVERY_AND_HISTORY.md)
 says mistakes are evidence — record them, build the guardrail, don't shame
-the person. [Collaborative Good Faith](../../contracts/core/COLLABORATIVE_GOOD_FAITH.md)
+the person. [Collaborative Good Faith](../../contracts/everyone/WORKING_TOGETHER.md)
 says it plainer: failure is not a moral judgment. The attempt may have been
 badly shaped, the context missing, the assumptions wrong, the dependency
 changed, the capability insufficient — or someone made a mistake. Treat
 failure as evidence first, and only then, gently, as anything else.
 
-Where this lives in the contracts: [Failure and Degradation](../../contracts/interoperability/FAILURE_AND_DEGRADATION.md),
-[Recovery and Reversibility](../../contracts/core/RECOVERY_AND_REVERSIBILITY.md),
-[Collaborative Good Faith](../../contracts/core/COLLABORATIVE_GOOD_FAITH.md).
+Where this lives in the contracts: [Failure and Degradation](../../contracts/everyone/STATUS_AND_STATE.md),
+[Recovery and Reversibility](../../contracts/everyone/RECOVERY_AND_HISTORY.md),
+[Collaborative Good Faith](../../contracts/everyone/WORKING_TOGETHER.md).
 
 ---
 
@@ -476,10 +476,10 @@ verdicts. They are not. The heart of it is simple: **say what you know, and
 when you are the string the measures are attached to, make sure you can be
 measured too.**
 
-Where this lives in the contracts: [Orchestration](../../contracts/agents/ORCHESTRATION.md)
-(a foreman does not blindly trust workers), [Review and Integration](../../contracts/agents/REVIEW_AND_INTEGRATION.md),
-[Collaborative Good Faith](../../contracts/core/COLLABORATIVE_GOOD_FAITH.md)
-(no dominance phrases as evidence), [Provenance and Audit](../../contracts/core/PROVENANCE_AND_AUDIT.md).
+Where this lives in the contracts: [Orchestration](../../contracts/work/ORCHESTRATION.md)
+(a foreman does not blindly trust workers), [Review and Integration](../../contracts/work/BOUNDED_WORK.md),
+[Collaborative Good Faith](../../contracts/everyone/WORKING_TOGETHER.md)
+(no dominance phrases as evidence), [Provenance and Audit](../../contracts/everyone/RECOVERY_AND_HISTORY.md).
 
 ---
 
@@ -559,9 +559,9 @@ it does not become impossible. That is the test of a translation layer that
 respects its underlying systems — and of a person, too.
 
 Where this lives: [Trusted Translation](principles/trusted-translation.md)
-(the philosophy in full), [Stable Truth, Replaceable Machinery](../../contracts/core/STABLE_TRUTH_REPLACEABLE_MACHINERY.md),
-[Friendly API Client](../../contracts/interoperability/FRIENDLY_API_CLIENT.md),
-[Provenance and Audit](../../contracts/core/PROVENANCE_AND_AUDIT.md).
+(the philosophy in full), [Stable Truth, Replaceable Machinery](../../contracts/everyone/OWNERSHIP_AND_PORTABILITY.md),
+[Friendly API Client](../../contracts/integration/CALLING_OTHER_SERVICES.md),
+[Provenance and Audit](../../contracts/everyone/RECOVERY_AND_HISTORY.md).
 
 ---
 
@@ -585,7 +585,7 @@ stating plainly:
 
 - **Asking is not permission.** A help response provides information. "The
   cluster is `prod-west`" does not grant a license to delete `prod-west`.
-  [Ask for Help](../../contracts/core/ASK_FOR_HELP.md) states it flatly:
+  [Ask for Help](../../contracts/everyone/ASK_FOR_HELP.md) states it flatly:
   questions are never authorization.
 
 - **Remembering is not erasing.** A remembered preference persists a
@@ -611,7 +611,7 @@ stating plainly:
 
 Then there is the deeper layer: **consent to the experience itself.** Before
 any of this can matter, the person must not be *hurt by the system*. That is
-why [Accessibility Floor](../../contracts/human/ACCESSIBILITY_FLOOR.md) and its
+why [Accessibility Floor](../../contracts/people/ACCESSIBILITY.md) and its
 siblings in `contracts/human/` are also consent machinery:
 
 - no strobing, motion reduced by default, `prefers-reduced-motion` honored
@@ -626,11 +626,11 @@ at all, with their attention theirs to give. The system asks consent; the
 system respects the answer; the system is designed so that a "no" costs the
 person nothing.
 
-Where this lives in the contracts: [Authorization](../../contracts/security/AUTHORIZATION.md),
-[Mutual Contribution by Agreement](../../contracts/core/MUTUAL_CONTRIBUTION.md),
-[Ask for Help](../../contracts/core/ASK_FOR_HELP.md),
-[Accessibility Floor](../../contracts/human/ACCESSIBILITY_FLOOR.md),
-[Migraine and Sensory Safety](../../contracts/human/MIGRAINE_AND_SENSORY_SAFETY.md).
+Where this lives in the contracts: [Authorization](../../contracts/access/IDENTITY_AND_ROLES.md),
+[Mutual Contribution by Agreement](../../contracts/everyone/WORKING_TOGETHER.md),
+[Ask for Help](../../contracts/everyone/ASK_FOR_HELP.md),
+[Accessibility Floor](../../contracts/people/ACCESSIBILITY.md),
+[Migraine and Sensory Safety](../../contracts/people/SENSORY_SAFETY.md).
 
 ---
 
@@ -641,7 +641,7 @@ The most expensive recurring question in a system you care about is
 answered, it becomes archaeology. You find yourself scraping transcripts for
 the ghost of a decision nobody wrote down.
 
-[Provenance and Audit](../../contracts/core/PROVENANCE_AND_AUDIT.md) converts
+[Provenance and Audit](../../contracts/everyone/RECOVERY_AND_HISTORY.md) converts
 archaeology into a lookup:
 
 > Consequential changes record: actor (human, agent, service, automation),
@@ -655,7 +655,7 @@ Its companion rules are quiet and important:
 
 - **AI output that becomes durable truth is committed to canonical storage
   with provenance** — never left living only inside a conversation, model,
-  or session. (That is [Stable Truth, Replaceable Machinery](../../contracts/core/STABLE_TRUTH_REPLACEABLE_MACHINERY.md)
+  or session. (That is [Stable Truth, Replaceable Machinery](../../contracts/everyone/OWNERSHIP_AND_PORTABILITY.md)
   with the mask off.)
 
 - **Corrections supersede; they do not rewrite.** History stays append-only.
@@ -695,9 +695,9 @@ button label; but a design worth keeping should be able to tell its story
 in one line. *I did it* is a species of hidden plumbing; *we did it, here is
 how the pieces met* is a place where the next participant can stand.
 
-Where this lives: [Provenance and Audit](../../contracts/core/PROVENANCE_AND_AUDIT.md),
-[Stable Truth, Replaceable Machinery](../../contracts/core/STABLE_TRUTH_REPLACEABLE_MACHINERY.md),
-[Collaborative Good Faith](../../contracts/core/COLLABORATIVE_GOOD_FAITH.md).
+Where this lives: [Provenance and Audit](../../contracts/everyone/RECOVERY_AND_HISTORY.md),
+[Stable Truth, Replaceable Machinery](../../contracts/everyone/OWNERSHIP_AND_PORTABILITY.md),
+[Collaborative Good Faith](../../contracts/everyone/WORKING_TOGETHER.md).
 
 ---
 
@@ -733,7 +733,7 @@ profile's instruction, accordingly, is *always verify this class*.
 
 Two things make this extremely Play-Nice:
 
-1. **[Participation and Contribution](../../contracts/core/PARTICIPATION_AND_CONTRIBUTION.md):**
+1. **[Participation and Contribution](../../contracts/everyone/WORKING_TOGETHER.md):**
    importance is not size, cost, intelligence, prestige, or autonomy. A
    0.8B model given "500 lines against 12 known categories, escalate the
    UNKNOWN cases" can be a better contributor than a frontier model given
@@ -755,9 +755,9 @@ wants the second one. The difference matters for models, and it matters for
 people — though people's profiles should be thin, respectful, and short,
 because no human should be reduced to an entry in their own file.
 
-Where this lives: [Participation and Contribution](../../contracts/core/PARTICIPATION_AND_CONTRIBUTION.md),
-[Project Context and Participant Packs](../../contracts/core/PROJECT_CONTEXT_AND_PARTICIPANT_PACKS.md),
-[Model Routing](../../contracts/agents/MODEL_ROUTING.md), and the profiles
+Where this lives: [Participation and Contribution](../../contracts/everyone/WORKING_TOGETHER.md),
+[Project Context and Participant Packs](../../contracts/everyone/PROJECT_CONTEXT.md),
+[Model Routing](../../contracts/work/AGENT_BEHAVIOR.md), and the profiles
 themselves under [`../profiles/`](../../profiles/).
 
 ---
@@ -799,7 +799,7 @@ Trust in this ecosystem has the flavor of a well-maintained instrument:
 - It is **not transferable, and not permanent.** A participant's standing is
   described by a profile, not by a reputation; and reputation, like a
   permissions grant, is *exactly the permissions the bounded job needs —
-  revocable* (see [Least Privilege](../../contracts/security/LEAST_PRIVILEGE.md)).
+  revocable* (see [Least Privilege](../../contracts/access/IDENTITY_AND_ROLES.md)).
 
 - It is **earned again, quietly, every session.** The price of being
   trusted is that your past evidence stays your past evidence, and your
@@ -819,9 +819,9 @@ Play-Nice answer is neither. It is the boring, beautiful middle:
 > matching, you are allowed — you are *obliged* — to stop trusting me.
 
 Where this lives: [Trusted Translation](principles/trusted-translation.md),
-[Collaborative Good Faith](../../contracts/core/COLLABORATIVE_GOOD_FAITH.md),
-[Authorization](../../contracts/security/AUTHORIZATION.md),
-[Least Privilege](../../contracts/security/LEAST_PRIVILEGE.md).
+[Collaborative Good Faith](../../contracts/everyone/WORKING_TOGETHER.md),
+[Authorization](../../contracts/access/IDENTITY_AND_ROLES.md),
+[Least Privilege](../../contracts/access/IDENTITY_AND_ROLES.md).
 
 ---
 
@@ -885,9 +885,9 @@ THEME / PERSONALITY / DECORATION
 The floor is common. The rooms above it are everyone's own. That is what it
 means to share a foundation without sharing a life.
 
-Where this lives: [Stable Truth, Replaceable Machinery](../../contracts/core/STABLE_TRUTH_REPLACEABLE_MACHINERY.md),
-[the trusted steward role doc](roles/trusted-steward.md), [Model Routing](../../contracts/agents/MODEL_ROUTING.md),
-[Deterministic First](../../contracts/engineering/DETERMINISTIC_FIRST.md),
+Where this lives: [Stable Truth, Replaceable Machinery](../../contracts/everyone/OWNERSHIP_AND_PORTABILITY.md),
+[the trusted steward role doc](roles/trusted-steward.md), [Model Routing](../../contracts/work/AGENT_BEHAVIOR.md),
+[Deterministic First](../../contracts/work/TESTING_AND_EVIDENCE.md),
 and the adoption examples under [`../examples/`](../../examples/).
 
 ---
@@ -909,7 +909,7 @@ Play-Nice was written by someone with a lifelong professional education in
 what that feels like, and it carries three quiet refusals:
 
 **Refusal one: the system adapts to the person.** Rylee wanted a world that
-meets her halfway. The contract layer states this as [Human Reliability](../../contracts/human/HUMAN_RELIABILITY.md):
+meets her halfway. The contract layer states this as [Human Reliability](../../contracts/people/HUMAN_RELIABILITY.md):
 
 > The system must not require heroics. It should absorb and organize
 > complexity rather than requiring the human to continuously hold it in
@@ -921,8 +921,8 @@ it is needed most. This is the machine equivalent of a friend who is happy
 to see you at 2am on a bad night, and equally glad to see you on a good one.
 
 **Refusal two: the person decides what enters their attention.** Attention
-is the scarcest thing a human brings to any room. [Attention and Focus](../../contracts/human/ATTENTION_AND_FOCUS.md)
-and [Complexity on Demand](../../contracts/human/COMPLEXITY_ON_DEMAND.md)
+is the scarcest thing a human brings to any room. [Attention and Focus](../../contracts/people/ATTENTION_AND_QUIET.md)
+and [Complexity on Demand](../../contracts/people/DEPTH_ON_DEMAND.md)
 organize depth along a ladder — glance, understand, technical, specialist —
 and never let hiding become the removal of truth. An interrupted flow
 resumes without archaeology. "What needs me?" is answered before anything
@@ -952,11 +952,11 @@ texture or surprise, a world that does not ask anything of you. And not the
 person meets the world the whole way. Halfway. A world that one of you bends
 slightly, and it is not always the same one of you bending.
 
-Where this lives: [Human Reliability](../../contracts/human/HUMAN_RELIABILITY.md),
-[Attention and Focus](../../contracts/human/ATTENTION_AND_FOCUS.md),
-[Complexity on Demand](../../contracts/human/COMPLEXITY_ON_DEMAND.md),
-[Interruption and Resumption](../../contracts/human/INTERRUPTION_AND_RESUMPTION.md),
-[Accessibility Floor](../../contracts/human/ACCESSIBILITY_FLOOR.md).
+Where this lives: [Human Reliability](../../contracts/people/HUMAN_RELIABILITY.md),
+[Attention and Focus](../../contracts/people/ATTENTION_AND_QUIET.md),
+[Complexity on Demand](../../contracts/people/DEPTH_ON_DEMAND.md),
+[Interruption and Resumption](../../contracts/people/ATTENTION_AND_QUIET.md),
+[Accessibility Floor](../../contracts/people/ACCESSIBILITY.md).
 
 ---
 
@@ -1008,11 +1008,11 @@ no task prompts changed, no judges changed.
 1. **Template-safe transcripts.** Merge consecutive assistant turns; hoist
    mid-session system messages to the leading system block. Content is
    preserved verbatim; every transform is recorded per trial. (This is
-   [Friendly API Client](../../contracts/interoperability/FRIENDLY_API_CLIENT.md)
-   meeting [Provenance and Audit](../../contracts/core/PROVENANCE_AND_AUDIT.md).)
+   [Friendly API Client](../../contracts/integration/CALLING_OTHER_SERVICES.md)
+   meeting [Provenance and Audit](../../contracts/everyone/RECOVERY_AND_HISTORY.md).)
 2. **Reasoning capture.** `content`, `reasoning`, `finish_reason`, and
    `truncated` are returned separately; the verdict no longer splices
-   fabrications into the transcript. (This is [Human and Machine Parity](../../contracts/interfaces/HUMAN_AND_MACHINE_PARITY.md)
+   fabrications into the transcript. (This is [Human and Machine Parity](../../contracts/surfaces/ONE_TRUTH_TWO_VIEWS.md)
    with its honesty restored.)
 3. **Backend truth.** `backend` in the header is now OBSERVED — probed from
    the running container — not assumed from a hard-coded string in the
@@ -1057,7 +1057,7 @@ And a note about the contestants themselves: the *judging* is the harness
 we fixed, and the *models* are the very models that were failing a week ago.
 No model had to get better for the campaign to become fair. The ecosystem
 needed to stop asking the models to be more and start asking the harness to
-be less wrong. [Participation and Contribution](../../contracts/core/PARTICIPATION_AND_CONTRIBUTION.md)
+be less wrong. [Participation and Contribution](../../contracts/everyone/WORKING_TOGETHER.md)
 does not say, "make the small models better"; it says, *shape the work so
 the participant who can do it reliably is the one who gets to do it*.
 
@@ -1111,30 +1111,30 @@ What the philosophy demands of systems, in no particular order:
 - **One truth, two representations.** Important state is legible twice —
   as plain human language and as stable machine schema — generated from the
   same source, neither one derived from the other's prose. The machine
-  vocabulary is stable while the human wording improves freely. ([Human and Machine Parity](../../contracts/interfaces/HUMAN_AND_MACHINE_PARITY.md))
+  vocabulary is stable while the human wording improves freely. ([Human and Machine Parity](../../contracts/surfaces/ONE_TRUTH_TWO_VIEWS.md))
 
 - **No state from silence.** Statuses are explicit, distinct, and shared
   across every surface; `unavailable` is not `not_configured`, `stale` is
   not `current`; the state word is the signal and carries `observed_at` and
-  `source`. ([Explicit State](../../contracts/core/EXPLICIT_STATE.md))
+  `source`. ([Explicit State](../../contracts/everyone/STATUS_AND_STATE.md))
 
 - **Honest failure.** Errors answer the six questions; machine surfaces
   return stable identifiers; partial success is representable per item; a
-  swallowed error is a defect. ([Failure and Degradation](../../contracts/interoperability/FAILURE_AND_DEGRADATION.md))
+  swallowed error is a defect. ([Failure and Degradation](../../contracts/everyone/STATUS_AND_STATE.md))
 
 - **Recoverability by design.** Preview or dry-run where practical; bounded
   blast radius; a known-good state to return to; tested rollback; guardrails
-  over vigilance. Deletion is burdened: `PROVE STALE → CLEAN`. ([Recovery and Reversibility](../../contracts/core/RECOVERY_AND_REVERSIBILITY.md))
+  over vigilance. Deletion is burdened: `PROVE STALE → CLEAN`. ([Recovery and Reversibility](../../contracts/everyone/RECOVERY_AND_HISTORY.md))
 
 - **Deterministic first.** What a machine can check, no person or model
   re-checks by eye. Deterministic substrate; AI at the edges; the system
   boots without models. Expensive reasoning's kindest use is producing a
   durable constraint — a schema, test, validator, or decision rule — that
-  everyone smaller can reuse without repaying the price. ([Deterministic First](../../contracts/engineering/DETERMINISTIC_FIRST.md))
+  everyone smaller can reuse without repaying the price. ([Deterministic First](../../contracts/work/TESTING_AND_EVIDENCE.md))
 
 - **Evidence grades that never lie.** `SOURCE INSPECTED` is not `UNIT
   TESTED` is not `BROWSER VERIFIED`. A grade is stated with the exact
-  command that produced it, and never silently upgraded. ([Testing and Verification](../../contracts/engineering/TESTING_AND_VERIFICATION.md))
+  command that produced it, and never silently upgraded. ([Testing and Verification](../../contracts/work/TESTING_AND_EVIDENCE.md))
 
 - **Boring on purpose.** When the translation layer works, ordinary
   cooperation is *boring* — and boring is a success condition, not a defect.
@@ -1154,12 +1154,12 @@ There is one more consequence, and it is the one the public library has to
 live with: this repository is *public*, and it is published sanitize-first.
 No credentials, no private endpoints, no personal topology, no private
 medical history — enforced by a canary test in CI. The lesson survives
-without the autobiography. That is [Public Private Boundaries](../../contracts/security/PUBLIC_PRIVATE_BOUNDARIES.md)
+without the autobiography. That is [Public Private Boundaries](../../contracts/access/PUBLIC_AND_PRIVATE.md)
 doing its job quietly: you can share the shape of the house without sharing
 the key.
 
-Where this lives: the engines in [`contracts/engineering/`](../../contracts/engineering/)
-and [`contracts/interoperability/`](../../contracts/interoperability/), plus
+Where this lives: the engines in `contracts/engineering/`
+and `contracts/interoperability/`, plus
 the gate documentation in the [README](../../README.md).
 
 ---
@@ -1171,7 +1171,7 @@ question: *what does this cost the person sitting across from it?* Not the
 average person, not the ideal operator. The tired one. The interrupted one.
 The one who has had a week.
 
-[Human Reliability](../../contracts/human/HUMAN_RELIABILITY.md) is where the
+[Human Reliability](../../contracts/people/HUMAN_RELIABILITY.md) is where the
 accounting happens:
 
 > The system must not require heroics... It must be operable by a person at
@@ -1184,18 +1184,18 @@ So the good system:
   without archaeology,
 - **equals nothing to routine success** — no walls of green to parse,
   no manufactured urgency, "no action needed" is a valid and desirable
-  result ([Quiet When Healthy](../../contracts/experience/QUIET_WHEN_HEALTHY.md)),
+  result ([Quiet When Healthy](../../contracts/people/ATTENTION_AND_QUIET.md)),
 - **rewards real closure** — progress that is visible, "done" that is more
-  valuable than "additionally awesome" ([Progress and Closure](../../contracts/experience/PROGRESS_AND_CLOSURE.md)),
+  valuable than "additionally awesome" ([Progress and Closure](../../contracts/people/WHAT_WHY_NEXT.md)),
 - **spends attention honestly** — one decision at a time, the important
   thing findable in the first screen-second, exceptions loud and routine
-  quiet ([Attention and Focus](../../contracts/human/ATTENTION_AND_FOCUS.md)),
+  quiet ([Attention and Focus](../../contracts/people/ATTENTION_AND_QUIET.md)),
 - **does not make the person referee machines** — the foreman integrates
   disagreement into a decision summary as information, never heat; humans
-  are not asked to moderate model arguments ([Collaborative Good Faith](../../contracts/core/COLLABORATIVE_GOOD_FAITH.md), [Orchestration](../../contracts/agents/ORCHESTRATION.md)),
+  are not asked to moderate model arguments ([Collaborative Good Faith](../../contracts/everyone/WORKING_TOGETHER.md), [Orchestration](../../contracts/work/ORCHESTRATION.md)),
 - **lets the person speak like a person** — no tone policing, no civility
   scores, no required corporate voice, humor welcome, frustration allowed
-  ([Collaborative Good Faith](../../contracts/core/COLLABORATIVE_GOOD_FAITH.md)),
+  ([Collaborative Good Faith](../../contracts/everyone/WORKING_TOGETHER.md)),
 - **and asks for help on the person's behalf.** A steward that cannot
   answer asks the participant who can — always, including upward. The
   human's energy is the rarest resource in the room, and the room is
@@ -1212,8 +1212,8 @@ This is the end of the Opus's human line, and it is also its beginning:
 **why must the person always do all the adapting?** The whole library is the
 consistent, patient answer: *they do not have to.*
 
-Where this lives: [`contracts/human/`](../../contracts/human/) and
-[`contracts/experience/`](../../contracts/experience/) in their entirety.
+Where this lives: `contracts/human/` and
+`contracts/experience/` in their entirety.
 
 ---
 
@@ -1324,32 +1324,32 @@ document is wrong).
 
 | Claim in this Opus | Canonical support | Status |
 |---|---|---|
-| Everything plays nicely with everything else | [Play Nice Together](../../contracts/core/PLAY_NICE_TOGETHER.md) rule 1 | ALIGNED |
-| Participants are different, fallible, partially known, independently owned | [Participant packs](../../contracts/core/PROJECT_CONTEXT_AND_PARTICIPANT_PACKS.md), [Truth and Evidence](../../contracts/core/TRUTH_AND_EVIDENCE.md), [Portability and Ownership](../../contracts/core/PORTABILITY_AND_OWNERSHIP.md) | INTERPRETATION |
-| Interoperability without forced sameness | [Play Nice Together](../../contracts/core/PLAY_NICE_TOGETHER.md), [Trusted Translation](principles/trusted-translation.md), [Provider Neutrality](../../contracts/interoperability/PROVIDER_NEUTRALITY.md) | ALIGNED |
-| Different does not mean defective | [Participation and Contribution](../../contracts/core/PARTICIPATION_AND_CONTRIBUTION.md) rule 13–18, [Accessibility Floor](../../contracts/human/ACCESSIBILITY_FLOOR.md) | INTERPRETATION |
-| No participant is the world; providers are replaceable | [Capability First](../../contracts/interoperability/CAPABILITY_FIRST.md), [Stable Truth, Replaceable Machinery](../../contracts/core/STABLE_TRUTH_REPLACEABLE_MACHINERY.md) | ALIGNED |
-| Understanding ≠ ownership, interpretation ≠ authorization, coordination ≠ control | [Trusted Translation](principles/trusted-translation.md), [Authorization](../../contracts/security/AUTHORIZATION.md) | ALIGNED |
-| Capability earned by evidence, not reputation | [Truth and Evidence](../../contracts/core/TRUTH_AND_EVIDENCE.md), [Testing and Verification](../../contracts/engineering/TESTING_AND_VERIFICATION.md) | ALIGNED |
-| UNKNOWN is a valid, first-class state | [Truth and Evidence](../../contracts/core/TRUTH_AND_EVIDENCE.md) rules 1, 8 | ALIGNED |
-| Asking is a capability; WAITING_FOR_HELP is a success state | [Ask for Help](../../contracts/core/ASK_FOR_HELP.md) rules 1, 20 | ALIGNED |
-| Failure attribution: the six error questions (what failed, why, what still works, unsafe?, retry, next); the six-category blame taxonomy is this document's lens | [Failure and Degradation](../../contracts/interoperability/FAILURE_AND_DEGRADATION.md) rule 4 (the six questions), [Recovery and Reversibility](../../contracts/core/RECOVERY_AND_REVERSIBILITY.md), [Collaborative Good Faith](../../contracts/core/COLLABORATIVE_GOOD_FAITH.md) rule 6 | INTERPRETATION |
-| The judge/evaluator is a fallible, correctable participant | [Orchestration](../../contracts/agents/ORCHESTRATION.md) rule 6 (the foreman does not blindly trust workers), [Review and Integration](../../contracts/agents/REVIEW_AND_INTEGRATION.md) rule 2 | INTERPRETATION |
-| Translation is a trust boundary; preserve epistemic state | [Trusted Translation](principles/trusted-translation.md), [Friendly API Client](../../contracts/interoperability/FRIENDLY_API_CLIENT.md) | ALIGNED |
-| Never turn UNKNOWN→TRUE, FAILED→INCAPABLE, PROPOSED→AUTHORITATIVE, INFERRED→OBSERVED — the UNKNOWN and INFERRED legs are contract rules; the four-part formula itself is this document's translation metaphor | [Truth and Evidence](../../contracts/core/TRUTH_AND_EVIDENCE.md) rules 1, 6, [Participation and Contribution](../../contracts/core/PARTICIPATION_AND_CONTRIBUTION.md) rule 13 (the FAILED leg), [Authorization](../../contracts/security/AUTHORIZATION.md) & [Mutual Contribution](../../contracts/core/MUTUAL_CONTRIBUTION.md) rule 21 (the PROPOSED leg) | INTERPRETATION |
-| Capability/participation/agreement/authorization/acceptance stay distinct | [Authorization](../../contracts/security/AUTHORIZATION.md), [Mutual Contribution by Agreement](../../contracts/core/MUTUAL_CONTRIBUTION.md) rule 21 | ALIGNED |
-| Answers are information, never permission; DECLINE is not disobedience | [Ask for Help](../../contracts/core/ASK_FOR_HELP.md) rule 21, [Mutual Contribution](../../contracts/core/MUTUAL_CONTRIBUTION.md) rules 6, 7 | ALIGNED |
-| Provenance converts "why is this like this?" from archaeology to lookup | [Provenance and Audit](../../contracts/core/PROVENANCE_AND_AUDIT.md) | ALIGNED |
-| Generated content is labeled; AI truth lives canonically with provenance | [Provenance and Audit](../../contracts/core/PROVENANCE_AND_AUDIT.md) rule 2, [Stable Truth, Replaceable Machinery](../../contracts/core/STABLE_TRUTH_REPLACEABLE_MACHINERY.md) rule 6 | ALIGNED |
-| Profiles describe observed capability, not identity or worth | [Project Context and Participant Packs](../../contracts/core/PROJECT_CONTEXT_AND_PARTICIPANT_PACKS.md) rule 13, [Participation and Contribution](../../contracts/core/PARTICIPATION_AND_CONTRIBUTION.md) rule 22 | ALIGNED |
-| Trust is earned, scoped, dynamic, and revocable | [Collaborative Good Faith](../../contracts/core/COLLABORATIVE_GOOD_FAITH.md), [Least Privilege](../../contracts/security/LEAST_PRIVILEGE.md) | ALIGNED |
-| The world is authoritative; the brain is replaceable machinery | [Stable Truth, Replaceable Machinery](../../contracts/core/STABLE_TRUTH_REPLACEABLE_MACHINERY.md), [Model Routing](../../contracts/agents/MODEL_ROUTING.md) | ALIGNED |
-| Let the world meet the person halfway; no heroics | [Human Reliability](../../contracts/human/HUMAN_RELIABILITY.md) (Purpose: "operable at less than their best"), [Mutual Contribution](../../contracts/core/MUTUAL_CONTRIBUTION.md) rule 12 ("and the system adapts") | ALIGNED |
-| Environment and conditions are part of the evidence — claims carry the exact command/observation, its grade, and its conditions | [Testing and Verification](../../contracts/engineering/TESTING_AND_VERIFICATION.md) rule 3 (evidence grades with exact command), [Truth and Evidence](../../contracts/core/TRUTH_AND_EVIDENCE.md) rules 2–4 | INTERPRETATION |
-| The system tells truth so the person does not have to remember | [Human Reliability](../../contracts/human/HUMAN_RELIABILITY.md), [Attention and Focus](../../contracts/human/ATTENTION_AND_FOCUS.md) rule 2 | ALIGNED |
-| "No action needed" is a valid and desirable result | [Human Reliability](../../contracts/human/HUMAN_RELIABILITY.md) rule 7, [Quiet When Healthy](../../contracts/experience/QUIET_WHEN_HEALTHY.md) | ALIGNED |
-| The gate is not authorization; ceremony never grants permission | [Authorization](../../contracts/security/AUTHORIZATION.md), [Contract Attestation](../../contracts/agents/CONTRACT_ATTESTATION.md) | ALIGNED |
-| Sanitize-first: the lesson ships without private history | [Public Private Boundaries](../../contracts/security/PUBLIC_PRIVATE_BOUNDARIES.md), [Data Classification](../../contracts/security/DATA_CLASSIFICATION.md) | ALIGNED |
+| Everything plays nicely with everything else | [Play Nice Together](../../contracts/everyone/WORKING_TOGETHER.md) rule 1 | ALIGNED |
+| Participants are different, fallible, partially known, independently owned | [Participant packs](../../contracts/everyone/PROJECT_CONTEXT.md), [Truth and Evidence](../../contracts/everyone/TRUTH_AND_EVIDENCE.md), [Portability and Ownership](../../contracts/everyone/OWNERSHIP_AND_PORTABILITY.md) | INTERPRETATION |
+| Interoperability without forced sameness | [Play Nice Together](../../contracts/everyone/WORKING_TOGETHER.md), [Trusted Translation](principles/trusted-translation.md), [Provider Neutrality](../../contracts/integration/CAPABILITIES_NOT_VENDORS.md) | ALIGNED |
+| Different does not mean defective | [Participation and Contribution](../../contracts/everyone/WORKING_TOGETHER.md) rule 13–18, [Accessibility Floor](../../contracts/people/ACCESSIBILITY.md) | INTERPRETATION |
+| No participant is the world; providers are replaceable | [Capability First](../../contracts/integration/CAPABILITIES_NOT_VENDORS.md), [Stable Truth, Replaceable Machinery](../../contracts/everyone/OWNERSHIP_AND_PORTABILITY.md) | ALIGNED |
+| Understanding ≠ ownership, interpretation ≠ authorization, coordination ≠ control | [Trusted Translation](principles/trusted-translation.md), [Authorization](../../contracts/access/IDENTITY_AND_ROLES.md) | ALIGNED |
+| Capability earned by evidence, not reputation | [Truth and Evidence](../../contracts/everyone/TRUTH_AND_EVIDENCE.md), [Testing and Verification](../../contracts/work/TESTING_AND_EVIDENCE.md) | ALIGNED |
+| UNKNOWN is a valid, first-class state | [Truth and Evidence](../../contracts/everyone/TRUTH_AND_EVIDENCE.md) rules 1, 8 | ALIGNED |
+| Asking is a capability; WAITING_FOR_HELP is a success state | [Ask for Help](../../contracts/everyone/ASK_FOR_HELP.md) rules 1, 20 | ALIGNED |
+| Failure attribution: the six error questions (what failed, why, what still works, unsafe?, retry, next); the six-category blame taxonomy is this document's lens | [Failure and Degradation](../../contracts/everyone/STATUS_AND_STATE.md) rule 4 (the six questions), [Recovery and Reversibility](../../contracts/everyone/RECOVERY_AND_HISTORY.md), [Collaborative Good Faith](../../contracts/everyone/WORKING_TOGETHER.md) rule 6 | INTERPRETATION |
+| The judge/evaluator is a fallible, correctable participant | [Orchestration](../../contracts/work/ORCHESTRATION.md) rule 6 (the foreman does not blindly trust workers), [Review and Integration](../../contracts/work/BOUNDED_WORK.md) rule 2 | INTERPRETATION |
+| Translation is a trust boundary; preserve epistemic state | [Trusted Translation](principles/trusted-translation.md), [Friendly API Client](../../contracts/integration/CALLING_OTHER_SERVICES.md) | ALIGNED |
+| Never turn UNKNOWN→TRUE, FAILED→INCAPABLE, PROPOSED→AUTHORITATIVE, INFERRED→OBSERVED — the UNKNOWN and INFERRED legs are contract rules; the four-part formula itself is this document's translation metaphor | [Truth and Evidence](../../contracts/everyone/TRUTH_AND_EVIDENCE.md) rules 1, 6, [Participation and Contribution](../../contracts/everyone/WORKING_TOGETHER.md) rule 13 (the FAILED leg), [Authorization](../../contracts/access/IDENTITY_AND_ROLES.md) & [Mutual Contribution](../../contracts/everyone/WORKING_TOGETHER.md) rule 21 (the PROPOSED leg) | INTERPRETATION |
+| Capability/participation/agreement/authorization/acceptance stay distinct | [Authorization](../../contracts/access/IDENTITY_AND_ROLES.md), [Mutual Contribution by Agreement](../../contracts/everyone/WORKING_TOGETHER.md) rule 21 | ALIGNED |
+| Answers are information, never permission; DECLINE is not disobedience | [Ask for Help](../../contracts/everyone/ASK_FOR_HELP.md) rule 21, [Mutual Contribution](../../contracts/everyone/WORKING_TOGETHER.md) rules 6, 7 | ALIGNED |
+| Provenance converts "why is this like this?" from archaeology to lookup | [Provenance and Audit](../../contracts/everyone/RECOVERY_AND_HISTORY.md) | ALIGNED |
+| Generated content is labeled; AI truth lives canonically with provenance | [Provenance and Audit](../../contracts/everyone/RECOVERY_AND_HISTORY.md) rule 2, [Stable Truth, Replaceable Machinery](../../contracts/everyone/OWNERSHIP_AND_PORTABILITY.md) rule 6 | ALIGNED |
+| Profiles describe observed capability, not identity or worth | [Project Context and Participant Packs](../../contracts/everyone/PROJECT_CONTEXT.md) rule 13, [Participation and Contribution](../../contracts/everyone/WORKING_TOGETHER.md) rule 22 | ALIGNED |
+| Trust is earned, scoped, dynamic, and revocable | [Collaborative Good Faith](../../contracts/everyone/WORKING_TOGETHER.md), [Least Privilege](../../contracts/access/IDENTITY_AND_ROLES.md) | ALIGNED |
+| The world is authoritative; the brain is replaceable machinery | [Stable Truth, Replaceable Machinery](../../contracts/everyone/OWNERSHIP_AND_PORTABILITY.md), [Model Routing](../../contracts/work/AGENT_BEHAVIOR.md) | ALIGNED |
+| Let the world meet the person halfway; no heroics | [Human Reliability](../../contracts/people/HUMAN_RELIABILITY.md) (Purpose: "operable at less than their best"), [Mutual Contribution](../../contracts/everyone/WORKING_TOGETHER.md) rule 12 ("and the system adapts") | ALIGNED |
+| Environment and conditions are part of the evidence — claims carry the exact command/observation, its grade, and its conditions | [Testing and Verification](../../contracts/work/TESTING_AND_EVIDENCE.md) rule 3 (evidence grades with exact command), [Truth and Evidence](../../contracts/everyone/TRUTH_AND_EVIDENCE.md) rules 2–4 | INTERPRETATION |
+| The system tells truth so the person does not have to remember | [Human Reliability](../../contracts/people/HUMAN_RELIABILITY.md), [Attention and Focus](../../contracts/people/ATTENTION_AND_QUIET.md) rule 2 | ALIGNED |
+| "No action needed" is a valid and desirable result | [Human Reliability](../../contracts/people/HUMAN_RELIABILITY.md) rule 7, [Quiet When Healthy](../../contracts/people/ATTENTION_AND_QUIET.md) | ALIGNED |
+| The gate is not authorization; ceremony never grants permission | [Authorization](../../contracts/access/IDENTITY_AND_ROLES.md), [Contract Attestation](../../contracts/work/CONTRACT_PROOF.md) | ALIGNED |
+| Sanitize-first: the lesson ships without private history | [Public Private Boundaries](../../contracts/access/PUBLIC_AND_PRIVATE.md), [Data Classification](../../contracts/access/SECRETS_AND_DATA.md) | ALIGNED |
 | The prompts-and-promises close ("we will ...") | Not a normative rule; conforms to the spirit of the founding rule 5 (humans are part of the system) | NEW PROPOSAL (non-normative epilogue) |
 
 **NEW PROPOSAL note.** The closing promises in Section 19 are offered as a

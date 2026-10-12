@@ -186,7 +186,7 @@ boundary was explicit:
 
 Here “Figma owns” names the participant's design-stage responsibility. It does
 not make a vendor file the sole durable authority for tokens or accessibility.
-The [Design Source and Fidelity contract](../../../contracts/experience/DESIGN_SOURCE_AND_FIDELITY.md)
+The [Design Source and Fidelity contract](../../../contracts/surfaces/DESIGN_FIDELITY.md)
 keeps portable design truth in the repository. The approved evidence must make
 that journey without losing the reasoning that produced it.
 
@@ -224,19 +224,19 @@ Honoring STOP was itself an example of the manners the product had discovered.
 - **Preserve meaning across handoffs.** Record the principle, evidence,
   reservations and owner of the next decision. See
   [Trusted Translation](trusted-translation.md) and
-  [Handoff](../../../contracts/agents/HANDOFF.md).
+  [Handoff](../../../contracts/work/HANDOFF_AND_CONTINUITY.md).
 - **Converge the language while preserving differences.** Corrections can make
   an idea implementable without making every context look alike. See
-  [Visual Fidelity and Composition](../../../contracts/experience/VISUAL_FIDELITY_AND_COMPOSITION.md).
+  [Visual Fidelity and Composition](../../../contracts/surfaces/DESIGN_FIDELITY.md).
 - **Carry history with contributions.** Credit where ideas and visitors came
   from; preserve evidence rather than substituting convenient lore. See
-  [Provenance and Audit](../../../contracts/core/PROVENANCE_AND_AUDIT.md) and
-  [Collaborative Good Faith](../../../contracts/core/COLLABORATIVE_GOOD_FAITH.md).
+  [Provenance and Audit](../../../contracts/everyone/RECOVERY_AND_HISTORY.md) and
+  [Collaborative Good Faith](../../../contracts/everyone/WORKING_TOGETHER.md).
 - **Respect attention and closure.** Software can celebrate, notice, ask and
   sit quietly. Participants can finish their contribution and stop. See
-  [Attention and Focus](../../../contracts/human/ATTENTION_AND_FOCUS.md),
-  [Quiet When Healthy](../../../contracts/experience/QUIET_WHEN_HEALTHY.md) and
-  [Progress and Closure](../../../contracts/experience/PROGRESS_AND_CLOSURE.md).
+  [Attention and Focus](../../../contracts/people/ATTENTION_AND_QUIET.md),
+  [Quiet When Healthy](../../../contracts/people/ATTENTION_AND_QUIET.md) and
+  [Progress and Closure](../../../contracts/people/WHAT_WHY_NEXT.md).
 
 The story gives those existing contracts a lived example: collaboration that
 protects intent, and software that respects human attention.

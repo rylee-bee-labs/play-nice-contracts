@@ -39,5 +39,5 @@ does not resolve intent. Existing code demonstrates behavior; it does not grant
 itself design authority.
 
 The normative lesson lives in
-[Assume UNKNOWN](../../../contracts/core/ASSUME_UNKNOWN.md). This case study grants
+[Assume UNKNOWN](../../../contracts/everyone/TRUTH_AND_EVIDENCE.md). This case study grants
 no authority to rewrite another project.
