@@ -223,7 +223,7 @@ def test_floor_is_discoverable_for_every_role():
 
 
 def test_assume_unknown_case_study_preserves_evidence_boundary():
-    text = (REPO / "docs/research/workshop-v3-v1-shell.md").read_text()
+    text = (REPO / "docs/background/research/workshop-v3-v1-shell.md").read_text()
     assert "reported case study" in text
     assert "UNVERIFIED" in text
     assert "counterfactual" in text
