@@ -17,10 +17,11 @@ A human-readable summary is at:
 This license applies to all philosophical, conceptual, and
 explanatory documentation under `docs/`, including:
 
-- `docs/PLAY-NICE-OPUS.md` (Big Pickle's accepted Opus)
-- `docs/PLAY-NICE-OPUS-TLDR.md`
-- `docs/principles/`, `docs/roles/`
-- `docs/research/`, `docs/decisions/`, `docs/participant-notes/`
+- `docs/background/PLAY-NICE-OPUS.md` (Big Pickle's accepted Opus)
+- `docs/background/README.md` (opens with the Opus TLDR)
+- `docs/background/principles/`, `docs/background/roles/`
+- `docs/background/research/`, `docs/decisions/`,
+  `docs/background/participant-notes/`
 - `docs/QUICK_REFERENCE.md`, `docs/PLAYNICE.md`
 - `docs/ACKNOWLEDGEMENT.md`
 
