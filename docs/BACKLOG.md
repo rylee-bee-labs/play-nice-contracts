@@ -9,7 +9,7 @@ Newest first.
 
 ### #56 — research: use CUE to reduce schema and manifest drift
 
-- Issue: https://github.com/Rylee-Bee/play-nice-contracts/issues/56
+- Issue: https://github.com/rylee-bee-labs/play-nice-contracts/issues/56
 - Opened: 2026-10-06 · Labels: none
 - Status on 2026-10-07: closed as not planned on 2026-10-07 — tracked here
 
@@ -19,7 +19,7 @@ Next step, when this is picked up: Read `docs/research/2026-10-06-cue-behind-pla
 
 ### #55 — research: standard event envelope for estate activity and receipts
 
-- Issue: https://github.com/Rylee-Bee/play-nice-contracts/issues/55
+- Issue: https://github.com/rylee-bee-labs/play-nice-contracts/issues/55
 - Opened: 2026-10-06 · Labels: none
 - Status on 2026-10-07: closed as not planned on 2026-10-07 — tracked here
 

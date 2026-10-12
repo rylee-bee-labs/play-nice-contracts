@@ -17,7 +17,7 @@ smaller, or unnecessary, so the recommendation is REJECT.
 
 ## The rule this study answers
 
-Rylee, 2026-10-06, quoted verbatim from Rylee-Bee/play-nice-contracts#56:
+Rylee, 2026-10-06, quoted verbatim from rylee-bee-labs/play-nice-contracts#56:
 
 > The success criterion is not 'the product works.' Their success criterion is: What existing
 > estate machinery becomes simpler, standardized, smaller, or unnecessary? If a technology adds
