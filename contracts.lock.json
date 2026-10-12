@@ -6,9 +6,9 @@
   "contracts": [
     {
       "id": "accessibility",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "path": "contracts/people/ACCESSIBILITY.md",
-      "sha256": "45d1df8f4bece1236165471e87ba5576abd2a8fe49609fc5619cfe67916ddc94",
+      "sha256": "6e2709cd91a408a0249a255f37b19a3219764e82045f5763291c5d6ca53a71ed",
       "receipt": "slate-porch-kestrel",
       "status": "canonical"
     },
@@ -150,9 +150,9 @@
     },
     {
       "id": "identity-and-roles",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "path": "contracts/access/IDENTITY_AND_ROLES.md",
-      "sha256": "ebbb6ec166e17fbb31eb1b538f75609b32909b51d95cb0995e9eadf375674b67",
+      "sha256": "cdca2014c25d5fbcb60727cab3e8efd69a1bdc5e5d8c0fa43c405b383d70ec35",
       "receipt": "anchor-fennel-postbox",
       "status": "canonical"
     },
@@ -310,9 +310,9 @@
     },
     {
       "id": "web-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "path": "contracts/surfaces/WEB_UI.md",
-      "sha256": "34f54e629c83976dd24c618de7111ecfaedc5ad1c99904baa18d9e7ce99479bc",
+      "sha256": "b767cdd500262d0c8123ba18b98a6262646c2bd34afc96238e7cd4cf2261b990",
       "receipt": "gorse-poplar-harvest",
       "status": "canonical"
     },

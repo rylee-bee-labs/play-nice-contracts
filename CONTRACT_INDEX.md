@@ -41,7 +41,7 @@ Anything a person uses: attention, accessibility, sensory safety, depth, themes.
 
 | ID | Title | Ver | Status | Purpose |
 |---|---|---|---|---|
-| `accessibility` | Accessibility | 2.0.0 | canonical | The default product already works for people with different vision, motor control and assistive technology; preferences may add comfort but never lower the floor. |
+| `accessibility` | Accessibility | 2.0.1 | canonical | The default product already works for people with different vision, motor control and assistive technology; preferences may add comfort but never lower the floor. |
 | `attention-and-quiet` | Attention and Quiet | 2.0.0 | canonical | A person's attention is borrowed, not owned; healthy systems spend almost none of it, and pausing and coming back is designed for, not suffered. |
 | `depth-on-demand` | Depth on Demand | 2.1.0 | canonical | Useful complexity is kept, not deleted; it is organized so a beginner has a clear path and an expert can drill all the way down. |
 | `human-reliability` | Human Reliability | 2.0.0 | canonical | A system must stay safe and understandable when the person using it is tired, interrupted or new, not only at their best. |
@@ -63,7 +63,7 @@ APIs, CLIs, web UIs, rooms: plain words, one truth for people and machines, setu
 | `room` | Room | 2.2.0 | canonical | Many small independent backends can share one front door only if each serves the same few endpoints with the same honest shapes. |
 | `library` | Library | 1.2.0 | canonical | Many apps can teach people how they work only if their books share one shape that a beginner and an expert can both read, and one home can gather them without rewriting them. |
 | `setup-checks-itself` | Setup Checks Itself | 1.0.0 | canonical | A setup that ends in "should work now" is a guess, so every setup offers a real check the person can run on the spot. |
-| `web-ui` | Web UI | 2.0.0 | canonical | The web UI is one view of the same truth the API and CLI show: honest about state, usable by everyone, and never the only way in. |
+| `web-ui` | Web UI | 2.0.1 | canonical | The web UI is one view of the same truth the API and CLI show: honest about state, usable by everyone, and never the only way in. |
 
 ## Sites
 
@@ -90,7 +90,7 @@ Identity and roles, secrets and data, public and private.
 
 | ID | Title | Ver | Status | Purpose |
 |---|---|---|---|---|
-| `identity-and-roles` | Identity and Roles | 2.0.0 | canonical | One contract for who someone is and what they may do — identity proved with current evidence, access decided with named permissions, every grant bounded, dated and revocable. |
+| `identity-and-roles` | Identity and Roles | 2.0.1 | canonical | One contract for who someone is and what they may do — identity proved with current evidence, access decided with named permissions, every grant bounded, dated and revocable. |
 | `public-and-private` | Public and Private | 2.0.0 | canonical | A repository that is public now or later is held to the public standard today, and canary tests — not intentions — enforce that boundary. |
 | `secrets-and-data` | Secrets and Data | 2.0.0 | canonical | Secret values live only in secret storage, every record carries a class that decides where it may appear, and both are enforced by structure and tests, not by memory. |
 

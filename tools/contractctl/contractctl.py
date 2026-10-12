@@ -777,36 +777,115 @@ def load_adoption(manifest_path: Path) -> dict:
     return data
 
 
+# ---------------------------------------------------------------- task matching
+#
+# One matcher for both resolution paths (manifest surfaces and the library's
+# own contract triggers). Deterministic and stdlib-only: a trigger matches
+# when its words appear in the task as whole words, in order. "ui" no longer
+# fires inside "suite" or "build", and "log" no longer fires inside "login".
+# Light plural folding means "tests" matches "test" and "pages" matches "page".
+
+_WORD_RE = re.compile(r"[a-z0-9]+(?:\.[a-z0-9]+)*")
+
+
+def _fold_word(w: str) -> str:
+    """Fold simple English plurals so 'scripts' matches 'script'."""
+    if len(w) > 4 and w.endswith("ies"):
+        return w[:-3] + "y"
+    if len(w) > 3 and w.endswith("s") and not w.endswith(("ss", "us", "is")):
+        return w[:-1]
+    return w
+
+
+def match_words(text: str) -> list[str]:
+    """Lowercase, split on anything that is not a letter or digit, fold plurals.
+
+    Hyphens, slashes and underscores separate words, so 'event-driven' and
+    'event driven' match each other. Dots inside a word are kept
+    ('robots.txt').
+    """
+    return [_fold_word(w) for w in _WORD_RE.findall(str(text).lower())]
+
+
+def phrase_in(phrase: str, task_words: list[str]) -> bool:
+    """True when every word of `phrase` appears in `task_words`, in order, adjacent."""
+    pw = match_words(phrase)
+    if not pw:
+        return False
+    n = len(pw)
+    return any(task_words[i : i + n] == pw for i in range(len(task_words) - n + 1))
+
+
+def match_term(term: str, task_words: list[str], tags: set[str]) -> str | None:
+    """How `term` matched, or None.
+
+    Returns 'tag' when an explicit --tag names it (exact, or the same words),
+    'task' when its words appear in the task text.
+    """
+    t = str(term).lower()
+    if t in tags or match_words(t) in [match_words(x) for x in tags]:
+        return "tag"
+    if phrase_in(t, task_words):
+        return "task"
+    return None
+
+
+def _surface_match(surface: str, task_words: list[str], tags: set[str]) -> str | None:
+    """Manifest surfaces: the whole surface name, or the loose form kept for
+    compatibility — 'external-api' also matches a task that says 'api'."""
+    how = match_term(surface, task_words, tags)
+    if how:
+        return how
+    words = match_words(surface)
+    if (
+        len(words) > 1
+        and words[0] in ("external", "agent", "human", "ui", "api", "cli", "web", "integration")
+        and words[-1] in task_words
+    ):
+        return "task"
+    return None
+
+
 def resolve_set(
     manifest: dict, task: str = "", task_tags: list[str] | None = None
 ) -> dict:
     """Resolve the smallest applicable contract set.
 
-    Selection sources (in order): manifest always; manifest triggers whose
-    surface tag matches task tags found in the task description; a baseline
-    floor of core truth contracts is NOT forced here — adoption manifests are
-    expected to put those in 'always'. Unknown contract references fail.
+    Selection sources (in order): the floor; manifest always; manifest
+    triggers whose surface appears in the task or the tags; library
+    contracts whose own triggers appear in the task or the tags. Unknown
+    contract references fail.
+
+    Returns:
+      selected: id -> why (the last source that selected it; kept for
+                attestations and older callers)
+      reasons:  id -> every reason, each {"source", "trigger", "via"}
+                (via = "tag" | "task" | None), so a selection can be explained
     """
     lib = {c["front_matter"]["contract_id"]: c for c in load_library()}
     selected: dict[str, str] = {}  # id -> why
+    reasons: dict[str, list[dict]] = {}
     errors: list[str] = []
 
-    def add(cid: str, why: str):
+    def add(cid: str, why: str, source: str, trigger=None, via=None):
         cid = canonical_id(cid, lib)
         if cid in lib:
             selected[cid] = why
+            reasons.setdefault(cid, []).append(
+                {"source": source, "trigger": trigger, "via": via}
+            )
         else:
             errors.append(f"manifest references unknown contract '{cid}'")
 
     # The floor applies to every participant, whatever the manifest says.
     if "floor" in lib:
-        add("floor", "floor")
+        add("floor", "floor", "floor")
     for cid in manifest.get("always", []) or []:
-        add(cid, "always")
+        add(cid, "always", "always")
 
-    tags = set(task_tags or [])
-    if task:
-        tl = task.lower()
+    tags = {str(t).lower() for t in (task_tags or [])}
+    task_words = match_words(task) if task else []
+    if task or tags:
         triggers = manifest.get("triggers", {}) or {}
         if not isinstance(triggers, dict):
             errors.append(
@@ -815,40 +894,29 @@ def resolve_set(
             )
             triggers = {}
         for surface, cids in triggers.items():
-            surface_l = str(surface).lower()
-            # surface matches if the tag was passed explicitly or appears in the task text
-            if (
-                surface_l in tags
-                or surface_l in tl
-                or _surface_words_match(surface_l, tl)
-            ):
+            via = _surface_match(str(surface), task_words, tags)
+            if via:
                 for cid in cids or []:
-                    add(cid, f"trigger:{surface}")
+                    add(cid, f"trigger:{surface}", "manifest-trigger", str(surface), via)
 
     # library-level trigger matching: contracts whose own triggers appear in the task
     for cid, c in lib.items():
         trig = c["front_matter"].get("triggers") or []
         for t in trig:
             t = str(t).lower()
-            if t == "always":
+            if t in ("always", "always-applicable"):
                 continue
-            if t in tags or (task and f" {t} " in f" {tl} ") or (task and t in tl):
-                add(cid, f"library-trigger:{t}")
+            via = match_term(t, task_words, tags)
+            if via:
+                add(cid, f"library-trigger:{t}", "library-trigger", t, via)
                 break
 
-    return {"selected": selected, "errors": errors, "library_size": len(lib)}
-
-
-def _surface_words_match(surface: str, task_lower: str) -> bool:
-    """Loose match: 'external-api' matches tasks mentioning 'external api' or 'api'."""
-    words = surface.replace("-", " ")
-    if words in task_lower:
-        return True
-    head = words.split()[0]
-    return (
-        head in ("external", "agent", "human", "ui", "api", "cli", "web", "integration")
-        and words.split()[-1] in task_lower
-    )
+    return {
+        "selected": selected,
+        "reasons": reasons,
+        "errors": errors,
+        "library_size": len(lib),
+    }
 
 
 # ---------------------------------------------------------------- attestation
@@ -3160,9 +3228,31 @@ def cmd_resolve(args) -> int:
         # explicitly named but missing: still fail closed (a typo is not "none")
         m = load_adoption(manifest)
     else:
-        print("no adoption manifest: resolved from the library defaults")
+        print(
+            "no adoption manifest: resolved from the library defaults",
+            file=sys.stderr if getattr(args, "json", False) else sys.stdout,
+        )
         m = {"always": list(ROLE_BASE_SETS[args.role]), "triggers": {}}
     res = resolve_set(m, args.task, (args.tag or []))
+    if getattr(args, "json", False):
+        print(
+            json.dumps(
+                {
+                    "schema": "play-nice/resolve-v1",
+                    "task": args.task,
+                    "tags": sorted({str(t).lower() for t in (args.tag or [])}),
+                    "manifest": str(manifest) if manifest.is_file() else None,
+                    "library_size": res["library_size"],
+                    "contracts": [
+                        {"id": cid, "reasons": res["reasons"].get(cid, [])}
+                        for cid in sorted(res["selected"])
+                    ],
+                    "errors": res["errors"],
+                },
+                indent=2,
+            )
+        )
+        return 1 if res["errors"] else 0
     if res["errors"]:
         print("resolution errors:", file=sys.stderr)
         for e in res["errors"]:
@@ -4104,6 +4194,11 @@ def main(argv=None) -> int:
         default="agent",
         choices=["agent", "human", "service"],
         help="base contract set when there is no adoption manifest (default: agent)",
+    )
+    p.add_argument(
+        "--json",
+        action="store_true",
+        help="machine-readable output: each contract with every reason it was selected",
     )
     p.set_defaults(func=cmd_resolve)
 

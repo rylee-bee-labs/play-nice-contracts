@@ -1,11 +1,11 @@
 ---
 contract_id: web-ui
 title: Web UI
-version: 2.0.0
+version: 2.0.1
 status: canonical
 layer: surfaces
 applies: [ui, web]
-triggers: [web page, website, frontend, ui, screen, form, dashboard, browser]
+triggers: [web page, website, frontend, ui, screen, form, dashboard, browser, page, button, menu, modal, dialog]
 rationale: The web UI is one view of the same truth the API and CLI show: honest about state, usable by everyone, and never the only way in.
 ---
 
