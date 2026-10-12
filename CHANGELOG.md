@@ -4,6 +4,36 @@ All notable changes to the play-nice-contracts library. Per-contract semver: PAT
 
 ## [Unreleased]
 
+### Changed
+- `playnice` is the front door. New `playnice rules "<task>"` lists the
+  contracts that apply and why (the same resolver as `contractctl
+  resolve`). `--help` lists everyday commands first and marks `work` and
+  `reconcile` as orchestrator commands. The README now shows a one-line
+  install (link the `playnice` wrapper into `~/.local/bin`) and short
+  commands; the wrapper now follows that symlink.
+- `playnice status` keeps three questions apart: CHECKS (the same verdict as
+  `playnice check`), ADOPTION (is there an adoption manifest, and is it
+  current), and WORK READINESS (can `playnice work` start, and what blocks
+  it). Before, a repo that passed `check` showed `PLAY NICE: UNKNOWN` with
+  no explanation. The JSON keeps `play_nice` and adds `checks` and
+  `readiness`.
+- `contractctl` finds the adoption manifest the same way everywhere, and the
+  same way `playnice` does (`.contracts/adoption.yaml`, then
+  `.project/contracts/adoption.yaml`). `upgrade-check`, `attest`, `commit`
+  and `adopt` no longer require `--manifest`; `onboard` defaults to
+  `--role worker`.
+- `--version` labels each number: `playnice 0.1.0 · library 2.0.0 · floor
+  1.0.0`. The README explains what each version covers. `pyproject.toml`
+  no longer claims to mirror `VERSION`.
+- `contract-proof` 2.0.1: rule 4 says what a proof line is, a versioned
+  declaration of the floor and rules an agent consulted. `playnice verify`
+  checks validity and currency; it does not prove comprehension or
+  compliance. README and AGENTS.md say the same.
+- The badge link agrees with its docs: `playnice start` links the README
+  badge to the check runs only when it writes the CI workflow, and to the
+  library otherwise. `assets/badge/README.md` documents both and no longer
+  names a `playnice upgrade` command that does not exist.
+
 ### Fixed
 - Task matching (`contractctl resolve`, attest, commit and `playnice work`)
   now matches whole words, in order, for both manifest surfaces and library

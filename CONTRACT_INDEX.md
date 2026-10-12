@@ -27,7 +27,7 @@ AI agents and anyone doing the work: bounded work, handoffs, testing, git, proof
 |---|---|---|---|---|
 | `agent-behavior` | Agent Behavior | 2.0.0 | canonical | One page for how an agent behaves while it works, including how to pick which model does a job. |
 | `bounded-work` | Bounded Work | 2.0.0 | canonical | A job with a defined finish can be finished; a job without one grows until someone pays to stop it. |
-| `contract-proof` | Contract Proof | 2.0.0 | canonical | Being current with the rules needs one cheap, checkable statement per kind of participant, not a ceremony that proves reading instead of following. |
+| `contract-proof` | Contract Proof | 2.0.1 | canonical | Being current with the rules needs one cheap, checkable statement per kind of participant, not a ceremony that proves reading instead of following. |
 | `git-and-worktrees` | Git and Worktrees | 2.1.0 | canonical | Branches and worktrees record who owns which work in flight, so parallel work stays safe and nothing real is deleted on a guess. |
 | `handoff-and-continuity` | Handoff and Continuity | 2.0.0 | canonical | The expensive part of resuming work is re-deriving what the last session knew, and a handoff plus current docs make that a lookup instead. |
 | `observability` | Observability | 2.0.0 | canonical | Logs and status surfaces exist so the next person or agent can diagnose a failure without reverse engineering it or leaking secrets while doing so. |

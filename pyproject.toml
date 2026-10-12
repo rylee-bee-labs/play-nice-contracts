@@ -9,7 +9,8 @@
 
 [project]
 name = "play-nice-contracts-dev"
-version = "0.10.0"  # mirrors VERSION; tooling itself is never pip-installed
+version = "0"  # placeholder required by packaging; not a release number. The library
+             # version is VERSION; tool versions print with `playnice --version`.
 description = "Dev/test extras for the Play-Nice contract library (tooling stays stdlib-only)"
 requires-python = ">=3.10"
 

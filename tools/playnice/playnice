@@ -10,6 +10,6 @@ the standard library.
 import os
 import sys
 
-here = os.path.dirname(os.path.abspath(__file__))
+here = os.path.dirname(os.path.realpath(__file__))  # follow a ~/.local/bin symlink
 target = os.path.join(here, "playnice.py")
 os.execv(sys.executable, [sys.executable, target, *sys.argv[1:]])
