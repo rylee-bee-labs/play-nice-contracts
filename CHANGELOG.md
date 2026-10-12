@@ -4,7 +4,26 @@ All notable changes to the play-nice-contracts library. Per-contract semver: PAT
 
 ## [Unreleased]
 
+### Fixed
+- Task matching (`contractctl resolve`, attest, commit and `playnice work`)
+  now matches whole words, in order, for both manifest surfaces and library
+  triggers. One matcher serves both paths. Before, "fix the test suite" and
+  "build a backup script" pulled in web-ui and accessibility ("ui" inside
+  "suite" and "build"), "add login with OIDC" pulled in secrets-and-data
+  ("log" inside "login"), and a manifest surface `agent` fired on "user
+  management". Simple plurals still match ("scripts" finds `script`). The
+  `external-api` → "api" loose surface form is kept. Existing commitments
+  whose task resolves differently now will re-resolve once.
+- `web-ui` 2.0.1, `accessibility` 2.0.1, `identity-and-roles` 2.0.1: more
+  everyday trigger words (page, button, menu, modal, dialog, a11y; auth,
+  log in, sign up, OIDC, SAML, SSO, MFA), so "add a settings page" finds the
+  web UI and accessibility rules. Routing metadata only; no rule changed.
+
 ### Added
+- `contractctl resolve --json` (`play-nice/resolve-v1`): every selected
+  contract with each reason it was selected (`source`, `trigger`, and `via`
+  task text or explicit tag), for orchestrators. `resolve_set()` also
+  returns this as `reasons`; `selected` keeps its old shape.
 - `plain-language` 2.1.0: important unfamiliar concepts get a concrete everyday way in; structural analogies are encouraged when they clarify useful relationships, but may never replace or contradict the literal explanation. Receipt rotated.
 - `depth-on-demand` 2.1.0: simplified explanations and analogies are scaffolding, not dead ends; the real term and mechanism stay reachable, and consequential limits of an analogy are exposed before a learner would rely on the wrong model. Receipt rotated.
 - `docs/principles/scotty-principle.md`: non-normative learner-facing philosophy for structural analogies — "understand the system deeply enough to explain it simply without making it wrong." It defines the five-year-old test as a prerequisite-load test, not baby talk, and keeps analogy out of machine semantics.
