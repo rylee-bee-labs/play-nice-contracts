@@ -5,6 +5,15 @@ All notable changes to the play-nice-contracts library. Per-contract semver: PAT
 ## [Unreleased]
 
 ### Changed
+- `playnice` with no command prints the full help and where to start,
+  instead of a one-line argparse error (still exit 2). `playnice rules`
+  says when no word in the task matched a trigger, so seven "always"
+  contracts no longer look like a real match; the JSON adds `task_matched`.
+  `playnice status` drops the dangling `; ` after an unreachable GitHub and
+  says to run `gh auth status`.
+- The test suite runs in parallel with pytest-xdist (`-n auto`) in CI and
+  `tools/check.sh`: the full gate went from about 80 s to about 34 s on 4
+  cores. pytest-xdist is optional; without it the tests run one at a time.
 - `playnice` is the front door. New `playnice rules "<task>"` lists the
   contracts that apply and why (the same resolver as `contractctl
   resolve`). `--help` lists everyday commands first and marks `work` and

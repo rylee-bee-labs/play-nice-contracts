@@ -76,13 +76,16 @@ Per-contract semver: PATCH = clarification, MINOR = compatible new rule, MAJOR =
 ## Tests
 
 ```bash
-python3 -m pytest tests/ -q    # what CI runs, after pip install pytest pyyaml
+python3 -m pytest tests/ -q -n auto   # what CI runs, after pip install pytest pytest-xdist pyyaml
 ```
+
+`-n auto` (pytest-xdist) runs the suite on every core, about 3x faster.
+It is optional: drop it and the same tests run one at a time.
 
 One-command local equivalent without polluting the system Python:
 
 ```bash
-uv run --python 3.12 --with pytest,pyyaml python3 -m pytest tests/ -q
+uv run --python 3.12 --with pytest,pyyaml,pytest-xdist python3 -m pytest tests/ -q -n auto
 ```
 
 The full suite covers: library invariants, resolution, attestation/commitment machinery, receipt-rotation enforcement, ask-for-help + question schema, the project-context/participant-pack framework, participation-and-contribution (right-sized participation, honest refusal), mutual-contribution (the agreement loop, authority separation), and collaborative-good-faith (critique toward repair, safe uncertainty, foreman disagreement integration, no moderation machinery).

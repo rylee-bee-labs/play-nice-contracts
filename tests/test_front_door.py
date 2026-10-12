@@ -156,6 +156,21 @@ def test_help_leads_with_everyday_commands(tmp_path):
     assert "orchestrators" in out
 
 
+
+def test_rules_says_when_no_task_word_matched(tmp_path):
+    r = run(PLAYNICE, ["rules", "zzz qqq"], tmp_path)
+    assert r.returncode == 0, r.stderr
+    assert "no word in the task matched a trigger" in r.stdout
+    assert "no word in the task" not in run(PLAYNICE, ["rules", "add a settings page"], tmp_path).stdout
+    assert json.loads(run(PLAYNICE, ["rules", "zzz", "--json"], tmp_path).stdout)["task_matched"] is False
+    assert json.loads(run(PLAYNICE, ["rules", "add a page", "--json"], tmp_path).stdout)["task_matched"] is True
+
+
+def test_bare_playnice_shows_help_and_where_to_start(tmp_path):
+    r = run(PLAYNICE, [], tmp_path)
+    assert r.returncode == 2
+    assert "positional arguments" in r.stderr and "start here: playnice start" in r.stderr
+
 # ------------------------------------------------------------ badge + wrapper
 
 

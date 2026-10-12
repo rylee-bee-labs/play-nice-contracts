@@ -25,11 +25,17 @@ cmp -s "$tmp2" contracts.lock.json || {
 echo "lock regeneration byte-identical"
 
 echo "==> test suite"
+# pytest-xdist is optional: with it the suite runs on every core (about
+# 3x faster); without it the same tests run one at a time.
 if python3 -c "import pytest, yaml" 2>/dev/null; then
-  python3 -m pytest tests/ -q
+  if python3 -c "import xdist" 2>/dev/null; then
+    python3 -m pytest tests/ -q -n auto
+  else
+    python3 -m pytest tests/ -q
+  fi
 else
   echo "(pytest/pyyaml not in this interpreter; using uv)"
-  uv run --python 3.12 --with pytest,pyyaml python3 -m pytest tests/ -q
+  uv run --python 3.12 --with pytest,pyyaml,pytest-xdist python3 -m pytest tests/ -q -n auto
 fi
 
 echo "==> secret / private-material scan (library surfaces)"
