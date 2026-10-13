@@ -1321,6 +1321,38 @@ def run_contract_gate(
 # ------------------------------------------------------------- work permit
 
 
+_VERIFY_HEADING = re.compile(r"^##[ \t]+verify\b.*$", re.IGNORECASE | re.MULTILINE)
+
+
+def read_verify_section(repo: Path) -> dict:
+    """The repo's own definition of done: the `## Verify` section of its AGENTS.md.
+
+    DECLARED carries the section text and the commands in its fenced code blocks;
+    UNKNOWN says which part is missing. Never blocks work: a missing section is
+    surfaced in the permit, the work output and the worker prompt, so it gets added."""
+    ag = repo / "AGENTS.md"
+    if not ag.is_file():
+        return {"state": "UNKNOWN", "reason": "no AGENTS.md", "source": None, "commands": []}
+    text = ag.read_text(encoding="utf-8", errors="replace")
+    m = _VERIFY_HEADING.search(text)
+    if not m:
+        return {"state": "UNKNOWN", "reason": "AGENTS.md has no `## Verify` section",
+                "source": "AGENTS.md", "commands": []}
+    rest = text[m.end():]
+    nxt = re.search(r"^#{1,2}[ \t]+\S", rest, re.MULTILINE)
+    body = (rest[: nxt.start()] if nxt else rest).strip()
+    commands: list[str] = []
+    for block in re.findall(r"^```[^\n]*\n(.*?)^```", body, re.MULTILINE | re.DOTALL):
+        for line in block.splitlines():
+            line = line.strip()
+            if line and not line.startswith("#"):
+                commands.append(line[2:] if line.startswith("$ ") else line)
+    if not commands:
+        return {"state": "UNKNOWN", "reason": "`## Verify` names no command in a code block",
+                "source": "AGENTS.md", "commands": [], "text": body}
+    return {"state": "DECLARED", "source": "AGENTS.md", "commands": commands, "text": body}
+
+
 def write_permit(
     repo: Path,
     manifest_path: Path,
@@ -1333,6 +1365,7 @@ def write_permit(
     """Phase 8 — a secret-free machine-readable work permit."""
     artifact = gate.get("artifact") or {}
     source = artifact.get("source") or {}
+    verify = read_verify_section(repo)
     permit = {
         "format": "play-nice/work-permit-v1",
         "work_permit": "ACTIVE",
@@ -1364,10 +1397,12 @@ def write_permit(
             "role": artifact.get("role", "session"),
             "artifact": gate.get("artifact_path"),
         },
+        "verify": verify,
         "worker_packet": {
             "INHERITED_CONTRACT_BUNDLE": artifact.get("bundle_sha256"),
             "PLAY_NICE_SOURCE_REVISION": source.get("revision"),
             "PARENT_CONTRACT_COMMITMENT": artifact.get("commitment", "ACTIVE"),
+            "VERIFY": verify["commands"],
         },
         "recorded_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "library": gate.get("library_revision"),
@@ -1456,8 +1491,24 @@ def build_agent_prompt(permit: dict, task: str, lib: Path) -> str:
         "   checkouts), push, and open a PR when that is the workflow.\n"
         "5. End your reply with the standard handoff sections\n"
         "   (CURRENT / CHANGED / VERIFIED / CONTRACTS / UNKNOWN / DEFERRED / NEXT).\n"
+        f"{_verify_instructions(permit.get('verify') or {})}"
         "\n"
         f"THE WORK: {task}"
+    )
+
+
+def _verify_instructions(verify: dict) -> str:
+    """Step 6 of the worker prompt: how this repo says done is proven."""
+    if verify.get("state") == "DECLARED":
+        cmds = "".join(f"     $ {c}\n" for c in verify["commands"])
+        return (
+            "6. Done means this repository's Verify commands pass (AGENTS.md `## Verify`).\n"
+            "   Run each one and put the command and its output in VERIFIED:\n" + cmds
+        )
+    return (
+        f"6. VERIFY: UNKNOWN ({verify.get('reason', 'not declared')}). Say which checks you\n"
+        "   ran in VERIFIED, mark anything unrun UNVERIFIED, and propose a `## Verify`\n"
+        "   section for AGENTS.md in NEXT.\n"
     )
 
 
@@ -1667,6 +1718,12 @@ def _print_permit(fr: dict, repo_state: dict, carryover: dict, gate: dict) -> No
     print("WORK PERMIT: ACTIVE")
 
 
+def _verify_line(verify: dict) -> str:
+    if verify.get("state") == "DECLARED":
+        return f"VERIFY: DECLARED ({len(verify['commands'])} command(s) from AGENTS.md)"
+    return f"VERIFY: UNKNOWN ({verify.get('reason', 'not declared')})"
+
+
 def cmd_work(args) -> int:
     cfg = load_global_config(Path(args.config) if args.config else None)
     if args.no_github:
@@ -1775,6 +1832,7 @@ def cmd_work(args) -> int:
     permit = write_permit(repo, manifest_path, task, fr, repo_state, carryover, gate)
     if not json_mode:
         _print_permit(fr, repo_state, carryover, gate)
+    emit(_verify_line(permit.get("verify") or {}))
     emit(f"permit: {permit.get('_path')}")
 
     if args.no_launch:

@@ -4,6 +4,15 @@ All notable changes to the play-nice-contracts library. Per-contract semver: PAT
 
 ## [Unreleased]
 
+### Added
+- `playnice work` reads the repo's own definition of done: the `## Verify`
+  section of its AGENTS.md. The commands in that section's code blocks go
+  into the work permit (`verify`, `worker_packet.VERIFY`), the work output
+  (`VERIFY: DECLARED (n command(s) from AGENTS.md)`) and the worker prompt,
+  which tells the agent to run them and show their output in VERIFIED. A repo
+  without the section gets `VERIFY: UNKNOWN (<what is missing>)` and the
+  agent is asked to propose one; work is not blocked.
+
 ### Changed
 - The 253 links in background docs to v1 contract files (`contracts/core/`
   and so on, gone since v2) now point at the v2 contract that holds each

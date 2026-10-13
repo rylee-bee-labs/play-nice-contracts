@@ -73,6 +73,11 @@ manifest, the sequence is:
    and writes `work-permit.json` next to the manifest. The permit records
    `repository.status`, the resolved bundle, the source revision, and the commitment
    sentence; the executing agent attests its own impact on top (two layers).
+   The permit also carries the repo's definition of done: the commands in the
+   `## Verify` section of its AGENTS.md (`verify.state` `DECLARED`, or `UNKNOWN`
+   with the reason). Work prints `VERIFY: ...` and the worker prompt tells the
+   agent to run those commands and show their output in VERIFIED. A missing
+   section never blocks work.
 6. **Agent launch** (unless `--no-launch`) — runs the configured
    `agent.command [agent.args...] <task>` with `cwd=<repo>` and a worker packet:
    - env `PLAY_NICE_LIBRARY` (library checkout used) and `PLAY_NICE_PERMIT` (permit
