@@ -305,6 +305,76 @@ def test_work_current_permits_and_writes_handoff(lib, pn_remote, tmp_path):
     assert sessions, "session artifact must be written by the gate"
 
 
+_AGENTS_WITH_VERIFY = """# AGENTS.md
+
+## Verify
+
+Run before calling a change done:
+
+```sh
+$ python3 -m pytest -q
+ruff check .
+```
+
+## Handoff
+Write it.
+"""
+
+
+def test_work_permit_carries_the_repo_verify_commands(lib, pn_remote, tmp_path):
+    consumer = make_consumer(
+        tmp_path, lib, pn_remote, pre_files={"AGENTS.md": _AGENTS_WITH_VERIFY}
+    )
+    r = run_pn(
+        ["work", "--repo", str(consumer), "--no-github", "--no-launch", _TASK],
+        pn_env(tmp_path, lib),
+        consumer,
+    )
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert "VERIFY: DECLARED (2 command(s) from AGENTS.md)" in r.stdout
+    permit = json.loads(
+        (consumer / ".contracts" / "work-permit.json").read_text(encoding="utf-8")
+    )
+    assert permit["verify"]["state"] == "DECLARED"
+    assert permit["worker_packet"]["VERIFY"] == ["python3 -m pytest -q", "ruff check ."]
+
+
+def test_work_without_verify_section_says_unknown_and_still_permits(
+    lib, pn_remote, tmp_path
+):
+    consumer = make_consumer(
+        tmp_path, lib, pn_remote, pre_files={"AGENTS.md": "# AGENTS.md\n\n## Rules\nbe kind\n"}
+    )
+    r = run_pn(
+        ["work", "--repo", str(consumer), "--no-github", "--no-launch", _TASK],
+        pn_env(tmp_path, lib),
+        consumer,
+    )
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert "VERIFY: UNKNOWN (AGENTS.md has no `## Verify` section)" in r.stdout
+    assert "WORK PERMIT: ACTIVE" in r.stdout
+    permit = json.loads(
+        (consumer / ".contracts" / "work-permit.json").read_text(encoding="utf-8")
+    )
+    assert permit["worker_packet"]["VERIFY"] == []
+
+
+def test_worker_prompt_names_the_verify_commands():
+    from tools.playnice import playnice as pn
+
+    permit = {
+        "worker_packet": {},
+        "repository": {"branch": "main", "revision": "abc"},
+        "play_nice": {"status": "CURRENT", "revision": "def"},
+        "verify": {"state": "DECLARED", "commands": ["make test"]},
+    }
+    prompt = pn.build_agent_prompt(permit, "do it", Path("/lib"))
+    assert "Done means this repository's Verify commands pass" in prompt
+    assert "$ make test" in prompt
+    permit["verify"] = {"state": "UNKNOWN", "reason": "no AGENTS.md"}
+    assert "VERIFY: UNKNOWN (no AGENTS.md)" in pn.build_agent_prompt(permit, "x", Path("/l"))
+
+
 def test_work_behind_blocks_without_permit(lib, pn_remote, tmp_path):
     consumer = make_consumer(tmp_path, lib, pn_remote)
     advance_remote(lib, pn_remote, "move the authoritative remote ahead")
@@ -582,6 +652,7 @@ def test_merge_ready_pr_merged_under_permit(lib, pn_remote, fakegh, tmp_path):
         consumer / ".contracts" / "work-permit.json"
     )
     assert "INHERITED CONTRACT BUNDLE" in agent["argv"][-1]
+    assert "VERIFY: UNKNOWN (no AGENTS.md)" in agent["argv"][-1]
 
 
 @pytest.mark.parametrize(
