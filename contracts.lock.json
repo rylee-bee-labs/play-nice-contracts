@@ -134,10 +134,10 @@
     },
     {
       "id": "handoff-and-continuity",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "path": "contracts/work/HANDOFF_AND_CONTINUITY.md",
-      "sha256": "c1c4eac054f416fd62beb94deb501c944db45480b6803822a077ad505deccbdf",
-      "receipt": "pasture-walnut-copper",
+      "sha256": "d2da15495abaf17c4ee22cfbd5bbaa08cd771510ce98af227b4d7c5e3b85a9b9",
+      "receipt": "meadow-lantern-thrush",
       "status": "canonical"
     },
     {
