@@ -5,6 +5,7 @@ All notable changes to the play-nice-contracts library. Per-contract semver: PAT
 ## [Unreleased]
 
 ### Added
+- The **handoff-and-continuity** 2.1.0 contract now carries explicit owner-approved direction across agents, conversations, Project Home and GitHub without redundant design re-approval. It preserves separate authenticated action gates, implementation proof and deliberate holds. Receipt rotated and contract lock updated.
 - `playnice work` reads the repo's own definition of done: the `## Verify`
   section of its AGENTS.md. The commands in that section's code blocks go
   into the work permit (`verify`, `worker_packet.VERIFY`), the work output
