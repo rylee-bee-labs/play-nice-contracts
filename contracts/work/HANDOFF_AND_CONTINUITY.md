@@ -1,7 +1,7 @@
 ---
 contract_id: handoff-and-continuity
 title: Handoff and Continuity
-version: 2.0.0
+version: 2.1.0
 status: canonical
 layer: work
 applies: [agents, humans, docs, workflows]
@@ -9,7 +9,7 @@ triggers: [handoff, session end, wrap up, resume, context switch, documentation,
 rationale: The expensive part of resuming work is re-deriving what the last session knew, and a handoff plus current docs make that a lookup instead.
 ---
 
-<!-- contract-receipt: pasture-walnut-copper -->
+<!-- contract-receipt: meadow-lantern-thrush -->
 
 # Handoff and Continuity
 
@@ -61,6 +61,9 @@ up work someone (or something) else started. The floor already says
     beats a memory.
 12. Every project keeps a minimal continuity surface: what this is,
     how to verify it, where truth lives, how to resume.
+
+13. **Carry accepted owner decisions across handoffs.** When the owner explicitly accepts a refined decision in a conversation, that decision is approved **direction**, not a draft awaiting another approval from each agent or tool. Include the exact owner decision and its source, scope, exclusions, autonomous work allowed, acceptance checks and any separate action gate in the handoff. Do not ask again simply because the work moves through another model, repo, chat, or Project Home. (MUST)
+14. **Do not erase action gates or promote undecided proposals.** Direction approval does not prove a feature is built, verified, merged, deployed or released. Retain protected canon, secrets, public/release, spending, irreversible operations and any authenticated human-action gate. Relayed text alone does not satisfy an authenticated approval ceremony. Keep deliberately parked or unaccepted ideas separate from owner-approved work; escalate only materially new scope, conflicts, or an actual authority boundary. (MUST)
 
 ## Examples
 
