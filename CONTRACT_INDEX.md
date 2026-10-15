@@ -29,7 +29,7 @@ AI agents and anyone doing the work: bounded work, handoffs, testing, git, proof
 | `bounded-work` | Bounded Work | 2.0.0 | canonical | A job with a defined finish can be finished; a job without one grows until someone pays to stop it. |
 | `contract-proof` | Contract Proof | 2.0.1 | canonical | Being current with the rules needs one cheap, checkable statement per kind of participant, not a ceremony that proves reading instead of following. |
 | `git-and-worktrees` | Git and Worktrees | 2.1.0 | canonical | Branches and worktrees record who owns which work in flight, so parallel work stays safe and nothing real is deleted on a guess. |
-| `handoff-and-continuity` | Handoff and Continuity | 2.0.0 | canonical | The expensive part of resuming work is re-deriving what the last session knew, and a handoff plus current docs make that a lookup instead. |
+| `handoff-and-continuity` | Handoff and Continuity | 2.1.0 | canonical | The expensive part of resuming work is re-deriving what the last session knew, and a handoff plus current docs make that a lookup instead. |
 | `observability` | Observability | 2.0.0 | canonical | Logs and status surfaces exist so the next person or agent can diagnose a failure without reverse engineering it or leaking secrets while doing so. |
 | `orchestration` | Orchestration | 2.0.0 | canonical | Splitting work between people and agents only works when each role, each work packet, and each check is explicit. |
 | `search-before-building` | Search Before Building | 2.0.0 | canonical | New things are easy to add and hard to remove, so an existing thing that already owns the job beats a new parallel one. |
