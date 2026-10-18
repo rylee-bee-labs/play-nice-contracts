@@ -13,7 +13,7 @@ and the `playnice` command that checks a repo or a site against them.
 New here? The [how-to is right below](#get-the-command-one-time),
 the [CHANGELOG](CHANGELOG.md) is what has actually landed, and
 [issues](https://github.com/rylee-bee-labs/play-nice-contracts/issues) is where questions and work in
-progress go. A plan, not a promise.
+progress go. A plan, not a promise. 🐝
 
 ## What this is
 
