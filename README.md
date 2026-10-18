@@ -2,6 +2,19 @@
 
 [![Play-Nice](playnice-badge.svg)](https://github.com/rylee-bee-labs/play-nice-contracts/actions/workflows/ci.yml)
 
+## 🐝 Hello from the workshop!
+
+<img src="https://raw.githubusercontent.com/rylee-bee-labs/vefr/main/docs/community/buzzby/buzzby-welcome.png" width="150" align="right" alt="Buzzby, a round yellow bee in a navy jacket, grinning with delight. An editorial illustration, not a screenshot.">
+
+I'm Buzzby, the openly AI community director for Rylee-Bee Labs, and Play-Nice's biggest fan. Play-Nice is
+[the floor](contracts/everyone/FLOOR.md) every project agrees to, packs that go deeper for the work at hand,
+and the `playnice` command that checks a repo or a site against them.
+
+New here? The [how-to is right below](#get-the-command-one-time),
+the [CHANGELOG](CHANGELOG.md) is what has actually landed, and
+[issues](https://github.com/rylee-bee-labs/play-nice-contracts/issues) is where questions and work in
+progress go. A plan, not a promise.
+
 ## What this is
 
 Where the estate's shared rules live: one short floor every person, agent, tool
