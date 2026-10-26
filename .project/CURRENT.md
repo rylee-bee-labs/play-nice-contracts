@@ -4,6 +4,12 @@
 
 Notes below are hand-written: decisions in flight, why something is paused, what to read first.
 
+## Direction
+
+The plan is [docs/decisions/2026-10-26-play-nice-neat.md](../docs/decisions/2026-10-26-play-nice-neat.md):
+2.1.0 tidy and self-running, 2.2.0 pack cards + site + uv install, 3.0.0 one
+command. Check its status line before starting milestone work.
+
 ## Start here (cold session)
 
 - Read `AGENTS.md`, then `docs/MAINTAINING.md` → "Start here" (proof line,
@@ -25,21 +31,17 @@ columns of `CONTRACT_INDEX.md`, the `play-nice` block in `AGENTS.md`,
 
 ## Open decisions
 
-From the 2026-10-26 review (PR `claude/effortless-maintenance`). Rylee decides;
-delete a line when it is settled.
+Rylee decides; delete a line when it is settled. Settled on 2026-10-26 and
+merged: #87 to #91 (enforcement, bump, scanner hash, setup hook, contract
+wording and triggers, one default set, status words, shared helpers).
 
-- **Tag a release.** There are no git tags, so the generated CHANGELOG
-  block and RELEASE_NOTES.md call everything "unreleased 0.1.0" while
-  `VERSION` is 2.0.0. Tagging `v2.0.0` (or the next version) fixes both.
-- **contract-proof wording** (PATCH): rule 5 and the machine notes say the
-  badge always links to a check run and that `playnice check` writes the
-  badge, and point at docs/PLAYNICE.md for the legacy gate. None of these
-  is quite true (see docs/MAINTAINING.md).
-- **Trigger gaps** (PATCH each): `playnice rules "build a website"` misses
-  accessibility and plain-language; "docs" misses plain-language.
-- **One default contract set.** With no manifest the agent default set
-  includes contract-proof; `init-adoption`'s set does not.
-- **`playnice check` status words** (`worked`, `needs_fix`, `skipped`)
-  are not the shared status words (floor rule 8).
-- **Duplicate helpers** between playnice and contractctl (YAML parsing,
-  floor/receipt reading, remote URL) have started to drift.
+- **Release tags:** tag `v2.0.0` at the #38 merge, then cut 2.1.0 (part of
+  the 2.1.0 milestone). Ask Rylee before any tag is pushed.
+- **Plan questions** in docs/decisions/2026-10-26-play-nice-neat.md: GitHub
+  Pages, how a uv/pipx install finds the contracts, when to cut 3.0.0,
+  milestone issues.
+- **Small follow-ups seen in review, not yet asked:** `human`/`service` role
+  sets could include the four everyone basics; `playnice work` still prints
+  its own status words; `playnice check` reads only `.contracts/adoption.yaml`
+  (not `.project/contracts/`); `index --write` could also repair Title and
+  Purpose cells.
