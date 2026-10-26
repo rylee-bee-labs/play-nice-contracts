@@ -1,11 +1,11 @@
 ---
 contract_id: versions-and-discovery
 title: Versions and Discovery
-version: 2.0.0
+version: 2.0.1
 status: canonical
 layer: integration
 applies: [apis, schemas, integrations, tools]
-triggers: [api version, schema change, breaking change, deprecation, compatibility, capability discovery, api change, version mismatch]
+triggers: [api version, schema change, breaking change, deprecation, compatibility, capability discovery, api change, version mismatch, deprecate]
 rationale: Systems stop misreading each other when versions are declared and checked, and stop guessing when they can ask what a system supports.
 ---
 

@@ -1,11 +1,11 @@
 ---
 contract_id: handoff-and-continuity
 title: Handoff and Continuity
-version: 2.1.0
+version: 2.1.1
 status: canonical
 layer: work
 applies: [agents, humans, docs, workflows]
-triggers: [handoff, session end, wrap up, resume, context switch, documentation, docs, status file, current state, archive, readme]
+triggers: [handoff, session end, wrap up, resume, context switch, documentation, docs, status file, current state, archive, readme, hand off]
 rationale: The expensive part of resuming work is re-deriving what the last session knew, and a handoff plus current docs make that a lookup instead.
 ---
 
