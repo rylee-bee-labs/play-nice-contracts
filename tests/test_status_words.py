@@ -50,6 +50,23 @@ def test_status_lists_match_schema():
     assert not errors, "\n".join(errors)
 
 
+def test_playnice_maps_its_states_into_the_schema():
+    """`playnice check` results and the words `playnice status` leads with
+    are all shared words, and every freshness state has one."""
+    import sys
+    sys.path.insert(0, str(REPO / "tools" / "playnice"))
+    try:
+        import playnice as pn
+    finally:
+        sys.path.pop(0)
+    words = set(schema_words())
+    assert set(pn.CHECK_STATES) <= words
+    for table in (pn.FRESHNESS_SHARED, pn.REPO_SHARED, pn.CARRYOVER_SHARED):
+        assert set(table.values()) <= words, table
+    cc = pn.import_contractctl(REPO)
+    assert set(pn.FRESHNESS_SHARED) == set(cc.FRESHNESS_STATES)
+
+
 def test_check_names_file_and_word():
     words = schema_words()
     base = (REPO / COPIES[2]).read_text()

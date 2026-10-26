@@ -61,14 +61,14 @@ def test_version_lines_label_every_number(tmp_path):
 # ------------------------------------------------------------ defaults
 
 
-def test_manifest_discovery_is_the_same_in_both_tools():
-    import inspect
-
-    src = inspect.getsource(pn.find_adoption_manifest)
-    for rel in ct.MANIFEST_CANDIDATES:
-        assert f'"{rel}"' in src, rel
-    order = [src.index(f'"{rel}"') for rel in ct.MANIFEST_CANDIDATES]
-    assert order == sorted(order)
+def test_manifest_discovery_is_the_same_in_both_tools(tmp_path):
+    assert pn.find_adoption_manifest(tmp_path) is None
+    # add the candidates from last to first: the earliest one present wins
+    for rel in reversed(ct.MANIFEST_CANDIDATES):
+        (tmp_path / rel).parent.mkdir(parents=True, exist_ok=True)
+        (tmp_path / rel).write_text("schema: play-nice/adoption-v1\n")
+        assert pn.find_adoption_manifest(tmp_path) == tmp_path / rel
+        assert ct.discover_manifest(tmp_path) == tmp_path / rel
 
 
 def test_commands_find_a_project_manifest_without_flags(tmp_path):
@@ -109,13 +109,15 @@ def test_status_separates_checks_adoption_and_readiness(tmp_path):
     assert r.returncode == 0, r.stderr
     out = r.stdout
     assert re.search(r"(?m)^CHECKS: plays nice", out)  # agrees with playnice check
-    assert re.search(r"(?m)^ADOPTION: not configured", out)
+    assert re.search(r"(?m)^ADOPTION: not_configured — no adoption manifest", out)
     assert re.search(r"(?m)^WORK READINESS: blocked — playnice work needs an adoption manifest", out)
     assert "PLAY NICE: UNKNOWN" not in out  # no bare UNKNOWN beside a pass
     j = json.loads(run(PLAYNICE, ["status", "--repo", str(repo), "--no-github", "--json"],
                        tmp_path).stdout)
     assert j["checks"]["state"].startswith("plays nice")
     assert j["readiness"]["state"] == "blocked"
+    assert j["adoption"] == "not_configured"
+    assert j["legacy_adoption"] == "UNKNOWN"  # the replaced word, for one release
     assert j["play_nice"]["status"] == "UNKNOWN"  # machine field kept for callers
 
 
@@ -132,8 +134,9 @@ def test_work_readiness_rules():
                "manifest_policy": "require-current", "remote_revision": "a" * 40}
     assert pn.work_readiness(Path("m"), blocked)["state"] == "blocked"
     auto = {**blocked, "manifest_update": "automatic"}
-    assert pn.work_readiness(Path("m"), auto)["state"] == "ready"
-    assert pn.work_readiness(Path("m"), {"enforced": False, "status": "UNKNOWN"})["state"] == "ready"
+    assert pn.work_readiness(Path("m"), auto)["state"] == "healthy"
+    assert pn.work_readiness(Path("m"), auto)["legacy_state"] == "ready"
+    assert pn.work_readiness(Path("m"), {"enforced": False, "status": "UNKNOWN"})["state"] == "healthy"
     assert pn.work_readiness(None, {})["next"] == "contractctl init-adoption"
 
 
@@ -186,6 +189,26 @@ def test_badge_links_to_check_runs_only_when_a_workflow_is_written(tmp_path):
     assert run(PLAYNICE, ["start", str(no_ci)], tmp_path).returncode == 0
     assert "someone/thing/actions/workflows/playnice.yml" in (with_ci / "README.md").read_text()
     assert "actions/workflows" not in (no_ci / "README.md").read_text()
+
+
+def test_start_no_workflow_skips_the_workflow_and_links_the_library(tmp_path):
+    """For a repo with its own CI (the library itself): no workflow file, so
+    the badge links where it does when there is no workflow to run."""
+    repo = git_repo(tmp_path / "ownci")
+    (repo / ".github").mkdir()
+    subprocess.run(["git", "-C", str(repo), "remote", "add", "origin",
+                    "https://github.com/someone/thing.git"], check=True)
+    plan = run(PLAYNICE, ["start", str(repo), "--no-workflow", "--dry-run"], tmp_path)
+    assert "--no-workflow — no workflow written" in plan.stdout
+    r = run(PLAYNICE, ["start", str(repo), "--no-workflow"], tmp_path)
+    assert r.returncode == 0, r.stderr
+    assert not (repo / ".github" / "workflows" / "playnice.yml").exists()
+    assert "--no-workflow — skipped the workflow" in r.stdout
+    assert "next: playnice check" in r.stdout
+    readme = (repo / "README.md").read_text()
+    assert f"(playnice-badge.svg)]({pn.LIBRARY_URL})" in readme
+    assert "actions/workflows" not in readme
+    assert (repo / "AGENTS.md").is_file() and (repo / "playnice-badge.svg").is_file()
 
 
 def test_wrapper_works_through_a_symlink(tmp_path):
