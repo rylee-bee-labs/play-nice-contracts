@@ -64,6 +64,33 @@ def test_plain_requests_find_their_contracts(task, present):
     assert present <= picked(task), present - picked(task)
 
 
+# Realistic tasks and the contracts any reviewer would agree apply. Found
+# 2026-10-26: "website", "docs", "password", "webhook", "hand off" and
+# "deprecate" each missed a contract here before their triggers were added.
+@pytest.mark.parametrize(
+    "task, present",
+    [
+        ("build a website", {"friendly-site", "web-ui", "accessibility", "plain-language"}),
+        ("write docs for the API", {"plain-language", "api"}),
+        ("write docs for a dashboard", {"plain-language"}),
+        ("rotate an API key", {"secrets-and-data"}),
+        ("add a settings page", {"web-ui", "accessibility"}),
+        ("fix a flaky test", {"testing-and-evidence"}),
+        ("add a CLI flag", {"cli"}),
+        ("store user passwords", {"secrets-and-data", "identity-and-roles"}),
+        ("add a webhook", {"events-and-caching", "calling-other-services"}),
+        ("show status on the dashboard", {"status-and-state"}),
+        ("animate the loading spinner", {"sensory-safety"}),
+        ("hand off to the next agent", {"handoff-and-continuity"}),
+        ("publish the repo publicly", {"public-and-private"}),
+        ("add a login form", {"identity-and-roles", "web-ui", "accessibility"}),
+        ("deprecate the v1 endpoint", {"api", "versions-and-discovery"}),
+    ],
+)
+def test_realistic_tasks_select_their_contracts(task, present):
+    assert present <= picked(task), present - picked(task)
+
+
 def test_multi_word_triggers_need_their_words_in_order():
     assert "accessibility" in picked("check it works with a screen reader")
     assert "accessibility" not in picked("update the feed reader")  # "reader" alone
