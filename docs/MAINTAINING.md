@@ -1,269 +1,270 @@
 # Maintaining the Play-Nice library
 
-> **Status:** Current · for people changing this library, not for people using it.
-> Using Play-Nice in your project? Start at [the floor](../contracts/everyone/FLOOR.md).
+> **Status:** Current · for people and agents changing this library, not for
+> people using it. Using Play-Nice in your project? Start at
+> [the floor](../contracts/everyone/FLOOR.md).
 
-The legacy `contractctl` attest/commit gate below still works for projects
-that pinned it; v2 replaces it with the one-line proof in
-[contract-proof](../contracts/work/CONTRACT_PROOF.md).
+## Start here
 
-## The contract gate (session prefix)
+1. **Start with the proof line.** Run `playnice rules "<task>"` to list the
+   contracts that apply, read them and the floor, then write
+   `Play-Nice floor <version> · receipt <word> · read <ids>` at the top of
+   your handoff and check it with `playnice verify "<line>"`
+   ([contract-proof](../contracts/work/CONTRACT_PROOF.md)). The old
+   attest/commit gate is retired for new work; see [Legacy](#legacy-the-attestcommit-gate).
+2. **Branch, pull request, Rylee approves.** Never push to `main`.
+3. **Done means `./tools/check.sh` prints `CHECK: PASS`.** It runs what CI
+   runs. In a fresh container, first: `pip install pytest pytest-xdist pyyaml`.
+4. **Changing a contract?** Follow the recipe below.
 
-Substantial work starts with the complete preflight:
+### Changing a contract
 
-```text
-REMOTE FRESHNESS (require-current only)
-        (contractctl freshness — verify the authoritative remote revision)
-                ↓
-RESOLVE APPLICABLE CONTRACTS → READ CANONICAL SOURCES →
-VERIFY VERSION + HASH + RECEIPT → TASK-IMPACT ACKNOWLEDGEMENT →
-CHECK FOR CONFLICTS → CONTRACT ATTESTATION →
-OPERATIONAL COMMITMENT → CONTRACT COMMITMENT: ACTIVE →
-MUTATING WORK MAY BEGIN
-```
+Edit the text first, then let `contractctl bump` do the bookkeeping.
 
-The three stages mean: receipt = "I obtained the lesson"; attestation = "I know this lesson applies here"; commitment = "I will use this lesson while I work." For substantial mutating work, BOTH `CONTRACT GATE: PASS` and `CONTRACT COMMITMENT: ACTIVE` are required before implementation. The commitment is an operating state, not ceremony: tooling uses it as an execution gate, stale bundles invalidate it, scope changes force re-resolution, and workers inherit the parent's bundle (they may strengthen, never weaken, the applicable constraints). Full prefix: `examples/session-handoff.md`. Neither gate nor commitment is ever authorization — authority comes from the task and the Authorization contract.
+| Change | Steps |
+|---|---|
+| **A. Wording fix**: PATCH, same meaning | edit → `contractctl bump <id> --patch` → `./tools/check.sh` |
+| **B. New or changed rule**: MINOR; MAJOR if it breaks existing users | edit → `contractctl bump <id> --minor --note "what changed"` (or `--major`) → `./tools/check.sh` |
+| **C. New contract** | see below |
+| **D. Floor change** | see below |
 
-## Remote freshness (require-current)
+`contractctl bump <id> --patch|--minor|--major [--note "what changed"]`
+sets the new version in the contract's front matter. For `--minor` and
+`--major` it also picks a new receipt word the library has never used, and
+requires `--note`, which it adds as a bullet under `## [Unreleased]` in
+`CHANGELOG.md` (for `--patch` the note is optional). It then refreshes the
+version column in `CONTRACT_INDEX.md` and regenerates `contracts.lock.json`.
 
-A project can opt into **current contracts** in its adoption manifest:
+**C. New contract.** Copy an existing contract in the same pack as a
+template and save it as `contracts/<pack>/<ID_UPPER>.md`.
 
-```yaml
-schema: play-nice/adoption-v1
-source:
-  repository: rylee-bee-labs/play-nice-contracts
-  revision: <reviewed SHA>
-freshness:
-  policy: require-current   # pinned (legacy default) | require-current
-  ref: main                 # authoritative branch
-  update: review            # review (block, ask for review) | automatic (refresh pin, still re-commit)
-```
+- Front matter: `contract_id`, `title`, `version: 1.0.0`,
+  `status: canonical`, `layer` (the pack folder name), `applies`,
+  `triggers`, `rationale`.
+- One receipt line: `<!-- contract-receipt: word-word-word -->` (three
+  lowercase words, not used by any other contract).
+- Sections: In short · Applies when · Rules · Examples · Why · You're done
+  when · Machine notes.
+- Add its row by hand to its pack's table in `CONTRACT_INDEX.md`, with the
+  rationale as the Purpose.
+- `contractctl lock`, commit, `./tools/check.sh`.
 
-Under `require-current`, `contractctl` deterministically checks the authoritative remote (`git ls-remote`) BEFORE the resolve/read/attest stages:
+**D. Floor change.** Edit `contracts/everyone/FLOOR.md` →
+`contractctl bump floor --minor --note "what changed"` → `playnice start .`
+(rewrites this repo's AGENTS.md block and badge; if it creates
+`.github/workflows/playnice.yml`, delete it, the library has its own CI) →
+`./tools/check.sh` (`tests/test_doc_facts.py` names every proof-line
+example and version still on the old floor; the example in
+`contracts/work/CONTRACT_PROOF.md` is contract text, so it needs its own
+`bump contract-proof --patch`). Every
+floor version change makes all adopters' proof lines and badges read
+"behind". That is by design: it is how they learn to re-read.
 
-```text
-REMOTE FRESHNESS → RESOLVE → READ → VERIFY → ATTEST → COMMIT → MUTATE
-```
+**Removing or renaming a contract:** add the old id to `aliases.json` and to
+the "Old names" table in `CONTRACT_INDEX.md`, so old proof lines and links
+keep working.
 
-- a local checkout, the adoption pin, a previous session, or "I checked GitHub" is **not** proof of remote freshness — the remote is actually queried;
-- `UNKNOWN`/`UNREACHABLE` → `CONTRACT COMMITMENT: INACTIVE` (fail closed); `BEHIND`/`DIVERGED` → `STALE`, requiring fetch/update → resolve → read → attest → commit again;
-- a changed authoritative revision invalidates existing commitments (re-resolve, re-attest, re-commit);
-- `contractctl sync` refreshes the pin per the update policy — **checking for the newest revision is not the same as silently adopting it**; `update: review` blocks mutation pending explicit review, and even `automatic` still forces a fresh resolve/read/attest/commit cycle;
-- **equivalence rule** (`update: automatic` only): when both the adopted pin and the local checkout are provable ancestors of the remote and `contracts/` + `schema/` are byte-identical across all three, freshness reads CURRENT despite post-merge docs/tooling commits ahead of the pin. Any difference in the normative surfaces, or unverifiable history, stays BEHIND — fail closed. This ends the post-merge pin treadmill without weakening review; commitment artifacts record `freshness.equivalence` so equivalence-CURRENT is distinguishable from exact-match CURRENT. `contractctl diff --from <pin> --to <rev>` answers "what actually changed between my pin and current?" including receipt rotations and always-set impact.
+**How changes are checked.** `contractctl validate --base <rev>` compares
+contracts with a base revision: by default the merge-base of `HEAD` and
+`origin/main` (or `HEAD` when there is no `origin/main`); CI passes the pull
+request's base commit. `PLAY_NICE_BASE` does the same as `--base`. It
+fails when a contract's content changed without a version bump, when a
+MINOR or MAJOR bump kept its receipt word, or when a MINOR or MAJOR bump has
+no new `[Unreleased]` changelog bullet naming the contract. Errors from
+`validate`, `lock` and `index` end with a `next:` line naming the command
+that fixes them.
 
-## The playnice orchestrator (`playnice work`)
+## Generated files
 
-`playnice` is the global agent-work entry point: take a task, fetch/refresh remote Play Nice contracts, reconcile carryover, pass the contract gate, issue a work permit, launch the agent, then verify and write a durable handoff — one command, no prompts required:
+Never edit these by hand; run the command instead.
 
-```bash
-python3 tools/playnice/playnice.py work --repo ~/code/your-repo "implement the feature"
-playnice status --repo ~/code/your-repo       # what state is this repo in?
-playnice reconcile --repo ~/code/your-repo    # clean up merged work, refresh pins
-```
+| File | Written by |
+|---|---|
+| `contracts.lock.json` | `contractctl lock` (also `bump`) |
+| `CONTRACT_INDEX.md` version and status columns | `contractctl index --write` (also `bump`); the rows themselves are hand-written |
+| AGENTS.md, between `<!-- play-nice:start -->` and `<!-- play-nice:end -->` | `playnice start .` |
+| `playnice-badge.svg` | `playnice check . --badge playnice-badge.svg` |
+| `docsgen` blocks in README, CHANGELOG, ROADMAP, RELEASE_NOTES | `lab docs gen` (outside this repo) |
 
-- **Fail closed on UNKNOWN.** No adoption manifest, no freshness evidence, no permit → no work, no mutation. Freshness and carryover use the exact vocabularies `CURRENT/BEHIND/DIVERGED/UNREACHABLE/UNKNOWN` and `DONE/MERGED/CLOSED/STILL_ACTIVE/DEFERRED/WAITING_FOR_HELP/UNKNOWN/BLOCKED`.
-- **Two-layer commitment.** The orchestrator computes a deterministic task-impact permit floor; the executing agent does its own worker attestation via `contractctl` and inherits the parent's constraints (worker packet: `INHERITED_CONTRACT_BUNDLE`, `PLAY_NICE_SOURCE_REVISION`, `PARENT_CONTRACT_COMMITMENT`).
-- **Automation is explicit opt-in.** Automation runs only with both a global config grant (`~/.config/play-nice/global.yaml`, or `PLAY_NICE_CONFIG`/`--config`) and an ACTIVE permit; `reconcile` revalidates liveness with `contractctl session-status` before any mutation.
-- **Deterministic, no live network.** Tests run against local bare remotes and a fake `gh` (`PLAY_NICE_GH`); nothing in the pipeline requires the network.
-- Exit codes: `0` ok · `1` usage/internal · `2` fail-closed · `3` agent failed · `4` needs help (human attention, safely deferred).
+Hand-written changelog entries go under the hand-written `## [Unreleased]`
+heading, below the generated block, never under the generated
+`## Unreleased`.
 
-Full reference: [`docs/PLAYNICE.md`](PLAYNICE.md) · config schema: [`schema/global-playnice.schema.json`](../schema/global-playnice.schema.json) · examples: [`examples/global-playnice.yaml`](../examples/global-playnice.yaml).
+## Outside this repo
 
-## Versioning
+These live in Rylee's wider workspace and are not installed in cloud
+sessions.
 
-Per-contract semver: PATCH = clarification, MINOR = compatible new rule, MAJOR = incompatible change. Library semver (VERSION) is distinct from the adopted Git revision: the version describes contract content, the revision pins the exact adopted commit. `contracts.lock.json` pins id, version, path, SHA-256, receipt, and status; lock drift is detected deterministically and attestations fail closed on it. A commitment's bundle identity represents the **resolved contract set** for its task — different scopes, different bundles — and stale bundles invalidate commitments. Bundle receipts (e.g. `cedar-lantern-47`) are identifiers, never credentials or authorization.
+- **`lab docs gen`** writes the `docsgen` blocks from merged PRs, releases
+  and issues.
+- **`lab enter`** and **`now-block --print .`** print live state (last
+  commit, CI on main, open PRs) at session start; `.project/CURRENT.md`
+  points to them.
+- **ci-harness**: `.github/workflows/secret-scan.yml` calls the estate's
+  reusable secret scan (gitleaks) from `rylee-bee-labs/ci-harness`, pinned
+  to a commit SHA. Dependabot proposes updates to the pin.
+- **pin-sync** (`tools/pin-sync/`): a script plus a systemd user timer for
+  Rylee's machine. When `main` moves, it opens a pin-update PR in each
+  adopting repo. See [its README](../tools/pin-sync/README.md).
 
-## Tests
+## Rules for agents working here
 
-```bash
-python3 -m pytest tests/ -q -n auto   # what CI runs, after pip install pytest pytest-xdist pyyaml
-```
+**What this repo is:** the canonical contract library: the normative text
+(`contracts/`), its JSON Schemas (`schema/`), and the stdlib-only tools
+that check and lock them (`tools/contractctl`, `tools/playnice`). Other
+repos pin revisions of it, so changes here ripple outward. Reference
+contract text from other repos; never copy it. It is not its own
+governance body: contract changes are proposals that Rylee reviews.
 
-`-n auto` (pytest-xdist) runs the suite on every core, about 3x faster.
-It is optional: drop it and the same tests run one at a time.
+- **Standard library only.** Tools import nothing beyond Python 3.10+'s
+  standard library (CI tests 3.10 to 3.12). `pyproject.toml` only declares
+  test extras. Adding a runtime dependency is a decision for Rylee.
+- **Contract text is the product.** State your intent and show the diff
+  before rewriting normative language, and follow [the recipe](#changing-a-contract).
+- **Changelog.** Every landed change gets a bullet under `## [Unreleased]`
+  in `CHANGELOG.md`, docs and licensing changes too. Bump `VERSION` only for
+  a library release.
+- **This repo is public.** No real tokens, hostnames, private IPs, family
+  details or personal medical history, anywhere. `contractctl scan` and the
+  secret-scan workflow check for them. Keep `profiles/examples/` shaped as
+  preferences, not personal records.
+- **Commit emails are checked.** Only `*+*@users.noreply.github.com` or
+  `*@*.invalid` author and committer emails may enter history; the CI
+  identity guard fails on anything else. GitHub's own merge commits
+  (committer `noreply@github.com`) are exempt.
+- **Merging.** Merge only after Rylee's explicit approval in the task. Her
+  token cannot approve its own PR, so an admin merge *with that approval*
+  is the sanctioned path; say so in the PR. Never use admin bypass she did
+  not grant for that change, and never to push `main` directly.
+- **Evidence over memory.** Check counts, versions, receipts and history
+  against this checkout and live CI. Prefer writing no count over one that
+  can rot.
+- **Project Worlds** characters and world content have a different license
+  and home and must never appear here. No scanner checks for this.
 
-One-command local equivalent without polluting the system Python:
+## Licensing map
 
-```bash
-uv run --python 3.12 --with pytest,pyyaml,pytest-xdist python3 -m pytest tests/ -q -n auto
-```
-
-The full suite covers: library invariants, resolution, attestation/commitment machinery, receipt-rotation enforcement, ask-for-help + question schema, the project-context/participant-pack framework, participation-and-contribution (right-sized participation, honest refusal), mutual-contribution (the agreement loop, authority separation), and collaborative-good-faith (critique toward repair, safe uncertainty, foreman disagreement integration, no moderation machinery).
-
-## Privacy / repository state
-
-This repository is **public**. It is published sanitize-first: no credentials, private endpoints, personal topology, or private medical history — enforced by a canary test that runs locally and in CI. Sensory-safe/low-vision/attention requirements stand as engineering requirements with no personal context attached; the profile under `profiles/examples/` is a presentation-preferences example, not a personal record. Keep the repo publishable by construction, not by later scrub.
-
-## CI / branch protection
-
-CI (`.github/workflows/ci.yml`) runs on every push and PR. The `library` job runs once per Python version (3.10–3.12): commit identity guard, workflow-YAML self-validation, `contractctl validate`, byte-identical lock determinism, the full test suite, and the secret/private-material scan. A separate gate job, also named **`library`**, passes only when every matrix run passed; that single name is what branch protection requires.
-
-`main` branch protection is **configured** (verified live):
-
-- require pull request before merging; ≥1 approving review; stale reviews dismissed
-- require status check **`library`** (the actual job name) and branches up to date
-- force pushes disallowed; deletions disallowed
-
-Admin reality: the owner's token bypasses protection (GitHub also
-forbids self-approval on a single-maintainer repo), so one approved
-agent-side admin *merge* is the sanctioned close when the owner has
-explicitly approved merging in-task — as happened for PR #17. Bypass
-is never used silently, and never for a direct push.
-
-Contract text changes: lockfile regeneration ships in the same commit (`contractctl lock`) — CI's determinism check fails otherwise. Meaningful contract changes (MINOR/MAJOR) must rotate the hidden receipt — `contractctl validate` enforces this from Git history.
-
-## Rules for agents changing this library
-
-(Moved from the root AGENTS.md, which is now a short signpost.)
-
-
-> **Using Play-Nice in your own project? This file is not for you.** Read
-> [the floor](../contracts/everyone/FLOOR.md) and the pack for what you're
-> building ([index](../CONTRACT_INDEX.md)). This file is for agents and people
-> who edit this library itself.
-
-**What this repo is:** the canonical Play-Nice contract library — the
-normative contract text (`contracts/`), its JSON Schemas (`schema/`),
-and the stdlib-only reference tooling that resolves, validates, locks,
-attests, and commits them (`tools/contractctl`, `tools/playnice`).
-Consumer repos pin revisions of this library in adoption manifests, so
-changes here ripple outward. This repo is the source of truth; never
-copy contract text into other repos, reference it instead.
-
-**What this repo is not:** a service, a framework, or the home of any
-consumer project's local rules. It is not its own governance body —
-contract changes are proposals reviewed by Rylee, not self-appointed.
-Project Worlds characters and world content have a different license
-and a different home: they must never appear in this public repository.
-(Prose rule — no scanner checks for it; machines can't yet recognize a
-character. Don't be the one who proves it wrong.)
-
-## Licensing map (test-enforced: `tests/test_license_map.py`)
-
-- contracts + docs text: **CC BY-SA 4.0** (attribution required;
-  derivatives of the text stay open; your code unaffected)
-- tooling, schemas, lockfile, tests: **MIT**
-- name and identity: `TRADEMARKS.md` (descriptive; 🐝 acknowledgement
-  is optional credit, never endorsement)
-
-## How to run `contractctl`
-
-`contractctl` is **a file, not an installed command**. Everywhere in
-this repo's docs, `contractctl` means either the executable shim or the
-Python file directly (identical behavior — the shim execs the file):
-
-```bash
-./tools/contractctl/contractctl             # from a library checkout
-python3 "$PLAY_NICE_LIBRARY/tools/contractctl/contractctl.py"  # as a consumer
-```
-
-Consumers typically `alias` it once. There is no installer by design
-(stdlib-only). The same applies to `./tools/playnice/playnice`.
-One-command local verify (mirrors CI): `./tools/check.sh`.
+Contract text and docs: **CC BY-SA 4.0**. Tools, schemas, lockfile and
+tests: **MIT**. Name and identity: `TRADEMARKS.md` (the bee acknowledgement
+is optional credit, never endorsement). `tests/test_license_map.py` checks it.
 
 ## What governs what
 
-| Surface | Nature | Change kind |
+| Path | What it is | Change kind |
 |---|---|---|
-| `contracts/` | the normative text — this library's product | governance change |
+| `contracts/` | the normative text, this library's product | recipe above |
 | `schema/` | machine shapes for contracts and manifests | governance change |
-| `contracts.lock.json` | generated; never hand-edited | regenerate via `lock` |
-| `CONTRACT_INDEX.md` | registry: routes, does not govern | maintain with contracts |
-| `tools/contractctl/`, `tools/playnice/` | reference CLI + orchestrator (`docs/PLAYNICE.md`) | code change |
-| `tests/` | hermetic suite (CI job name is `library`) | must accompany changes |
-| `docs/` | non-normative: maintainer guides, quick reference, decisions | prose; never above `contracts/` |
-| `docs/background/` | non-normative: the Opus, principles, roles, research, participant notes; old paths keep one-line pointers | prose; never above `contracts/` |
-| `harness/` | **EXPERIMENTAL** research — candidate laws are hypotheses with evidence, NOT rules | evidence changes only |
-| `profiles/`, `examples/` | preference layer + real adoption manifests | keep schema-valid |
-| `VERSION`, `CHANGELOG.md` | library semver, distinct from git revision pins | bump per release rules |
-| `LICENSE`, `contracts/LICENSE.md`, `docs/LICENSE.md`, `SECURITY.md`, `TRADEMARKS.md`, `CONTRIBUTING.md`, `.github/CODEOWNERS` | licensing, threat model, identity, review intent | Rylee-review required |
+| `CONTRACT_INDEX.md`, `aliases.json` | routing and old names; does not govern | with contracts |
+| `tools/` | `contractctl`, `playnice` ([PLAYNICE.md](PLAYNICE.md)), `pin-sync` | code; tests accompany it |
+| `tests/` | hermetic suite | with every change |
+| `docs/` | non-normative guides and decision records | prose; never above `contracts/` |
+| `docs/background/` | the Opus, principles, roles, research; old paths keep one-line pointers | prose; never above `contracts/` |
+| `harness/` | **experimental** research: hypotheses with evidence, not rules | evidence only |
+| `profiles/`, `examples/` | preference layer and real adoption manifests | keep schema-valid |
+| `LICENSE`, `contracts/LICENSE.md`, `docs/LICENSE.md`, `SECURITY.md`, `TRADEMARKS.md`, `CONTRIBUTING.md`, `.github/CODEOWNERS` | licensing, threat model, identity, review | Rylee reviews |
 
-## The contract gate is dogfooded here
+## Running the tools and tests
 
-This repo adopts its own library via `.contracts/adoption.yaml`, marked
-`source.self: true`. A commit cannot pin its own SHA, so a pin that had
-to equal HEAD would be stale again after every merge. Self-adoption is
-checked by ancestry instead:
-
-- `playnice check .` passes when the pin is a commit in this checkout's
-  history. It fails when the pin is not a commit here (for example a
-  branch commit that a squash merge threw away) or is off this history.
-- `contractctl freshness` reads CURRENT when the pin is in the history of
-  remote `main` and this checkout contains remote `main` (main itself, or
-  a branch that has merged it). BEHIND means pull; DIVERGED means merge
-  main, or re-pin to a commit on main.
-- `source.self` is only honored in the library's own manifest. External
-  adopters keep the strict pin check.
-
-The pin never needs bumping after a merge. Re-pin only to a commit that
-is already on `main`. CI and `./tools/check.sh` run `playnice check .`,
-and a test keeps the committed `playnice-badge.svg` equal to its result,
-so the README badge always says what the check says.
-
-Before substantial mutating work here, run the consumer gate:
+`contractctl` and `playnice` are files, not installed commands. Run
+`./tools/contractctl/contractctl` (or `python3 tools/contractctl/contractctl.py`);
+the same goes for `./tools/playnice/playnice`. There is no installer by
+design.
 
 ```bash
-contractctl freshness   # CURRENT expected; then:
-contractctl resolve --manifest .contracts/adoption.yaml --task "<your task>"
-# read each resolved contract's canonical file, then:
+./tools/check.sh                      # everything CI runs
+python3 -m pytest tests/ -q -n auto   # tests only; -n auto (pytest-xdist) is optional
+# the same, without touching the system Python:
+uv run --python 3.12 --with pytest,pyyaml,pytest-xdist python3 -m pytest tests/ -q -n auto
+```
+
+## Versioning
+
+`VERSION` describes the contract content; a Git revision pins the exact
+commit a project adopted. `contracts.lock.json` records each contract's id,
+version, path, SHA-256, receipt and status; CI regenerates it twice and
+fails if either differs from the committed file. Every version number:
+the README's [version table](../README.md#version-numbers).
+
+## CI and branch protection
+
+`.github/workflows/ci.yml` runs on every push and PR. The `library` job runs
+once per Python version (3.10 to 3.12): commit identity guard, workflow
+YAML check, `contractctl validate`, lock determinism, the full suite,
+`contractctl scan`, and `playnice check .`. A gate job, also named
+**`library`**, passes only when every run passed; branch protection
+requires that name. `.github/workflows/secret-scan.yml` runs gitleaks
+through ci-harness.
+
+`main` protection requires a PR, one approving review (stale reviews
+dismissed), the `library` check and an up-to-date branch, and forbids
+force pushes and deletion. Check it live before relying on it:
+`gh api repos/rylee-bee-labs/play-nice-contracts/branches/main/protection`.
+
+## This repo adopts itself
+
+`.contracts/adoption.yaml` has `source.self: true`. A commit cannot pin its
+own SHA, so the pin is checked by ancestry instead:
+
+- `playnice check .` passes when the pin is a commit in this checkout's
+  history, and fails when it is not (for example a branch commit that a
+  squash merge threw away).
+- `contractctl freshness` reads CURRENT when the pin is in remote `main`'s
+  history and this checkout contains remote `main`. BEHIND means pull;
+  DIVERGED means merge `main`, or re-pin to a commit on `main`.
+- `source.self` is honored only in the library's own manifest; other
+  adopters keep the strict pin check.
+
+The pin never needs bumping after a merge; re-pin only to a commit already
+on `main`. A test keeps the committed `playnice-badge.svg` equal to
+`playnice check .`, so the README badge says what the check says.
+
+## The orchestrator (`playnice work`)
+
+`playnice work` runs a unit of agent work end to end for orchestrators:
+freshness, carryover, the legacy gate (below), a work permit, the agent,
+then verify and handoff. It treats the commands in AGENTS.md's `## Verify`
+section as the definition of done. Exit codes: `0` ok · `1` empty task or
+unexpected internal error · `2` fail closed, or a command-line usage error
+(argparse) · `3` agent failed · `4` needs help. Full reference:
+[PLAYNICE.md](PLAYNICE.md).
+
+## Legacy: the attest/commit gate
+
+Retired for new work by [contract-proof](../contracts/work/CONTRACT_PROOF.md)
+rule 10. It stays documented for projects that pinned it before v2, and
+because `playnice work` still runs it internally. `contractctl resolve` is
+still current: it answers which rules apply to a task.
+
+```text
+REMOTE FRESHNESS → RESOLVE → READ → VERIFY version, hash, receipt →
+IMPACT → ATTEST (CONTRACT GATE: PASS) → COMMIT (CONTRACT COMMITMENT: ACTIVE) → WORK
+```
+
+```bash
+contractctl freshness   # CURRENT expected
+contractctl resolve --manifest .contracts/adoption.yaml --task "<task>"
+# read each resolved contract's file, then:
 contractctl attest --manifest .contracts/adoption.yaml --task "<task>" --impact <id>="<sentence>" ...
 contractctl commit --manifest .contracts/adoption.yaml --task "<task>" --impact <id>="<sentence>" ...
 ```
 
-`CONTRACT GATE: PASS` + `CONTRACT COMMITMENT: ACTIVE` before
-implementation. Commitment artifacts land in `.contracts/sessions/`
-(gitignored) — never commit them.
+Commitment files land in `.contracts/sessions/` (gitignored; never commit
+them). Neither the gate nor the commitment is permission; authority comes
+from the task.
 
-## Rules for agents working here
+**Remote freshness.** A manifest can set
+`freshness: {policy: require-current, ref: main, update: review|automatic}`
+(the default policy is `pinned`). `contractctl` then queries the remote with
+`git ls-remote` before resolving; a local checkout or "I checked GitHub" is
+not evidence.
 
-- **Standard library only.** Tooling imports nothing beyond Python's
-  stdlib (3.10+; CI tests 3.10–3.12). `pyproject.toml` exists solely
-  to declare test-only extras (`pip install ".[dev]"` → pytest, pyyaml);
-  there is no build-system table and nothing is pip-installed as runtime.
-  Adding a runtime dependency remains an explicit decision, not a
-  convenience.
-- **Contract text changes are governance changes.** State intent and
-  show the diff before rewriting normative language. Per-contract
-  semver: PATCH = clarification, MINOR = compatible new rule,
-  MAJOR = incompatible. MINOR/MAJOR must rotate the contract's hidden
-  receipt — `contractctl validate` enforces this from Git history.
-  Record every landed change in `CHANGELOG.md` (that includes changes
-  that only touch docs or licensing — this repo eats its own
-  continuity dog food); bump `VERSION` only for library-level releases.
-- **Lock determinism.** Editing `contracts/` means regenerating
-  `contracts.lock.json` in the same commit; two regenerations must be
-  byte-identical or CI fails.
-- **This repo is public.** Never place real tokens, hostnames, private
-  IPs, family details, or personal medical history anywhere in it —
-  CI's secret/private-material scan is part of the contract. Keep
-  `profiles/examples/` preference-shaped, not personal records.
-- **Commit identity is scrubbed, machine-enforced.** Only GitHub
-  `*+*@users.noreply.github.com` or `*@*.invalid` author/committer
-  emails may enter history — the CI identity guard fails closed on
-  raw mailboxes, machine hostnames, and tunnel domains. GitHub
-  squash/merge wrappers (committer `noreply@github.com`) are exempt:
-  the account's commit email should also be set to noreply (GitHub →
-  Settings → Emails) so even wrappers stay clean.
-- **Change flow:** work on a branch, open a PR, and ask Rylee. Agents
-  merge only after her explicit in-task approval; when her token
-  cannot approve its own PR, an admin merge *with that approval* is
-  the sanctioned path — say so in the PR. Never direct-push `main`;
-  never use admin bypass she didn't explicitly grant for that change.
-- **Evidence over memory.** Claims about counts, versions, receipts, or
-  history are verified against this checkout and live CI, not recalled.
-  Prefer writing no count over one that can rot.
-
-## Verify (mirrors CI — all must pass before done)
-
-```bash
-./tools/check.sh   # validate + double-regen lock determinism + full suite
-                   # + secret scan + identity guard — one command, mirrors CI
-```
-
-Step-by-step equivalents:
-
-```bash
-python3 tools/contractctl/contractctl.py validate
-python3 tools/contractctl/contractctl.py lock   # then confirm lock diff is expected/empty
-uv run --python 3.12 --with pytest,pyyaml python3 -m pytest tests/ -q
-```
+- `UNKNOWN` or `UNREACHABLE` → commitment INACTIVE (fail closed). `BEHIND`
+  or `DIVERGED` → STALE: update, then resolve, read, attest and commit again.
+- `contractctl sync` refreshes the pin per `update`: `review` blocks until
+  someone reviews; `automatic` refreshes it but still forces a fresh cycle.
+- With `update: automatic`, freshness reads CURRENT when the pin and the
+  checkout are both ancestors of the remote and `contracts/` and `schema/`
+  are byte-identical across all three. Commitments record this as
+  `freshness.equivalence`.
+- `contractctl diff --from <pin> --to <rev>` shows what changed between two
+  revisions, including receipt rotations.

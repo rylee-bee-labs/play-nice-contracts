@@ -1,6 +1,6 @@
 # play-nice-contracts — dev environment declaration.
 #
-# RUNTIME INVARIANT (AGENTS.md): contractctl and playnice import nothing
+# RUNTIME INVARIANT (docs/MAINTAINING.md): contractctl and playnice import nothing
 # beyond the Python standard library (3.10+). This file declares TEST-ONLY
 # dependencies so `pip install -e .[dev]` / editors / CI can resolve the
 # suite without any magic incantation. There is deliberately no build-system

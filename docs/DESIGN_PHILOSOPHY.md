@@ -58,8 +58,9 @@ Machine-readable output (`--json`) carries the same facts as the words.
   - **behind · v1.3 is out**: amber, dark text.
   - **fix needed**: soft red, white text.
 - Every colour pair meets WCAG AA contrast for its text.
-- The badge links to the check that produced it. A copied picture is just
-  a picture; the link is the proof.
+- The badge links to the CI check that produced it when the repo has that
+  workflow, and to the library otherwise. A copied picture is just a
+  picture; the link is the proof.
 
 ## Accessible by default
 

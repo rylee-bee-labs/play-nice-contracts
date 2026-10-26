@@ -1,7 +1,7 @@
 # Adoption manifest — play-nice-contracts consumes its own library.
-# The contract gate is dogfooded here: substantial mutating work in this
-# repo runs freshness -> resolve -> read -> attest -> commit like any
-# consumer. `source.self: true` marks this as the library adopting itself:
+# New work here starts with the proof line (contract-proof), not the
+# legacy attest/commit gate; `playnice check .` and `playnice work` read
+# this manifest. `source.self: true` marks the library adopting itself:
 # a commit cannot pin its own SHA, so the pin only has to be a reviewed
 # commit already in main's history (checked by ancestry), not HEAD. It
 # never needs bumping after a merge. Full rulebook: docs/MAINTAINING.md.
