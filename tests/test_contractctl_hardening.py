@@ -222,7 +222,9 @@ def test_help_groups_come_from_the_one_command_table(ct, tmp_path):
     assert len(names) == len(set(names)), "a command is in two groups"
     # registered commands == the table (argparse lists its choices on error)
     r = run_ct(["no-such-command"], tmp_path)
-    choices = set(re.findall(r"'([a-z-]+)'", r.stderr.split("choose from", 1)[1]))
+    # Newer Pythons print the choices without quotes; accept either form.
+    listed = r.stderr.split("choose from", 1)[1].split(")", 1)[0]
+    choices = {c.strip().strip("'\"") for c in listed.split(",") if c.strip()}
     assert choices == set(names)
     # --help shows each group's title, then its commands, in table order
     out = run_ct(["--help"], tmp_path).stdout
