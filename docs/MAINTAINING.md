@@ -14,7 +14,8 @@
    attest/commit gate is retired for new work; see [Legacy](#legacy-the-attestcommit-gate).
 2. **Branch, pull request, Rylee approves.** Never push to `main`.
 3. **Done means `./tools/check.sh` prints `CHECK: PASS`.** It runs what CI
-   runs. In a fresh container, first: `pip install pytest pytest-xdist pyyaml`.
+   runs. Cloud sessions install the test tools through the SessionStart hook;
+   elsewhere, first: `pip install pytest pytest-xdist pyyaml`.
 4. **Changing a contract?** Follow the recipe below.
 
 ### Changing a contract

@@ -13,8 +13,8 @@ Notes below are hand-written: decisions in flight, why something is paused, what
 ## Verify
 
 - `./tools/check.sh` must print `CHECK: PASS`; it runs what CI runs.
-- In a fresh cloud container, first: `pip install pytest pytest-xdist pyyaml`
-  (no SessionStart hook does this yet; see Open decisions).
+- Cloud sessions get pytest, pytest-xdist and pyyaml from the SessionStart
+  hook (`.claude/hooks/session-start.sh`); elsewhere, `pip install` them.
 
 ## Generated files
 
@@ -31,12 +31,6 @@ delete a line when it is settled.
 - **Tag a release.** There are no git tags, so the generated CHANGELOG
   block and RELEASE_NOTES.md call everything "unreleased 0.1.0" while
   `VERSION` is 2.0.0. Tagging `v2.0.0` (or the next version) fixes both.
-- **Scanner pattern list.** `SCAN_PATTERNS` in contractctl spells out a
-  private domain in this public repo. Option: match a hash of the domain
-  instead of the text. A security-boundary change, so not done unasked.
-- **SessionStart hook** for cloud sessions (installs the test tools so
-  `./tools/check.sh` runs at once). Writing `.claude/settings.json` needs
-  Rylee's go-ahead.
 - **contract-proof wording** (PATCH): rule 5 and the machine notes say the
   badge always links to a check run and that `playnice check` writes the
   badge, and point at docs/PLAYNICE.md for the legacy gate. None of these
