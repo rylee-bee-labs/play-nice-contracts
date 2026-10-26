@@ -1,11 +1,11 @@
 ---
 contract_id: calling-other-services
 title: Calling Other Services
-version: 2.0.0
+version: 2.0.1
 status: canonical
 layer: integration
 applies: [integrations, api clients, agents, automation]
-triggers: [api call, third-party api, integration, external service, sync job, automation, retry, rate limit, write to another system]
+triggers: [api call, third-party api, integration, external service, sync job, automation, retry, rate limit, write to another system, webhook]
 rationale: Calling someone else's system well — learn first, respect limits, write small, verify, stay safe to repeat — is what keeps integrations running.
 ---
 

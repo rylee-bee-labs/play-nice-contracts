@@ -1,7 +1,7 @@
 ---
 contract_id: contract-proof
 title: Contract Proof
-version: 2.0.1
+version: 2.0.2
 status: canonical
 layer: work
 applies: [agents, projects, sites, tools]
@@ -48,9 +48,12 @@ apply to a task (the resolver and the packs say).
    or compliance. It grants nothing: authority for a specific action
    still comes from the task (see the floor, rule 5), and inventing a
    receipt word is a false declaration (see the floor, rule 1).
-5. A project shows its proof as the bee badge, produced by
-   `playnice check` in the project's own CI. The badge links to the
-   check run that drew it; a copied picture is decoration, not proof.
+5. A project that claims current shows its proof as the bee badge,
+   drawn by `playnice check` in the project's own CI, with the README
+   badge linking to that check's runs. A badge with no check behind it,
+   or a copied picture, is decoration, not proof. (`playnice start`
+   links the badge to the check only when it can write the CI workflow;
+   otherwise it links to the library until there is one.)
    (MUST for claiming current)
 6. The badge states its condition in words as well as color: "plays
    nice · vX", "behind · vY is out", "fix needed" (see the floor, rule
@@ -134,5 +137,6 @@ the word does not match the floor page: re-read
 
 `contact` and `expires` follow the security.txt pattern so a stale
 claim ages out on its own. Commands: `playnice verify "<line>"`,
-`playnice check` (repo; writes badge), `playnice check <url>` (site).
-Legacy: `contractctl` gate workflow in `docs/PLAYNICE.md`.
+`playnice check` (repo; writes a badge file only with `--badge <file>`),
+`playnice check <url>` (site). Legacy: the `contractctl` attest/commit
+gate is in `docs/MAINTAINING.md` (section "Legacy").

@@ -1,11 +1,11 @@
 ---
 contract_id: identity-and-roles
 title: Identity and Roles
-version: 2.0.1
+version: 2.0.2
 status: canonical
 layer: access
 applies: [services, apps, apis, agents, automation, infrastructure]
-triggers: [login, log in, sign in, sign up, signup, auth, authenticate, authentication, authorization, oidc, saml, sso, mfa, 2fa, permission, role, access control, session, token, oauth, api key, agent access, admin, user management]
+triggers: [login, log in, sign in, sign up, signup, auth, authenticate, authentication, authorization, oidc, saml, sso, mfa, 2fa, permission, role, access control, session, token, oauth, api key, agent access, admin, user management, password]
 rationale: One contract for who someone is and what they may do — identity proved with current evidence, access decided with named permissions, every grant bounded, dated and revocable.
 ---
 

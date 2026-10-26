@@ -5,4 +5,4 @@ Description=Play-Nice pin robot (follow play-nice-contracts main in adopters)
 Type=oneshot
 # Set these for your machine: the checkout of play-nice-contracts, and gh.
 Environment=PIN_SYNC_GH=%h/.local/bin/gh
-ExecStart=/usr/bin/python3 %h/code/Rylee-Bee/play-nice-contracts/tools/pin-sync/pin_sync.py
+ExecStart=/usr/bin/python3 %h/code/play-nice-contracts/tools/pin-sync/pin_sync.py

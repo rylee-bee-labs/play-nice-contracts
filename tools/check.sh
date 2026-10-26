@@ -28,7 +28,7 @@ echo "==> test suite"
 # pytest-xdist is optional: with it the suite runs on every core (about
 # 3x faster); without it the same tests run one at a time.
 if python3 -c "import pytest, yaml" 2>/dev/null; then
-  if python3 -c "import xdist" 2>/dev/null; then
+  if python3 -c "import importlib.metadata as m; m.version('pytest-xdist')" 2>/dev/null; then
     python3 -m pytest tests/ -q -n auto
   else
     python3 -m pytest tests/ -q
