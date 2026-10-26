@@ -82,12 +82,15 @@ that fixes them.
 ## Generated files
 
 Never edit these by hand; run the command instead.
+`./tools/check-generated.sh` (part of `./tools/check.sh` and CI) checks the
+first four and prints the exact command for any that are stale; it never
+edits a file. A new generated file gets one check there.
 
 | File | Written by |
 |---|---|
 | `contracts.lock.json` | `contractctl lock` (also `bump`) |
 | `CONTRACT_INDEX.md` missing rows, and the version and status columns | `contractctl index --write` (also `bump`, for the columns) |
-| AGENTS.md, between `<!-- play-nice:start -->` and `<!-- play-nice:end -->` | `playnice start .` |
+| AGENTS.md, between `<!-- play-nice:start -->` and `<!-- play-nice:end -->` | `playnice start . --no-workflow` |
 | `playnice-badge.svg` | `playnice check . --badge playnice-badge.svg` |
 | `docsgen` blocks in README, CHANGELOG, ROADMAP, RELEASE_NOTES | `lab docs gen` (outside this repo) |
 
@@ -191,15 +194,35 @@ version, path, SHA-256, receipt and status; CI regenerates it twice and
 fails if either differs from the committed file. Every version number:
 the README's [version table](../README.md#version-numbers).
 
+### Releasing the library
+
+1. On a branch, run `contractctl release X.Y.Z`. It moves the hand-written
+   `## [Unreleased]` entries under `## [X.Y.Z] - <today>`, leaves an empty
+   `## [Unreleased]`, writes `VERSION`, and updates the library version in
+   README.md. It refuses a version that is not newer, or an empty
+   `[Unreleased]`.
+2. `./tools/check.sh`, then open a pull request. Rylee approves.
+3. Merging it runs `.github/workflows/release.yml`: it tags `vX.Y.Z` on the
+   merge commit and publishes `contractctl release-notes X.Y.Z` (that
+   changelog section) as the GitHub release. If the tag exists, it does
+   nothing.
+
+Contract versions and the floor version are separate: `contractctl bump`
+changes those, and a library release just collects what has landed.
+
 ## CI and branch protection
 
 `.github/workflows/ci.yml` runs on every push and PR. The `library` job runs
 once per Python version (3.10 to 3.12): commit identity guard, workflow
-YAML check, `contractctl validate`, lock determinism, the full suite,
-`contractctl scan`, and `playnice check .`. A gate job, also named
+YAML check, `contractctl validate`, `tools/check-generated.sh`, the full
+suite, `contractctl scan`, and `playnice check .`. A gate job, also named
 **`library`**, passes only when every run passed; branch protection
 requires that name. `.github/workflows/secret-scan.yml` runs gitleaks
-through ci-harness.
+through ci-harness. `.github/workflows/release.yml` publishes a release
+when `VERSION` changes on `main` (see Releasing). `.github/workflows/health.yml`
+runs `./tools/check.sh` on `main` every Monday: on failure it opens (or
+comments on) one issue labelled `health-check`, and closes it once the gate
+passes again; when everything passes it says nothing.
 
 `main` protection requires a PR, one approving review (stale reviews
 dismissed), the `library` check and an up-to-date branch, and forbids

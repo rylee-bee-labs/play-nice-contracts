@@ -1,0 +1,74 @@
+name: health
+
+# Weekly health check of main: the full gate (./tools/check.sh: validate,
+# generated files, tests incl. doc links, scan, self-check). Quiet when fine:
+# it opens one issue labelled health-check when the gate fails, comments on
+# that issue if it is still open next time, and closes it once the gate passes.
+
+on:
+  schedule:
+    - cron: "41 6 * * 1" # Mondays 06:41 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+
+      - name: Install test runner
+        run: pip install pytest pytest-xdist pyyaml
+
+      - name: Full gate
+        shell: bash
+        run: ./tools/check.sh 2>&1 | tee "$RUNNER_TEMP/gate.log"
+
+      - name: Open or update the health issue
+        if: failure()
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh label create health-check --color B60205 \
+            --description "The weekly health check failed" --force
+          {
+            echo "The weekly health check of \`main\` failed: $RUN_URL"
+            echo
+            echo "What failed (last 60 lines of \`./tools/check.sh\`):"
+            echo
+            echo '```text'
+            tail -n 60 "$RUNNER_TEMP/gate.log" 2>/dev/null || echo "(no log: the gate did not start)"
+            echo '```'
+            echo
+            echo "Next: run \`./tools/check.sh\` on main; each failing step names its fix."
+          } > "$RUNNER_TEMP/body.md"
+          num="$(gh issue list --state open --label health-check --json number --jq '.[0].number // empty' 2>/dev/null || true)"
+          if [ -n "$num" ]; then
+            gh issue comment "$num" --body-file "$RUNNER_TEMP/body.md"
+          else
+            gh issue create --title "Weekly health check failed" \
+              --label health-check --body-file "$RUNNER_TEMP/body.md"
+          fi
+
+      - name: Close the health issue once healthy
+        if: success()
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          num="$(gh issue list --state open --label health-check --json number --jq '.[0].number // empty' 2>/dev/null || true)"
+          if [ -n "$num" ]; then
+            gh issue close "$num" --comment "Healthy again: $RUN_URL"
+          fi
