@@ -46,8 +46,9 @@ template and save it as `contracts/<pack>/<ID_UPPER>.md`.
   lowercase words, not used by any other contract).
 - Sections: In short · Applies when · Rules · Examples · Why · You're done
   when · Machine notes.
-- Add its row by hand to its pack's table in `CONTRACT_INDEX.md`, with the
-  rationale as the Purpose.
+- `contractctl index --write` adds its row to its pack's table in
+  `CONTRACT_INDEX.md` (title, version, status, and the rationale as the
+  Purpose).
 - `contractctl lock`, commit, `./tools/check.sh`.
 
 **D. Floor change.** Edit `contracts/everyone/FLOOR.md` →
@@ -71,7 +72,10 @@ contracts with a base revision: by default the merge-base of `HEAD` and
 request's base commit. `PLAY_NICE_BASE` does the same as `--base`. It
 fails when a contract's content changed without a version bump, when a
 MINOR or MAJOR bump kept its receipt word, or when a MINOR or MAJOR bump has
-no new `[Unreleased]` changelog bullet naming the contract. Errors from
+no new `[Unreleased]` changelog bullet naming the contract. It also checks
+each contract's pack folder and sections, that its index row matches its
+front matter and sits in its pack's table, and that `aliases.json` matches
+the index's "Old names" table. Errors from
 `validate`, `lock` and `index` end with a `next:` line naming the command
 that fixes them.
 
@@ -82,7 +86,7 @@ Never edit these by hand; run the command instead.
 | File | Written by |
 |---|---|
 | `contracts.lock.json` | `contractctl lock` (also `bump`) |
-| `CONTRACT_INDEX.md` version and status columns | `contractctl index --write` (also `bump`); the rows themselves are hand-written |
+| `CONTRACT_INDEX.md` missing rows, and the version and status columns | `contractctl index --write` (also `bump`, for the columns) |
 | AGENTS.md, between `<!-- play-nice:start -->` and `<!-- play-nice:end -->` | `playnice start .` |
 | `playnice-badge.svg` | `playnice check . --badge playnice-badge.svg` |
 | `docsgen` blocks in README, CHANGELOG, ROADMAP, RELEASE_NOTES | `lab docs gen` (outside this repo) |
@@ -169,7 +173,8 @@ is optional credit, never endorsement). `tests/test_license_map.py` checks it.
 `contractctl` and `playnice` are files, not installed commands. Run
 `./tools/contractctl/contractctl` (or `python3 tools/contractctl/contractctl.py`);
 the same goes for `./tools/playnice/playnice`. There is no installer by
-design.
+design. `contractctl --help` lists its commands in groups: everyday,
+adopters, and the legacy gate.
 
 ```bash
 ./tools/check.sh                      # everything CI runs
