@@ -467,6 +467,7 @@ def test_automatic_update_policy_repins(lib, pn_remote, tmp_path):
     m = re.search(r"<!-- contract-receipt: ([a-z-]+) -->", text)
     assert m and m.group(1) == "kestrel-flint-loom", m  # fixture sanity
     text = text.replace(m.group(0), "<!-- contract-receipt: basalt-quill-ember -->")
+    assert "version: 2.0.0" in text, "fixture: version moved; update the test"
     text = text.replace("version: 2.0.0", "version: 2.1.0")
     t.write_text(text)
     cl = lib / "CHANGELOG.md"
@@ -982,3 +983,18 @@ def test_config_errors_fail_loudly(tmp_path, lib):
     bad.write_text("github:\n  merge_ready_pull_requests: maybe\n", encoding="utf-8")
     with pytest.raises(pn.ConfigError):
         pn.load_global_config(bad)
+
+
+def test_config_values_drop_inline_comments():
+    """`command: codex  # my agent` is the command `codex`, and a commented
+    boolean is still a boolean; a `#` inside quotes or a word is kept."""
+    sys.path.insert(0, str(REPO / "tools" / "playnice"))
+    try:
+        import playnice as pn
+    finally:
+        sys.path.pop(0)
+    assert pn._coerce("codex  # my agent") == "codex"
+    assert pn._coerce("true # yes") is True
+    assert pn._coerce('"a # b"  # note') == "a # b"
+    assert pn._coerce("x#y") == "x#y"
+    assert pn._coerce("[a, b] # list") == ["a", "b"]

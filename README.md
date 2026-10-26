@@ -116,7 +116,8 @@ the library itself. The badge above is that check's result.
 
 ## Where to read more
 
-- [AGENTS.md](AGENTS.md) — the rules for using and changing this library.
+- [AGENTS.md](AGENTS.md) — where to start, for agents using this library.
+- [docs/MAINTAINING.md](docs/MAINTAINING.md) — how to change this library.
 - [The floor](contracts/everyone/FLOOR.md) — 17 rules that apply to everyone,
   every time.
 - [CONTRACT_INDEX.md](CONTRACT_INDEX.md) — the entry point that routes you to

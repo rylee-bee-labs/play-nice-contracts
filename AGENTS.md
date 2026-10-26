@@ -25,11 +25,11 @@ in a pack may go below the floor.
 | [Integration](contracts/integration/) | connecting to other services |
 | [Access](contracts/access/) | identity and roles, secrets and data, public and private |
 
-## Two version numbers, on purpose
+## Version numbers
 
-The **library** is `2.0.0` (`VERSION`); the **floor** has its own version
-(`1.0.0`), and that is the one the proof line names. `playnice --version`
-prints both, with the tool's own version.
+The library, the floor, each contract and the `playnice` tool have their own
+version; the [README table](README.md#version-numbers) lists them. Proof lines
+name the floor's. `playnice --version` prints the tool, library and floor.
 
 ## The proof line
 
@@ -57,23 +57,26 @@ reads its `/.well-known/play-nice.json` (see
 
 ## Changing the library
 
-Contracts change by pull request, reviewed by the owner. See
-[CONTRIBUTING.md](CONTRIBUTING.md) and [maintaining](docs/MAINTAINING.md)
-(tests, CI, versioning, the legacy gate). The full gate is one command:
-`./tools/check.sh`. Old contract names still work — see the old-name table in
-the [index](CONTRACT_INDEX.md) and `aliases.json`.
+Read [docs/MAINTAINING.md](docs/MAINTAINING.md#start-here) first: the proof
+line, the change flow (pull request, Rylee approves) and the recipe for
+changing a contract. Old contract names still work: see the "Old names" table
+in the [index](CONTRACT_INDEX.md) and `aliases.json`.
 
 Character and world content from Project Worlds lives in other repositories
-under their own terms — nothing here licenses it, and it must never be moved
-into this repository.
-
-The license map (code MIT, contract text and docs CC BY-SA 4.0, identity per
-`TRADEMARKS.md`) supersedes a brief same-window "MIT everywhere" experiment and
-simplifies that baseline's MPL tooling layer to MIT; `CHANGELOG.md` records the
-full sequence, including where the README had it wrong.
-
+under their own terms. Nothing here licenses it, and it must never be moved
+into this repository. License map: [maintaining](docs/MAINTAINING.md#licensing-map).
 How the badge and the docs look and sound: [design
 philosophy](docs/DESIGN_PHILOSOPHY.md).
+
+## Verify
+
+Work here is done when this passes (it runs what CI runs):
+
+```bash
+./tools/check.sh
+```
+
+## The floor
 
 <!-- play-nice:start -->
 <!-- written by `playnice start` — refresh with the same command, not by hand -->

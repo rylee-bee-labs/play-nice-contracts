@@ -27,9 +27,9 @@ Use one of these instead:
   Settings → Code security → Private vulnerability reporting form
   on the canonical repository. This is the fastest path when
   the repo is configured for it.
-- **GitHub Security Advisories** — the workflow at
-  `.github/workflows/security.yml` (if present) is the supported
-  intake when private reporting is enabled.
+- **GitHub Security Advisories** — the repository's Security tab
+  (Advisories → Report a vulnerability) when private reporting is
+  enabled.
 
 When you write in:
 
@@ -61,24 +61,26 @@ We will not ask you to rotate anything on your side; that's on us.
 Play Nice Contracts is honest about what it is and isn't:
 
 - **What it is** — a versioned library of contract specifications
-  (markdown), a small Python CLI (`tools/contractctl`) for
-  validating/locking/attesting the library, a test suite, and
-  example adoption manifests.
+  (markdown), two small Python CLIs (`tools/contractctl`,
+  `tools/playnice`), a test suite, and example adoption manifests.
 - **What it isn't** — a hosted service, a multi-tenant system, a
-  database, a network daemon, or anything that reaches out to
-  the internet on its own.
+  database, or a network daemon. Nothing runs in the background.
 
 Implications:
 
-- The library has no network calls. The tooling reads files; it
-  does not phone home.
+- No telemetry. The tools reach the network only when a command
+  needs it: `contractctl freshness`/`sync` and `playnice` run
+  `git ls-remote`, `git fetch` or `git clone` against the library's
+  repository; `playnice check <url>` fetches that site's
+  `/.well-known/play-nice.json`; `playnice work` with GitHub enabled
+  calls `gh`. Everything else reads local files.
 - Contract receipts are deterministic, locally generated, and
   derived from the canonical contracts. There is no upstream
   service to compromise.
-- The library runs as the user who invokes it. It writes to
-  the working directory and to the path passed via flags.
-- The library never writes outside the directory it is invoked
-  in, except where the operator explicitly tells it to.
+- The tools run as the user who invokes them. They write to the
+  repository they are run on, to paths passed via flags, and, for
+  `playnice`, to a clone of the library under `~/.cache/play-nice`
+  (or `PLAY_NICE_CACHE`).
 
 ## Public-private boundary
 
@@ -88,10 +90,11 @@ documentation needed to implement Play Nice. It does not
 contain any private infrastructure, hostnames, credentials, or
 operational state from the author's environment.
 
-A `Secret / private-material scan` job in `.github/workflows/ci.yml`
-catches obvious private-material leakage (RFC1918 IPs, homelab
-hostnames, credential prefixes, private-key headers) in PRs and
-pushes to `main`.
+Two checks run on pull requests and pushes to `main`: the
+`Secret / private-material scan` step in `.github/workflows/ci.yml`
+(`contractctl scan`: RFC1918 IPs, homelab hostnames, credential
+prefixes, private-key headers) and gitleaks in
+`.github/workflows/secret-scan.yml`.
 
 ## What this file does not promise
 

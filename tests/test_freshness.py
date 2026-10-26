@@ -341,6 +341,7 @@ def test_automatic_contract_change_still_behind(tmp_repo, remote, manifest):
     assert _commit(manifest, _TASK).returncode == 0
     # move the remote with a real contract change
     t = tmp_repo / "contracts" / "everyone" / "TRUTH_AND_EVIDENCE.md"
+    assert "version: 2.0.0" in t.read_text(), "fixture: version moved; update the test"
     t.write_text(t.read_text().replace("version: 2.0.0", "version: 2.0.1"))
     assert git0(tmp_repo, "add", "-A").returncode == 0
     assert git0(tmp_repo, "commit", "-qm", "contract patch", "--no-gpg-sign").returncode == 0
@@ -370,6 +371,7 @@ def test_sync_automatic_updates_pin_but_not_commitment(tmp_repo, remote, manifes
     assert _commit(manifest, _TASK).returncode == 0
     # a REAL contract change: sync must repin but the old commitment stays STALE
     t = tmp_repo / "contracts" / "everyone" / "TRUTH_AND_EVIDENCE.md"
+    assert "version: 2.0.0" in t.read_text(), "fixture: version moved; update the test"
     t.write_text(t.read_text().replace("version: 2.0.0", "version: 2.0.1"))
     assert git0(tmp_repo, "add", "-A").returncode == 0
     assert git0(tmp_repo, "commit", "-qm", "contract patch", "--no-gpg-sign").returncode == 0
@@ -537,6 +539,7 @@ def test_upgrade_check_docs_drift_needs_review_only(tmp_repo, remote, manifest):
 
 def test_upgrade_check_flags_always_set_impact(tmp_repo, remote, manifest):
     t = tmp_repo / "contracts" / "everyone" / "TRUTH_AND_EVIDENCE.md"
+    assert "version: 2.0.0" in t.read_text(), "fixture: version moved; update the test"
     t.write_text(t.read_text().replace("version: 2.0.0", "version: 2.1.0"))
     assert git0(tmp_repo, "add", "-A").returncode == 0
     assert git0(tmp_repo, "commit", "-qm", "contract bump", "--no-gpg-sign").returncode == 0

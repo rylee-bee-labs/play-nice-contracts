@@ -138,8 +138,8 @@ repository state; anything it cannot classify is `UNKNOWN` and preserved.
 | Code | Meaning |
 | --- | --- |
 | `0` | OK (including clean `status`/`reconcile` reporting and `NEXT: nothing required`). |
-| `1` | Usage error / internal error. |
-| `2` | Fail closed (missing adoption, UNKNOWN freshness, no permit, gate failure, GitHub unavailable, stale permit). |
+| `1` | Empty task, or an unexpected internal error. |
+| `2` | Fail closed (missing adoption, UNKNOWN freshness, no permit, gate failure, GitHub unavailable, stale permit), or a command-line usage error such as an unknown flag (argparse). |
 | `3` | Agent failed (its work is preserved; no post-work reconcile ran). |
 | `4` | Needs help / safely deferred (`WAITING_FOR_HELP`, `BLOCKED`, review-required). |
 
@@ -197,7 +197,7 @@ be strengthened, never weakened.
 
 - No network at test time: local bare remotes (`tests/fakegh.py` scenario runner via
   `PLAY_NICE_GH` + `PLAY_NICE_FAKE_GH_SCENARIO`, `tests/fakeagent.py` launcher double,
-  `tests/test_playnice.py` ~26 tests).
+  `tests/test_playnice.py`).
 - `work-permit.json` and handoff content are deterministic for a given repo/remote
   state; `--json` output shape is stable.
 - Test hygiene: tests pin `PLAY_NICE_CONFIG` to a nonexistent tmp path so no host
