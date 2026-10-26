@@ -125,21 +125,10 @@ def test_receipts_unique(lib):
 
 
 def test_all_contracts_dual_use_structure(lib):
-    """Each contract uses one complete shape: the v1 dual-use headings, or
-    the v2 shape from docs/DESIGN_PHILOSOPHY.md (migration in progress)."""
-    v1 = [
-        "## Purpose",
-        "## NORMATIVE RULES",
-        "## RATIONALE",
-        "## HUMAN EXAMPLES",
-        "## ANTI-PATTERNS",
-        "## ACCEPTANCE CHECKS",
-    ]
-    v2 = ["## In short", "## Applies when", "## Rules", "## Why", "## You're done when"]
-    for c in lib.load_library():
-        shape = v2 if "## In short" in c["text"] else v1
-        for sec in shape:
-            assert sec in c["text"], f"{c['rel_path']} missing {sec!r}"
+    """Each contract has the v2 body sections from docs/DESIGN_PHILOSOPHY.md.
+    The list is contractctl.REQUIRED_SECTIONS; validate enforces it."""
+    errors = [e for e in lib.validate_library() if "missing body section" in e]
+    assert errors == [], "\n".join(errors)
 
 
 def test_contract_count(lib):

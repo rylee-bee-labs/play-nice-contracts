@@ -58,10 +58,10 @@ APIs, CLIs, web UIs, rooms: plain words, one truth for people and machines, setu
 | `api` | API | 2.0.0 | canonical | The API is the seam every other surface builds on, so it must be versioned, documented, discoverable, and honest about errors. |
 | `cli` | CLI | 2.0.0 | canonical | The command line is a first-class view of the system: usable by a tired human, scriptable by cron, inspectable by agents. |
 | `design-fidelity` | Design Fidelity | 2.0.0 | canonical | The approved design is data in the repo, checked layer by layer, so what ships matches what was decided — with no design tool required. |
+| `library` | Library | 1.2.0 | canonical | Many apps can teach people how they work only if their books share one shape that a beginner and an expert can both read, and one home can gather them without rewriting them. |
 | `one-truth-two-views` | One Truth, Two Views | 2.0.0 | canonical | One fact stored once and shown twice: plain words for people, stable shapes for machines, both generated from the same source. |
 | `plain-language` | Plain Language | 2.1.0 | canonical | Words are part of every surface, so they get the same care as the rest: honest, short, and actionable. |
 | `room` | Room | 2.2.0 | canonical | Many small independent backends can share one front door only if each serves the same few endpoints with the same honest shapes. |
-| `library` | Library | 1.2.0 | canonical | Many apps can teach people how they work only if their books share one shape that a beginner and an expert can both read, and one home can gather them without rewriting them. |
 | `setup-checks-itself` | Setup Checks Itself | 1.0.0 | canonical | A setup that ends in "should work now" is a guess, so every setup offers a real check the person can run on the spot. |
 | `web-ui` | Web UI | 2.0.1 | canonical | The web UI is one view of the same truth the API and CLI show: honest about state, usable by everyone, and never the only way in. |
 

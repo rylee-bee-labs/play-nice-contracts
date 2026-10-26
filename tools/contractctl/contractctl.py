@@ -2,35 +2,6 @@
 """contractctl — resolve, validate, lock, and attest play-nice contracts.
 
 Minimal-dependency (stdlib-only) CLI for the play-nice-contracts library.
-
-Subcommands:
-  list                  list contracts (id, version, status, layer)
-  show <id>             print a contract's canonical content
-  validate              validate the whole library (schemas, receipts, index)
-  resolve               resolve the applicable contract set for a task
-                        (works without an adoption manifest: floor + role
-                        base set + library-trigger matches)
-  lock                  generate contracts.lock.json (deterministic)
-  diff                  compare the contract set between two library revisions
-  scan                  scan a tree for banned public-boundary shapes
-  index                 report or repair CONTRACT_INDEX.md columns
-  init-adoption         write a starter adoption manifest
-  upgrade-check         am I current, what changed, what do I run next?
-  attest                produce a CONTRACT_ATTESTATION v1 block
-  verify-attestation    re-verify an attestation against the library
-  commit                activate the CONTRACT OPERATIONAL COMMITMENT artifact
-  session-status        ACTIVE / STALE / INACTIVE for a commitment
-  adopt                 validate a project adoption manifest
-  init-project          scaffold a .project/ context folder
-  project               .project/ subcommands (validate)
-  participant           participant-pack subcommands (list, validate)
-  validate-question     validate a question / help-request artifact
-  onboard               guided reading plan for a role
-  status                library health summary (not this project's state)
-  freshness             verify the authoritative remote revision (fail closed)
-  sync                  refresh the adoption pin to the remote revision
-
-Run with --help or <subcommand> --help for details.
 """
 
 from __future__ import annotations
@@ -44,6 +15,7 @@ import re
 import shlex
 import subprocess
 import sys
+import textwrap
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -72,6 +44,23 @@ LAYER_DIRS = {
     "integration": "integration",
     "access": "access",
 }
+# Each pack's section heading in CONTRACT_INDEX.md ("## <title>").
+# tools/playnice/playnice.py keeps a copy for the AGENTS.md block; a test
+# keeps the two equal.
+PACK_TITLES = {
+    "everyone": "Everyone",
+    "work": "Agents and work",
+    "people": "People",
+    "surfaces": "Surfaces",
+    "sites": "Sites",
+    "integration": "Integration",
+    "access": "Access",
+}
+# Body sections every contract must have (docs/DESIGN_PHILOSOPHY.md); validate
+# checks they are present, not their order. Examples and Machine notes are
+# optional.
+REQUIRED_SECTIONS = ("In short", "Applies when", "Rules", "Why", "You're done when")
+OLD_NAMES_HEADING = "Old names"
 
 ALIASES_FILE = REPO_ROOT / "aliases.json"
 
@@ -353,6 +342,17 @@ def validate_library(lib: list[dict] | None = None) -> list[str]:
         layer = fm.get("layer", "")
         if layer not in LAYER_DIRS:
             errors.append(f"{p}: missing/invalid layer {layer!r}")
+        elif c["path"].parent.name != LAYER_DIRS[layer]:
+            errors.append(
+                f"{p}: layer {layer!r} does not match its pack folder "
+                f"{c['path'].parent.name!r}"
+            )
+
+        # body sections: every one present as its own '## ' heading
+        headings = set(re.findall(r"^## (.+?)\s*$", c["text"], re.MULTILINE))
+        for sec in REQUIRED_SECTIONS:
+            if sec not in headings:
+                errors.append(f"{p}: missing body section '## {sec}'")
 
         # filename should match id
         stem = c["path"].stem
@@ -408,6 +408,12 @@ def validate_library(lib: list[dict] | None = None) -> list[str]:
             errors.append(
                 f"index drift: CONTRACT_INDEX.md lists unknown contract '{cid}'"
             )
+
+    # Index rows: Title, Purpose and pack section agree with the contract
+    errors.extend(check_index_rows(lib))
+
+    # Old names: aliases.json and the index's "Old names" table agree
+    errors.extend(check_aliases(set(seen_ids)))
 
     # Receipt-rotation discipline: meaningful changes must rotate receipts
     errors.extend(check_receipt_rotation(lib))
@@ -519,6 +525,109 @@ def check_index_sync(lib: list[dict]) -> list[str]:
     ]
 
 
+def _index_cells(line: str) -> list[str]:
+    """Cells of one Markdown table row; `\\|` is a literal pipe."""
+    inner = line.strip()[1:-1] if line.strip().endswith("|") else line.strip()[1:]
+    return [c.strip().replace("\\|", "|") for c in re.split(r"(?<!\\)\|", inner)]
+
+
+def index_table_rows(text: str | None = None) -> list[dict]:
+    """Every registry row of CONTRACT_INDEX.md with the '## ' section it sits
+    under: {id, title, version, status, purpose, section}."""
+    if text is None:
+        if not INDEX_FILE.is_file():
+            return []
+        text = INDEX_FILE.read_text(encoding="utf-8")
+    out: list[dict] = []
+    section = ""
+    for line in text.splitlines():
+        if line.startswith("## "):
+            section = line[3:].strip()
+        elif _INDEX_ROW_RE.match(line):
+            cells = _index_cells(line)
+            if len(cells) < 5:
+                continue
+            out.append({
+                "id": cells[0].strip("`"), "title": cells[1], "version": cells[2],
+                "status": cells[3], "purpose": cells[4], "section": section,
+            })
+    return out
+
+
+def check_index_rows(lib: list[dict]) -> list[str]:
+    """A row's Title and Purpose are the contract's title and rationale, and
+    the row sits under its pack's section. Rows for unknown ids are reported
+    by the membership check, not here."""
+    by_id = {c["front_matter"].get("contract_id"): c["front_matter"] for c in lib}
+    errs: list[str] = []
+    for row in index_table_rows():
+        fm = by_id.get(row["id"])
+        if fm is None:
+            continue
+        cid = row["id"]
+        if row["title"] != str(fm.get("title", "")):
+            errs.append(
+                f"index drift: '{cid}' Title is {row['title']!r}, "
+                f"front matter title is {fm.get('title', '')!r}"
+            )
+        if row["purpose"] != str(fm.get("rationale", "")):
+            errs.append(f"index drift: '{cid}' Purpose differs from its front-matter rationale")
+        want = PACK_TITLES.get(str(fm.get("layer", "")))
+        if want and row["section"] != want:
+            errs.append(
+                f"index drift: '{cid}' row is under '## {row['section']}', "
+                f"its pack section is '## {want}'"
+            )
+    return errs
+
+
+def index_old_names(text: str | None = None) -> list[tuple[str, str]]:
+    """(old id, new id) rows of the index's "Old names" table, in file order."""
+    if text is None:
+        if not INDEX_FILE.is_file():
+            return []
+        text = INDEX_FILE.read_text(encoding="utf-8")
+    out: list[tuple[str, str]] = []
+    section = ""
+    for line in text.splitlines():
+        if line.startswith("## "):
+            section = line[3:].strip()
+        elif section == OLD_NAMES_HEADING and line.startswith("|"):
+            cells = _index_cells(line)
+            if len(cells) == 2 and CONTRACT_ID_RE.match(cells[0].strip("`")):
+                out.append((cells[0].strip("`"), cells[1].strip("`")))
+    return out
+
+
+def check_aliases(live_ids: set[str]) -> list[str]:
+    """Every alias points at a live contract, no alias shadows a live id, and
+    the index's "Old names" table lists exactly the pairs in aliases.json."""
+    errs: list[str] = []
+    aliases = load_aliases()
+    for old, new in sorted(aliases.items()):
+        if old in live_ids:
+            errs.append(f"aliases: '{old}' is a live contract id, so it cannot also be an old name")
+        if new not in live_ids:
+            errs.append(f"aliases: '{old}' points to unknown contract '{new}'")
+    rows = index_old_names()
+    table: dict[str, str] = {}
+    for old, new in rows:
+        if old in table:
+            errs.append(f"aliases: '{old}' is listed twice in the Old names table of CONTRACT_INDEX.md")
+        table[old] = new
+    for old in sorted(set(aliases) | set(table)):
+        a, t = aliases.get(old), table.get(old)
+        if a == t:
+            continue
+        if t is None:
+            errs.append(f"aliases: '{old}' → '{a}' is in aliases.json but not in the Old names table of CONTRACT_INDEX.md")
+        elif a is None:
+            errs.append(f"aliases: '{old}' → '{t}' is in the Old names table of CONTRACT_INDEX.md but not in aliases.json")
+        else:
+            errs.append(f"aliases: '{old}' points to '{a}' in aliases.json but '{t}' in CONTRACT_INDEX.md")
+    return errs
+
+
 def rewrite_index_row(text: str, cid: str, want_version: str, want_status: str) -> tuple[str, int]:
     """Replace one row's version and status cells in place (deterministic;
     leaves every other byte of the index untouched)."""
@@ -528,6 +637,53 @@ def rewrite_index_row(text: str, cid: str, want_version: str, want_status: str) 
         re.MULTILINE,
     )
     return pat.subn(lambda m: f"{m.group(1)}{want_version}{m.group(3)}{want_status}{m.group(5)}", text)
+
+
+def index_missing_ids(lib: list[dict]) -> list[str]:
+    """Contract ids with no CONTRACT_INDEX.md row, sorted."""
+    have = _index_contract_ids()
+    return sorted(
+        str(c["front_matter"].get("contract_id", ""))
+        for c in lib
+        if c["front_matter"].get("contract_id") not in have
+    )
+
+
+def _index_sort_key(cid: str) -> tuple[bool, str]:
+    # each pack table keeps `floor` first, then ids in alphabetical order
+    return (cid != "floor", cid)
+
+
+def insert_index_row(text: str, fm: dict) -> tuple[str, bool]:
+    """Add one contract's row to its pack's table at its sorted place.
+    Returns (text, False) when the pack has no section or table to add to."""
+    cid = str(fm["contract_id"])
+    heading = "## " + PACK_TITLES.get(str(fm.get("layer", "")), "")
+    cells = [f"`{cid}`"] + [
+        str(fm.get(k, "")).replace("|", "\\|")
+        for k in ("title", "version", "status", "rationale")
+    ]
+    row = "| " + " | ".join(cells) + " |"
+    lines = text.split("\n")
+    try:
+        start = lines.index(heading)
+    except ValueError:
+        return text, False
+    i = start + 1
+    while i < len(lines) and not lines[i].startswith("|") and not lines[i].startswith("## "):
+        i += 1
+    if i >= len(lines) or not lines[i].startswith("|"):
+        return text, False
+    i += 2  # header row and separator
+    insert_at = i
+    while i < len(lines) and lines[i].startswith("|"):
+        m = _INDEX_ROW_RE.match(lines[i])
+        if m and _index_sort_key(m.group(1)) > _index_sort_key(cid):
+            break
+        i += 1
+        insert_at = i
+    lines.insert(insert_at, row)
+    return "\n".join(lines), True
 
 
 # ---------------------------------------------------------------- public-boundary scan
@@ -3023,9 +3179,7 @@ source:
   revision: {revision}
 
 always:
-  - truth-and-evidence
-  - status-and-state
-  - ask-for-help
+{always}
 
 triggers:
 
@@ -3070,6 +3224,7 @@ def init_project(
                 name=name,
                 adoption_path=adoption_path,
                 revision=revision,
+                always="\n".join(f"  - {cid}" for cid in DEFAULT_CONTRACT_SET),
             ),
             encoding="utf-8",
         )
@@ -3134,14 +3289,29 @@ def fix_hints(errors: list[str]) -> list[str]:
             add("add a bullet naming the contract under '## [Unreleased]' in CHANGELOG.md (or: contractctl bump <id> --minor --note \"...\")")
         elif e.startswith("index drift: '") and "row says" in e:
             add("contractctl index --write")
+        elif e.startswith("index drift: contract '") and "missing from" in e:
+            add("contractctl index --write")
+        elif e.startswith("index drift: '") and ("Title is" in e or "Purpose differs" in e):
+            add("copy the contract's front-matter title and rationale into its CONTRACT_INDEX.md row")
+        elif e.startswith("index drift: '") and "row is under" in e:
+            add("move the row into its pack's table in CONTRACT_INDEX.md")
         elif e.startswith("index drift:"):
-            add("add or remove the row by hand in CONTRACT_INDEX.md (purpose = the contract's rationale)")
+            add("remove the row by hand from CONTRACT_INDEX.md (renamed? add the old id to aliases.json and the Old names table)")
+        elif e.startswith("aliases:"):
+            add("make aliases.json and the Old names table in CONTRACT_INDEX.md list the same pairs, each pointing at a live contract")
+        elif "does not match its pack folder" in e:
+            add("set the contract's 'layer:' to its pack folder name, or move the file to contracts/<layer>/")
+        elif "missing body section" in e:
+            add("add the missing '## ' section; copy the shape of a contract in the same pack")
         elif e.startswith("base:"):
             add("git fetch origin main, or pass --base <rev> that exists here")
     if any(h.startswith("contractctl bump") for h in hints):
-        # bump also writes the changelog bullet, the index row and the lock
+        # bump also writes the changelog bullet, the index columns and the
+        # lock; it does not add a missing index row, so that hint stays
+        missing_row = any("missing from CONTRACT_INDEX.md" in e for e in errors)
         return [h for h in hints if not (
-            h.startswith("contractctl index") or h.startswith("add a bullet"))]
+            (h.startswith("contractctl index") and not missing_row)
+            or h.startswith("add a bullet"))]
     if any(e.startswith("lock drift") or "contracts.lock.json missing" in e for e in errors):
         add("contractctl lock")
     return hints
@@ -3520,17 +3690,28 @@ def cmd_diff(args) -> int:
     return 0
 
 
+# The one default contract set: the everyone basics plus the agent-work
+# ones. It is the agent base set when a folder has no adoption manifest, and
+# the `always:` list that init-adoption and init-project write, so the three
+# paths cannot drift apart. The floor is added on top by resolve_set.
+DEFAULT_CONTRACT_SET = (
+    "truth-and-evidence",
+    "status-and-state",
+    "recovery-and-history",
+    "ask-for-help",
+    "agent-behavior",
+    "bounded-work",
+    "handoff-and-continuity",
+    "testing-and-evidence",
+    "contract-proof",
+)
+
 # Base contract sets by participant role, used when a folder carries no
 # adoption manifest (v2: `resolve` must answer, not error — the manifest
 # stays optional). Floor and library-trigger matches are added on top.
+# "human" and "service" are narrower role views, not the default set.
 ROLE_BASE_SETS = {
-    "agent": [
-        "agent-behavior",
-        "bounded-work",
-        "handoff-and-continuity",
-        "testing-and-evidence",
-        "contract-proof",
-    ],
+    "agent": list(DEFAULT_CONTRACT_SET),
     "human": [
         "accessibility",
         "attention-and-quiet",
@@ -4237,28 +4418,33 @@ def cmd_scan(args) -> int:
 
 
 def cmd_index(args) -> int:
-    """Report or repair CONTRACT_INDEX.md version/status columns.
+    """Report or repair CONTRACT_INDEX.md rows.
 
     The index is derived data (see Stable Truth, Replaceable Machinery): the
-    canonical files are the source, the index routes. This command makes the
-    version/status columns auto-repairable so that drift class cannot recur.
-    Membership drift (a missing or unknown row) is not auto-generated — a
-    human/agent adds the row once, with its purpose line.
+    canonical files are the source, the index routes. `--write` rewrites the
+    version/status columns and adds a row for any contract that has none
+    (title, version, status, rationale, in its pack's table at its sorted
+    place). A row for an unknown id is reported, never deleted: it may be a
+    rename that needs an old-name entry.
     """
     lib = load_library()
     errors = validate_library(lib)
     details = index_drift_details(lib)
-    other = [
-        e for e in errors
-        if not (e.startswith("index drift: '") and "row says" in e)
-    ]
+    missing = index_missing_ids(lib)
+    other = [e for e in errors if not e.startswith("index drift:")]
     if not args.write:
-        if not details:
+        if not details and not missing:
             print("INDEX: version/status columns in sync with canonical")
+            rest = [e for e in errors if e.startswith("index drift:")]
+            for e in rest:
+                print(f"  - {e}")
+            print_fix_hints(rest)
             return 0 if not errors else 1
-        print(f"INDEX DRIFT — {len(details)} row(s) disagree with canonical:")
+        print(f"INDEX DRIFT — {len(details) + len(missing)} row(s) disagree with canonical:")
         for cid, gv, gs, wv, ws in details:
             print(f"  - {cid}: {gv}/{gs} → {wv}/{ws}")
+        for cid in missing:
+            print(f"  - {cid}: no row")
         print("  repair: contractctl index --write")
         return 1
     if other:
@@ -4267,31 +4453,42 @@ def cmd_index(args) -> int:
             print(f"  - {e}", file=sys.stderr)
         print_fix_hints(other, sys.stderr)
         return 1
-    if not details:
+    if details or missing:
+        text = INDEX_FILE.read_text(encoding="utf-8")
+        for cid, _gv, _gs, wv, ws in details:
+            text, n = rewrite_index_row(text, cid, wv, ws)
+            if n != 1:
+                print(
+                    f"INDEX: FAILED — could not rewrite row for '{cid}' deterministically",
+                    file=sys.stderr,
+                )
+                return 2
+        by_id = {c["front_matter"]["contract_id"]: c["front_matter"] for c in lib}
+        for cid in missing:
+            text, ok = insert_index_row(text, by_id[cid])
+            if not ok:
+                title = PACK_TITLES.get(str(by_id[cid].get("layer", "")), "?")
+                print(
+                    f"INDEX: FAILED — no '## {title}' table in CONTRACT_INDEX.md for '{cid}'",
+                    file=sys.stderr,
+                )
+                return 2
+        INDEX_FILE.write_text(text, encoding="utf-8", newline="\n")
+        print(f"INDEX: repaired {len(details)} row(s), added {len(missing)} row(s) from canonical")
+        for cid, gv, gs, wv, ws in details:
+            print(f"  - {cid}: {gv}/{gs} → {wv}/{ws}")
+        for cid in missing:
+            print(f"  - {cid}: row added")
+    else:
         print("INDEX: already in sync (no changes)")
-        return 0
-    text = INDEX_FILE.read_text(encoding="utf-8")
-    for cid, _gv, _gs, wv, ws in details:
-        text, n = rewrite_index_row(text, cid, wv, ws)
-        if n != 1:
-            print(
-                f"INDEX: FAILED — could not rewrite row for '{cid}' deterministically",
-                file=sys.stderr,
-            )
-            return 2
-    INDEX_FILE.write_text(text, encoding="utf-8", newline="\n")
-    print(f"INDEX: repaired {len(details)} row(s) from canonical")
-    for cid, gv, gs, wv, ws in details:
-        print(f"  - {cid}: {gv}/{gs} → {wv}/{ws}")
+    rest = [e for e in validate_library(load_library()) if e.startswith("index drift:")]
+    if rest:
+        print("still to fix by hand:")
+        for e in rest:
+            print(f"  - {e}")
+        print_fix_hints(rest)
+        return 1
     return 0
-
-
-ADOPTION_ALWAYS_FLOOR = (
-    "truth-and-evidence",
-    "status-and-state",
-    "recovery-and-history",
-    "ask-for-help",
-)
 
 
 def _default_repository() -> str:
@@ -4323,7 +4520,7 @@ def render_adoption_manifest(
         f"  revision: {revision}",
         "always:",
     ]
-    lines += [f"  - {cid}" for cid in ADOPTION_ALWAYS_FLOOR]
+    lines += [f"  - {cid}" for cid in DEFAULT_CONTRACT_SET]
     lines += [
         "freshness:",
         f"  policy: {policy}",
@@ -4479,10 +4676,63 @@ def _split_impact_value(argv_eff: list[str], extras: list[str]) -> str | None:
     return f"{first} {' '.join(extras)}"
 
 
+# Every subcommand, grouped for `contractctl --help`. This table is the one
+# source: main() registers a command only through it, and the help text is
+# generated from it.
+COMMAND_GROUPS: tuple[tuple[str, tuple[tuple[str, str], ...]], ...] = (
+    ("Everyday: check and maintain the contract library", (
+        ("validate", "check contracts, index, old names and lockfile"),
+        ("bump", "after editing a contract: set its version, rotate its receipt "
+                 "(minor/major), add the changelog bullet, refresh index and lock"),
+        ("lock", "regenerate contracts.lock.json (deterministic)"),
+        ("index", "report or repair CONTRACT_INDEX.md rows"),
+        ("list", "list contracts (id, version, status, pack)"),
+        ("show", "print a contract's canonical content"),
+        ("resolve", "list the contracts that apply to a task "
+                    "(works without an adoption manifest)"),
+        ("diff", "compare the contract set between two library revisions"),
+        ("scan", "scan a tree for banned public-boundary shapes (adopter-reusable)"),
+        ("status", "library health summary (not this project's state)"),
+    )),
+    ("Adopters: use the library in a project", (
+        ("init-adoption", "write a starter adoption manifest"),
+        ("adopt", "validate a project adoption manifest"),
+        ("upgrade-check", "is my pin current, what changed, and what do I run next?"),
+        ("freshness", "check the authoritative remote revision (fail closed)"),
+        ("sync", "refresh the adoption pin to the authoritative remote revision"),
+        ("onboard", "guided reading plan for a role"),
+        ("init-project", "scaffold a minimal .project/ context folder"),
+        ("project", ".project/ subcommands (validate)"),
+        ("participant", "participant-pack subcommands (list, validate)"),
+        ("validate-question", "validate a question / help-request / help-response artifact"),
+    )),
+    ("Legacy gate: attest/commit, retired for new work (docs/MAINTAINING.md)", (
+        ("attest", "produce a CONTRACT_ATTESTATION v1 block"),
+        ("commit", "activate the CONTRACT OPERATIONAL COMMITMENT artifact"),
+        ("verify-attestation", "re-verify an attestation against the library"),
+        ("session-status", "ACTIVE / STALE / INACTIVE for a commitment"),
+    )),
+)
+COMMAND_PURPOSES = {name: why for _g, cmds in COMMAND_GROUPS for name, why in cmds}
+
+
+def grouped_commands_help() -> str:
+    """The grouped command list shown by `contractctl --help`."""
+    lines = ["Subcommands:"]
+    for title, cmds in COMMAND_GROUPS:
+        lines += ["", f"{title}"]
+        for name, why in cmds:
+            wrapped = textwrap.wrap(why, width=54) or [""]
+            lines.append(f"  {name:20s}  {wrapped[0]}")
+            lines += [" " * 24 + w for w in wrapped[1:]]
+    lines += ["", "Run with --help or <subcommand> --help for details."]
+    return "\n".join(lines)
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(
         prog="contractctl",
-        description=__doc__,
+        description=__doc__ + "\n" + grouped_commands_help(),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     ap.add_argument(
@@ -4491,16 +4741,24 @@ def main(argv=None) -> int:
         version=version_line("contractctl", library_version()),
         help="print contractctl and library version, then exit",
     )
-    sub = ap.add_subparsers(dest="command", required=True)
+    sub = ap.add_subparsers(
+        dest="command", required=True, metavar="<command>",
+        help="one of the subcommands listed above",
+    )
 
-    p = sub.add_parser("list", help="list contracts")
+    def add_command(name: str, **kw) -> argparse.ArgumentParser:
+        # only commands in COMMAND_GROUPS can be registered (KeyError otherwise)
+        kw.setdefault("description", COMMAND_PURPOSES[name])
+        return sub.add_parser(name, **kw)
+
+    p = add_command("list")
     p.set_defaults(func=cmd_list)
 
-    p = sub.add_parser("show", help="print a contract's canonical content")
+    p = add_command("show")
     p.add_argument("contract_id")
     p.set_defaults(func=cmd_show)
 
-    p = sub.add_parser("validate", help="validate library + lockfile")
+    p = add_command("validate")
     p.add_argument(
         "--base",
         default=None,
@@ -4510,11 +4768,7 @@ def main(argv=None) -> int:
     )
     p.set_defaults(func=cmd_validate)
 
-    p = sub.add_parser(
-        "bump",
-        help="after editing a contract: set its version, rotate its receipt "
-        "(minor/major), add the changelog bullet, refresh index and lock",
-    )
+    p = add_command("bump")
     p.add_argument("contract_id")
     lv = p.add_mutually_exclusive_group(required=True)
     lv.add_argument("--patch", action="store_true", help="clarification; same meaning")
@@ -4523,7 +4777,7 @@ def main(argv=None) -> int:
     p.add_argument("--note", default=None, help="changelog bullet text (required for --minor/--major)")
     p.set_defaults(func=cmd_bump)
 
-    p = sub.add_parser("resolve", help="resolve applicable contracts for a task")
+    p = add_command("resolve")
     p.add_argument(
         "--manifest",
         default=None,
@@ -4551,13 +4805,10 @@ def main(argv=None) -> int:
     )
     p.set_defaults(func=cmd_resolve)
 
-    p = sub.add_parser("lock", help="regenerate contracts.lock.json")
+    p = add_command("lock")
     p.set_defaults(func=cmd_lock)
 
-    p = sub.add_parser(
-        "diff",
-        help="compare the contract set between two library revisions",
-    )
+    p = add_command("diff")
     p.add_argument("--from", dest="from_rev", required=True, metavar="REV")
     p.add_argument("--to", dest="to_rev", required=True, metavar="REV")
     p.add_argument(
@@ -4573,26 +4824,20 @@ def main(argv=None) -> int:
     )
     p.set_defaults(func=cmd_diff)
 
-    p = sub.add_parser(
-        "scan", help="scan a tree for banned public-boundary shapes (adopter-reusable)"
-    )
+    p = add_command("scan")
     p.add_argument("--root", default=".", help="directory to scan (default: .)")
     p.add_argument(
         "--json", action="store_true", dest="json_output", help="machine-readable JSON"
     )
     p.set_defaults(func=cmd_scan)
 
-    p = sub.add_parser(
-        "index", help="report or repair CONTRACT_INDEX.md version/status columns"
-    )
+    p = add_command("index")
     p.add_argument(
         "--write", action="store_true", help="rewrite drifted rows in place (deterministic)"
     )
     p.set_defaults(func=cmd_index)
 
-    p = sub.add_parser(
-        "init-adoption", help="write a starter adoption manifest (instead of copying an example)"
-    )
+    p = add_command("init-adoption")
     p.add_argument(
         "--manifest",
         default=".contracts/adoption.yaml",
@@ -4608,17 +4853,14 @@ def main(argv=None) -> int:
     p.add_argument("--force", action="store_true", help="overwrite an existing manifest")
     p.set_defaults(func=cmd_init_adoption)
 
-    p = sub.add_parser(
-        "upgrade-check",
-        help="one answer: is my pin current, what changed, and what do I run next?",
-    )
+    p = add_command("upgrade-check")
     p.add_argument("--manifest", default=None, help=MANIFEST_HELP)
     p.add_argument(
         "--json", action="store_true", dest="json_output", help="machine-readable JSON"
     )
     p.set_defaults(func=cmd_upgrade_check)
 
-    p = sub.add_parser("attest", help="produce CONTRACT_ATTESTATION v1")
+    p = add_command("attest")
     p.add_argument(
         "--manifest", default=None, help=MANIFEST_HELP
     )
@@ -4646,7 +4888,7 @@ def main(argv=None) -> int:
     )
     p.set_defaults(func=cmd_attest)
 
-    p = sub.add_parser("commit", help="activate CONTRACT OPERATIONAL COMMITMENT v1")
+    p = add_command("commit")
     p.add_argument(
         "--manifest", default=None, help=MANIFEST_HELP
     )
@@ -4703,9 +4945,7 @@ def main(argv=None) -> int:
     )
     p.set_defaults(func=cmd_commit)
 
-    p = sub.add_parser(
-        "session-status", help="report current commitment state (ACTIVE/STALE/INACTIVE)"
-    )
+    p = add_command("session-status")
     p.add_argument(
         "--manifest",
         default=None,
@@ -4724,10 +4964,7 @@ def main(argv=None) -> int:
     )
     p.set_defaults(func=cmd_session_status)
 
-    p = sub.add_parser(
-        "init-project",
-        help="create a minimal .project/ skeleton (no empty directory forest)",
-    )
+    p = add_command("init-project")
     p.add_argument(
         "target",
         nargs="?",
@@ -4740,13 +4977,13 @@ def main(argv=None) -> int:
     p.add_argument("--name", required=True, help="human name")
     p.set_defaults(func=cmd_init_project)
 
-    p = sub.add_parser("project", help="project-context subcommands")
+    p = add_command("project")
     psub = p.add_subparsers(dest="project_command", required=True)
     pv = psub.add_parser("validate", help="validate a .project/ directory")
     pv.add_argument("path", help="path to the .project/ directory (or its parent)")
     pv.set_defaults(func=cmd_project_validate)
 
-    p = sub.add_parser("participant", help="participant-pack subcommands")
+    p = add_command("participant")
     psub2 = p.add_subparsers(dest="participant_command", required=True)
     pav = psub2.add_parser("validate", help="validate one participant pack directory")
     pav.add_argument("path", help="path to the participant pack directory")
@@ -4755,18 +4992,13 @@ def main(argv=None) -> int:
     pal.add_argument("path", help="path to the .project/ directory (or its parent)")
     pal.set_defaults(func=cmd_participant_list)
 
-    p = sub.add_parser(
-        "validate-question",
-        help="validate a play-nice question / help-request / help-response artifact",
-    )
+    p = add_command("validate-question")
     p.add_argument(
         "question", help="path to the JSON artifact (play-nice/question-v1 family)"
     )
     p.set_defaults(func=cmd_validate_question)
 
-    p = sub.add_parser(
-        "verify-attestation", help="verify an attestation against the library"
-    )
+    p = add_command("verify-attestation")
     p.add_argument("attestation", help="path to the CONTRACT_ATTESTATION v1 artifact")
     p.add_argument(
         "--manifest",
@@ -4775,14 +5007,14 @@ def main(argv=None) -> int:
     )
     p.set_defaults(func=cmd_verify_attestation)
 
-    p = sub.add_parser("adopt", help="validate a project adoption manifest")
+    p = add_command("adopt")
     p.add_argument(
         "--manifest", default=None,
         help="adoption manifest to validate " + MANIFEST_DEFAULT_NOTE,
     )
     p.set_defaults(func=cmd_adopt)
 
-    p = sub.add_parser("onboard", help="guided onboarding plan for a role")
+    p = add_command("onboard")
     p.add_argument(
         "--role",
         default="worker",
@@ -4806,12 +5038,11 @@ def main(argv=None) -> int:
     )
     p.set_defaults(func=cmd_onboard)
 
-    p = sub.add_parser("status", help="one-line library health")
+    p = add_command("status")
     p.set_defaults(func=cmd_status)
 
-    p = sub.add_parser(
+    p = add_command(
         "freshness",
-        help="verify the authoritative remote revision (first preflight stage)",
         description=(
             "Deterministically establish the state of the configured authoritative "
             "remote revision (git ls-remote). Fail closed: only CURRENT satisfies "
@@ -4831,9 +5062,8 @@ def main(argv=None) -> int:
     )
     p.set_defaults(func=cmd_freshness)
 
-    p = sub.add_parser(
+    p = add_command(
         "sync",
-        help="refresh the adoption pin to the authoritative remote revision",
         description=(
             "Detect a changed authoritative remote. update: automatic moves the "
             "pin and forces a fresh resolve/read/attest/commit cycle; update: "
