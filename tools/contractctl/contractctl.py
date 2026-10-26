@@ -2196,9 +2196,12 @@ def freshness_config(manifest: dict) -> dict:
     return {"policy": policy, "ref": ref, "update": update}
 
 
-def _remote_url(repository: str) -> str:
+def remote_url(repository: str) -> str:
     """Repository identifier -> git URL. GitHub owner/repo shorthand expands
-    to the canonical https URL; full URLs and local paths pass through."""
+    to the canonical https URL; full URLs and local paths pass through, and
+    `~` is expanded because git does not expand it."""
+    if repository.startswith("~"):
+        return str(Path(repository).expanduser())
     if repository.startswith(("/", "./", "../")) or Path(repository).exists():
         return repository
     if "://" in repository or repository.startswith("git@"):
@@ -2214,7 +2217,7 @@ def git_ls_remote(repository: str, ref: str) -> str | None:
     Returns the full SHA, or None when the ref does not exist on the remote.
     Raises CTFreshnessError(UNREACHABLE) when the remote cannot be queried.
     """
-    url = _remote_url(repository)
+    url = remote_url(repository)
     try:
         proc = subprocess.run(
             ["git", "ls-remote", url, f"refs/heads/{ref}"],
@@ -2558,7 +2561,7 @@ def check_freshness(manifest_path: Path) -> dict:
     for pin in pins:
         if _is_ancestor_library(REPO_ROOT, pin, remote) is not True:
             diverged = True
-    url = _remote_url(repository)
+    url = remote_url(repository)
     if not diverged:
         # Ancestor-with-unchanged-set rule: under update: automatic, a pin
         # that is a provable ancestor of the remote may read CURRENT when

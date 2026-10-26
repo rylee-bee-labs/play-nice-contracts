@@ -585,7 +585,7 @@ def test_unfinished_handoff_discovered(lib, pn_remote, tmp_path):
     env = pn_env(tmp_path, lib)
     r = run_pn(["status", "--repo", str(consumer), "--no-github"], env, consumer)
     assert r.returncode == 0, r.stdout + r.stderr
-    assert "CARRYOVER: PARTIAL" in r.stdout
+    assert "CARRYOVER: partial — PARTIAL" in r.stdout
     assert "handoff:.agent/HANDOFF.md" in r.stdout
     assert "UNKNOWN" in r.stdout
 
@@ -595,14 +595,19 @@ def test_clean_repo_carryover_reconciled(lib, pn_remote, tmp_path):
     env = pn_env(tmp_path, lib)
     r = run_pn(["status", "--repo", str(consumer), "--no-github"], env, consumer)
     assert r.returncode == 0, r.stdout + r.stderr
-    assert "CARRYOVER: RECONCILED (0 items)" in r.stdout
+    assert "CARRYOVER: complete — RECONCILED (0 items)" in r.stdout
+    assert "REPOSITORY: healthy — CURRENT" in r.stdout
+    assert "ADOPTION: healthy — contracts CURRENT" in r.stdout
     data = json.loads(
         run_pn(
             ["status", "--repo", str(consumer), "--no-github", "--json"], env, consumer
         ).stdout
     )
-    assert data["carryover"]["state"] == "RECONCILED"
+    assert data["carryover"]["state"] == "complete"
+    assert data["carryover"]["legacy_state"] == "RECONCILED"
+    assert data["adoption"] == "healthy"
     assert data["play_nice"]["status"] == "CURRENT"
+    assert data["repository"]["state"] == "healthy"
     assert data["repository"]["status"] == "CURRENT"
 
 

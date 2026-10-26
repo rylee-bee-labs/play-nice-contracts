@@ -97,8 +97,27 @@ manifest, the sequence is:
 
 Read-only. Prints repository identity, adoption state, freshness, carryover, GitHub
 availability, and (with a permit) the active permit. No manifest → `adoption:
-UNKNOWN`, `play_nice.status: UNKNOWN`, exit `0` (reporting is safe, mutation is not).
+not_configured`, `play_nice.status: UNKNOWN`, exit `0` (reporting is safe, mutation is not).
 `--json` emits a stable shape.
+
+Each line starts with a shared status word (floor rule 8), then the exact
+freshness, repository or carryover word below as the evidence:
+
+| Line | Shared word ← exact word |
+| --- | --- |
+| `ADOPTION` | `not_configured` ← no manifest · `healthy` ← `CURRENT` · `stale` ← `BEHIND` · `needs_attention` ← `DIVERGED` · `unavailable` ← `UNREACHABLE` · `unknown` ← `UNKNOWN` |
+| `WORK READINESS` | `healthy` ← ready · `blocked` ← blocked |
+| `REPOSITORY` | `healthy` ← `CURRENT`, `AHEAD` · `stale` ← `BEHIND` · `needs_attention` ← `DIVERGED` · `warning` ← `DIRTY` · `not_configured` ← `NO_UPSTREAM`, `NO_REMOTE` · `unknown` ← `EMPTY_OR_UNKNOWN` |
+| `CARRYOVER` | `complete` ← `RECONCILED` · `partial` ← `PARTIAL` |
+
+In `--json`, `adoption`, `readiness.state`, `repository.state` and
+`carryover.state` carry the shared word; `play_nice.status` and
+`repository.status` keep the exact word. Until the next library release the
+replaced values stay as `legacy_adoption`, `readiness.legacy_state` and
+`carryover.legacy_state`; they will then be removed. `playnice check` does
+the same per check: `state` is `healthy`, `needs_attention`,
+`not_configured`, `unavailable` or `unknown`, and `legacy_state` keeps the
+old `worked`, `needs_fix` or `skipped` for one release.
 
 ### `reconcile`
 

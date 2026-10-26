@@ -50,9 +50,9 @@ template and save it as `contracts/<pack>/<ID_UPPER>.md`.
 - `contractctl lock`, commit, `./tools/check.sh`.
 
 **D. Floor change.** Edit `contracts/everyone/FLOOR.md` →
-`contractctl bump floor --minor --note "what changed"` → `playnice start .`
-(rewrites this repo's AGENTS.md block and badge; if it creates
-`.github/workflows/playnice.yml`, delete it, the library has its own CI) →
+`contractctl bump floor --minor --note "what changed"` →
+`playnice start . --no-workflow` (rewrites this repo's AGENTS.md block and
+badge; `--no-workflow` because the library has its own CI) →
 `./tools/check.sh` (`tests/test_doc_facts.py` names every proof-line
 example and version still on the old floor; the example in
 `contracts/work/CONTRACT_PROOF.md` is contract text, so it needs its own

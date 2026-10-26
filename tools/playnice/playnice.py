@@ -23,7 +23,7 @@ zero-friction commands beside the lifecycle ones:
 
     playnice verify "<receipt line>"   is that line current for the library?
     playnice check [PATH|URL] [--badge FILE]   check a repo or a site; badge
-    playnice start [PATH] [--dry-run]  set a repo up: AGENTS.md, badge, CI
+    playnice start [PATH] [--dry-run] [--no-workflow]  set a repo up: AGENTS.md, badge, CI
 
 Exit codes:
   0  success (work finished or nothing required; verify CURRENT; check plays nice)
@@ -240,9 +240,20 @@ def _validate_config(cfg: dict) -> None:
 def _parse_yaml_simple(text: str, where: str) -> dict:
     """Minimal deterministic YAML-subset parser (nested mappings + scalar lists).
 
-    The project's own parser lives in contractctl; this tool touches only the
-    small YAML shapes used by play-nice config. Anything not understood fails
-    loudly instead of being silently reinterpreted.
+    For the global config only. Anything not understood fails loudly instead
+    of being silently reinterpreted.
+
+    This is deliberately not contractctl's parser (`_yaml_block_to_dict`),
+    which reads contract front matter and adoption manifests. The two formats
+    need different scalars, so merging them would change what existing files
+    mean:
+    - config needs integers (`post.timeout_minutes: 30`); contractctl keeps
+      digits as strings, so a revision pin like `1234567` stays a string;
+    - config accepts single quotes, a `#` inside quotes, tab comments and
+      `None`; contractctl keeps those characters, and keeps `none` literal
+      because `conflicts: none` means something in a contract;
+    - contractctl reads block scalars, lists of maps and `{}`; config has none.
+    tests/test_playnice_dedupe.py pins these differences.
     """
     lines: list[tuple[int, str]] = []
     for raw in text.splitlines():
@@ -403,7 +414,7 @@ def find_library(config: dict, cwd: Path, env: dict | None = None) -> Path:
         target.parent.mkdir(parents=True, exist_ok=True)
         repo = config["play_nice"]["repository"]
         r = subprocess.run(
-            ["git", "clone", "--quiet", _remote_url(repo), str(target)],
+            ["git", "clone", "--quiet", own_contractctl().remote_url(repo), str(target)],
             capture_output=True,
             text=True,
             timeout=300,
@@ -425,20 +436,6 @@ def find_library(config: dict, cwd: Path, env: dict | None = None) -> Path:
     return target
 
 
-def _remote_url(repository: str) -> str:
-    if repository.startswith(("/", "./", "../", "~")) or Path(repository).exists():
-        return str(Path(repository).expanduser().resolve())
-    if "://" in repository:
-        return repository
-    if "@" in repository and ":" in repository:
-        return repository
-    # owner/repo shorthand
-    owner, _, name = repository.partition("/")
-    if not owner or not name:
-        raise PlayNiceError(f"cannot interpret repository {repository!r}")
-    return f"https://github.com/{owner}/{name}.git"
-
-
 def import_contractctl(lib: Path):
     """Import the contractctl engine from the canonical library checkout."""
     import importlib.util
@@ -451,6 +448,29 @@ def import_contractctl(lib: Path):
     sys.modules["contractctl"] = mod
     spec.loader.exec_module(mod)
     return mod
+
+
+_OWN_CONTRACTCTL = None
+
+
+def own_contractctl():
+    """contractctl from the checkout this file sits in, imported once.
+
+    For the helpers playnice needs before it has found a library (manifest
+    discovery, the clone URL of the library itself). Facts about a library
+    (its floor, its contracts) come from import_contractctl(lib) instead,
+    because contractctl reads the checkout it was imported from.
+    """
+    global _OWN_CONTRACTCTL
+    if _OWN_CONTRACTCTL is None:
+        own = Path(__file__).resolve().parents[2]
+        if not (own / "tools" / "contractctl" / "contractctl.py").is_file():
+            raise PlayNiceError(
+                f"playnice.py must sit in a Play-Nice library checkout "
+                f"(no tools/contractctl/contractctl.py under {own})"
+            )
+        _OWN_CONTRACTCTL = import_contractctl(own)
+    return _OWN_CONTRACTCTL
 
 
 class PlayNiceError(Exception):
@@ -613,17 +633,9 @@ def find_adoption_manifest(repo: Path, explicit: str | None = None) -> Path | No
         if not p.is_absolute():
             p = repo / p
         return p if p.is_file() else None
-    candidates = [
-        ".contracts/adoption.yaml",
-        ".project/contracts/adoption.yaml",
-        ".contracts/adoption.yml",
-        ".project/contracts/adoption.yml",
-    ]
-    for rel in candidates:
-        p = repo / rel
-        if p.is_file():
-            return p
-    return None
+    # contractctl's search order; it names the primary path when none exists
+    p = own_contractctl().discover_manifest(repo)
+    return p if p.is_file() else None
 
 
 def play_nice_check(manifest_path: Path, lib: Path, global_cfg: dict) -> dict:
@@ -1929,6 +1941,18 @@ def cmd_work(args) -> int:
     )
 
 
+# `status` leads each line with a shared status word (schema/status.schema.json,
+# floor rule 8). The exact freshness, git and carryover words that work,
+# permits and handoffs use follow it as the evidence, and stay in JSON as is.
+FRESHNESS_SHARED = {"CURRENT": "healthy", "BEHIND": "stale", "DIVERGED": "needs_attention",
+                    "UNREACHABLE": "unavailable", "UNKNOWN": "unknown"}
+REPO_SHARED = {"CURRENT": "healthy", "AHEAD": "healthy", "BEHIND": "stale",
+               "DIVERGED": "needs_attention", "DIRTY": "warning",
+               "NO_UPSTREAM": "not_configured", "NO_REMOTE": "not_configured",
+               "EMPTY_OR_UNKNOWN": "unknown"}
+CARRYOVER_SHARED = {"RECONCILED": "complete", "PARTIAL": "partial"}
+
+
 def cmd_status(args) -> int:
     """Read-only inspection: freshness + repo + carryover + GitHub state."""
     cfg = load_global_config(Path(args.config) if args.config else None)
@@ -1956,7 +1980,8 @@ def cmd_status(args) -> int:
     lib = find_library(cfg, Path.cwd(), env)
     out: dict = {}
     if manifest_path is None:
-        out["adoption"] = "UNKNOWN"
+        out["adoption"] = "not_configured"
+        out["legacy_adoption"] = "UNKNOWN"  # removed in the next library release
         out["play_nice"] = {
             "status": "UNKNOWN",
             "enforced": False,
@@ -1964,18 +1989,20 @@ def cmd_status(args) -> int:
         }
     else:
         fr = play_nice_check(manifest_path, lib, cfg)
+        out["adoption"] = FRESHNESS_SHARED.get(fr.get("status"), "unknown")
         out["play_nice"] = fr
     out["checks"] = _status_checks(repo)
     out["readiness"] = work_readiness(manifest_path, out.get("play_nice") or {})
     rs = collect_repo_state(repo, cfg)
-    out["repository"] = rs
+    out["repository"] = {**rs, "state": REPO_SHARED.get(rs["status"], "unknown")}
     gh = None
     if cfg["github"]["inspect_pull_requests"] or cfg["github"]["inspect_issues"]:
         gh = collect_github_state(repo, cfg, env)
         out["github"] = gh
     co = discover_carryover(repo, cfg, gh)
     out["carryover"] = {
-        "state": co["state"],
+        "state": CARRYOVER_SHARED.get(co["state"], "unknown"),
+        "legacy_state": co["state"],  # removed in the next library release
         "items": [
             {
                 "kind": i.get("kind"),
@@ -1995,20 +2022,22 @@ def cmd_status(args) -> int:
     ck = out["checks"]
     print(f"CHECKS: {ck['state']} — {ck['words']}")
     if manifest_path is None:
-        print("ADOPTION: not configured — no adoption manifest, so contracts are "
+        print("ADOPTION: not_configured — no adoption manifest, so contracts are "
               "not enforced here (that is fine for ordinary use)")
     else:
         mode = "enforced" if fr.get("enforced") else "not enforced"
-        print(f"ADOPTION: {fr.get('status')} ({mode}) — {fr.get('detail') or 'no detail'}")
+        print(f"ADOPTION: {out['adoption']} — contracts {fr.get('status')} ({mode}) — "
+              f"{fr.get('detail') or 'no detail'}")
     rd = out["readiness"]
     print(f"WORK READINESS: {rd['state']} — {rd['words']}")
     if rd.get("next"):
         print(f"  next: {rd['next']}")
     print(
-        f"REPOSITORY: {out['repository'].get('status')} ({out['repository'].get('branch')} @{str(out['repository'].get('head') or '')[:12]}, dirty={bool(out['repository'].get('dirty'))})"
+        f"REPOSITORY: {out['repository']['state']} — {out['repository'].get('status')} ({out['repository'].get('branch')} @{str(out['repository'].get('head') or '')[:12]}, dirty={bool(out['repository'].get('dirty'))})"
     )
     print(
-        f"CARRYOVER: {out['carryover']['state']} ({len(out['carryover']['items'])} items)"
+        f"CARRYOVER: {out['carryover']['state']} — {out['carryover']['legacy_state']} "
+        f"({len(out['carryover']['items'])} items)"
     )
     for item in out["carryover"]["items"]:
         print(
@@ -2095,7 +2124,7 @@ def _status_checks(repo: Path) -> dict:
         return {"state": "unknown", "words": f"could not run the checks: {e}"}
     if res.get("state") == "unknown":
         return {"state": "unknown", "words": res.get("error") or "could not run the checks"}
-    failing = [c["name"] for c in res.get("checks", []) if c["state"] == "needs_fix"]
+    failing = [c["name"] for c in res.get("checks", []) if c["state"] == "needs_attention"]
     words = ("every baseline check passed" if not failing
              else "needs a fix: " + "; ".join(failing) + " (run playnice check)")
     return {"state": res["label"], "words": words}
@@ -2109,22 +2138,23 @@ def work_readiness(manifest_path: Path | None, fr: dict) -> dict:
     update: automatic lets work refresh the pin itself first.
     """
     if manifest_path is None:
-        return {"state": "blocked",
+        return {"state": "blocked", "legacy_state": "blocked",
                 "words": "playnice work needs an adoption manifest; checks and "
                          "verify do not",
                 "next": "contractctl init-adoption"}
     if not freshness_blocked(fr):
-        return {"state": "ready", "words": "playnice work can start", "next": None}
+        return {"state": "healthy", "legacy_state": "ready",
+                "words": "playnice work can start", "next": None}
     auto = (fr.get("manifest_update") == "automatic"
             and fr.get("manifest_policy") == "require-current"
             and fr.get("status") in ("BEHIND", "DIVERGED")
             and fr.get("remote_revision"))
     if auto:
-        return {"state": "ready",
+        return {"state": "healthy", "legacy_state": "ready",
                 "words": f"contracts are {fr['status']}; playnice work refreshes the "
                          "pin first (update: automatic)",
                 "next": None}
-    return {"state": "blocked",
+    return {"state": "blocked", "legacy_state": "blocked",
             "words": f"contracts are {fr.get('status')} and enforced"
                      + (f" ({fr['detail']})" if fr.get("detail") else ""),
             "next": "contractctl upgrade-check"}
@@ -2310,50 +2340,41 @@ def version_tuple(v: str) -> tuple:
     return tuple(parts)
 
 
-def load_v2_floor(lib: Path) -> dict:
-    """Version, receipt word and verbatim Rules list from the floor page."""
-    text = (lib / FLOOR_REL).read_text(encoding="utf-8")
-    fm = re.match(r"\A---\s*\n(.*?)\n---\s*\n", text, re.DOTALL)
-    block = fm.group(1) if fm else ""
-    version = re.search(r"(?m)^version:\s*(\S+)", block)
-    receipt = re.search(r"<!--\s*contract-receipt:\s*([a-z0-9-]+)\s*-->", text)
+def load_v2_floor(cc) -> dict:
+    """Version, receipt word and verbatim Rules list from the floor page.
+
+    `cc` is contractctl imported from the library being read: its
+    floor_version() and RECEIPT_RE are the one definition of both.
+    """
+    path = cc.REPO_ROOT / FLOOR_REL
+    text = path.read_text(encoding="utf-8")
+    version = cc.floor_version()
+    receipt = cc.RECEIPT_RE.search(text)
     rules = re.search(r"(?ms)^## Rules\s*\n(.*?)^## ", text)
-    if not version or not receipt or not rules:
-        raise CheckUnavailable(f"{lib / FLOOR_REL} has no version, receipt or Rules section")
+    if version == "unknown" or not receipt or not rules:
+        raise CheckUnavailable(f"{path} has no version, receipt or Rules section")
     return {
-        "version": version.group(1),
+        "version": version,
         "receipt": receipt.group(1),
         "rules": rules.group(1).rstrip(),
     }
 
 
-def load_v2_index(lib: Path) -> dict:
-    """{ids: contract_id -> status, aliases: old id -> new id} from the library."""
-    ids: dict[str, str] = {}
-    cdir = lib / "contracts"
-    if cdir.is_dir():
-        for d in sorted(cdir.iterdir()):
-            if not d.is_dir():
-                continue
-            for f in sorted(d.glob("*.md")):
-                t = f.read_text(encoding="utf-8", errors="replace")
-                cid = re.search(r"(?m)^contract_id:\s*(\S+)\s*$", t)
-                st = re.search(r"(?m)^status:\s*(\S+)\s*$", t)
-                if cid:
-                    ids[cid.group(1)] = st.group(1) if st else "canonical"
+def load_v2_index(cc) -> dict[str, str]:
+    """contract_id -> status for every contract in the library `cc` reads."""
     try:
-        aliases = json.loads((lib / "aliases.json").read_text(encoding="utf-8")).get("aliases", {})
-    except (OSError, ValueError):
-        aliases = {}
-    return {"ids": ids, "aliases": aliases}
+        lib = cc.load_library()
+    except cc.CTError as e:
+        raise CheckUnavailable(f"cannot read the library's contracts: {e}")
+    return {c["front_matter"]["contract_id"]: c["front_matter"].get("status", "canonical")
+            for c in lib if c["front_matter"].get("contract_id")}
 
 
-def canonical_read_id(cid: str, index: dict) -> str | None:
-    """Resolve a read id to a library contract id (old ids via aliases.json)."""
-    if cid in index["ids"]:
-        return cid
-    mapped = index["aliases"].get(cid)
-    return mapped if mapped in index["ids"] else None
+def canonical_read_id(cc, cid: str, index: dict[str, str]) -> str | None:
+    """A read id as a library contract id (old ids via aliases.json), or None
+    when it is neither a contract nor an alias of one."""
+    mapped = cc.canonical_id(cid, index)
+    return mapped if mapped in index else None
 
 
 # ------------------------------------------------------------------- verify
@@ -2364,7 +2385,7 @@ def split_receipt_line(line: str) -> list[str]:
     return [seg.strip() for seg in normalized.split("·") if seg.strip() != ""]
 
 
-def parse_verify_line(line: str, index: dict) -> tuple[dict | None, str | None]:
+def parse_verify_line(line: str, index: dict, cc) -> tuple[dict | None, str | None]:
     """Grammar from CONTRACT_PROOF.md Machine notes:
     'Play-Nice floor <version> · receipt <word>' optionally followed by
     ' · read <id>, <id>' (old ids allowed via aliases.json). Returns
@@ -2400,7 +2421,7 @@ def parse_verify_line(line: str, index: dict) -> tuple[dict | None, str | None]:
         bad = [cid for cid in read if not WORD_RE.fullmatch(cid)]
         if bad:
             return None, f"read ids must be lowercase ids like 'web-ui': {', '.join(bad)}"
-        unknown = [cid for cid in read if canonical_read_id(cid, index) is None]
+        unknown = [cid for cid in read if canonical_read_id(cc, cid, index) is None]
         if unknown:
             return None, (
                 "unknown read ids (not library contracts, not aliases): "
@@ -2414,9 +2435,10 @@ def cmd_verify(args) -> int:
     out: dict = {"command": "verify", "line": line}
     try:
         lib = v2_library_root(Path.cwd())
-        floor = load_v2_floor(lib)
-        index = load_v2_index(lib)
-    except CheckUnavailable as e:
+        cc = import_contractctl(lib)
+        floor = load_v2_floor(cc)
+        index = load_v2_index(cc)
+    except (CheckUnavailable, PlayNiceError) as e:
         out.update(
             state="INVALID", exit=2, message=str(e),
             next="set PLAY_NICE_LIBRARY to a play-nice-contracts checkout",
@@ -2428,7 +2450,7 @@ def cmd_verify(args) -> int:
         # Never print the real receipt word: it is the proof of reading.
         f"Play-Nice floor {floor['version']} · receipt <word from the floor> · read floor"
     )
-    parsed, problem = parse_verify_line(line, index)
+    parsed, problem = parse_verify_line(line, index, cc)
     if problem:
         out.update(
             state="INVALID", exit=2, message=problem,
@@ -2676,7 +2698,7 @@ def badge_svg(lib: Path, kind: str, label: str) -> str:
 
 def summarize(checks: list[dict], recorded: str | None, current: str) -> dict:
     """plays nice | behind | fix needed (behind wins over a stale-only block)."""
-    needs = [c for c in checks if c["state"] == "needs_fix"]
+    needs = [c for c in checks if c["state"] == "needs_attention"]
     behind = bool(recorded) and version_tuple(current) > version_tuple(recorded)
     only_stale_block = (
         behind and needs and all(c["id"] == "agents-file" for c in needs)
@@ -2691,8 +2713,19 @@ def summarize(checks: list[dict], recorded: str | None, current: str) -> dict:
             "label": f"plays nice · v{current}", "exit": 0}
 
 
+# Per-check states are shared status words (schema/status.schema.json, floor
+# rule 8). Until the next library release, JSON also carries the word each
+# state replaced as `legacy_state`; that field will then be removed.
+CHECK_STATES = ("healthy", "needs_attention", "not_configured", "unavailable", "unknown")
+LEGACY_CHECK_STATES = {"healthy": "worked", "needs_attention": "needs_fix",
+                       "not_configured": "skipped", "unavailable": "skipped",
+                       "unknown": "skipped"}
+CHECK_STATE_WIDTH = max(len(s) for s in CHECK_STATES)
+
+
 def _check_item(cid, name, state, words, fix=None) -> dict:
-    return {"id": cid, "name": name, "state": state, "words": words, "fix": fix}
+    return {"id": cid, "name": name, "state": state, "words": words, "fix": fix,
+            "legacy_state": LEGACY_CHECK_STATES[state]}
 
 
 def recorded_floor(target: Path) -> str | None:
@@ -2713,19 +2746,19 @@ def check_agents_file(target: Path, floor: dict) -> dict:
     name = "AGENTS.md Play-Nice block"
     ag = target / "AGENTS.md"
     if not ag.is_file():
-        return _check_item("agents-file", name, "needs_fix",
+        return _check_item("agents-file", name, "needs_attention",
                            "no AGENTS.md in this folder", "playnice start")
     if MARK_START not in _read_text(ag):
-        return _check_item("agents-file", name, "needs_fix",
+        return _check_item("agents-file", name, "needs_attention",
                            "AGENTS.md has no play-nice block", "playnice start")
     rec = recorded_floor(target)
     if rec is None:
-        return _check_item("agents-file", name, "needs_fix",
+        return _check_item("agents-file", name, "needs_attention",
                            "the play-nice block records no floor version", "playnice start")
     if version_tuple(rec) == version_tuple(floor["version"]):
-        return _check_item("agents-file", name, "worked",
+        return _check_item("agents-file", name, "healthy",
                            f"block present and current (floor {rec})")
-    return _check_item("agents-file", name, "needs_fix",
+    return _check_item("agents-file", name, "needs_attention",
                        f"block records floor {rec}; the floor is now {floor['version']}",
                        "playnice start")
 
@@ -2733,34 +2766,34 @@ def check_agents_file(target: Path, floor: dict) -> dict:
 def check_html_basics(target: Path, kinds: dict) -> dict:
     name = "HTML basics (labels, lang, alt, headings)"
     if not kinds["web"]:
-        return _check_item("html-basics", name, "skipped", "no web UI detected")
+        return _check_item("html-basics", name, "not_configured", "no web UI detected")
     problems: list[str] = []
     for rel, text in kinds["html_files"]:
         problems.extend(html_basics_problems(rel, text))
     if not problems:
-        return _check_item("html-basics", name, "worked",
+        return _check_item("html-basics", name, "healthy",
                            f"{len(kinds['html_files'])} page(s) checked: every control labeled, "
                            "<html lang> set, every <img> has alt, headings in order")
     shown = "; ".join(problems[:8])
     more = f" (+{len(problems) - 8} more)" if len(problems) > 8 else ""
-    return _check_item("html-basics", name, "needs_fix", f"{len(problems)} problem(s): {shown}{more}",
+    return _check_item("html-basics", name, "needs_attention", f"{len(problems)} problem(s): {shown}{more}",
                        "add the missing label/alt/lang; keep heading levels in order")
 
 
 def check_unsafe_html(target: Path, kinds: dict) -> dict:
     name = "No innerHTML built from fetched data"
     if not kinds["web"]:
-        return _check_item("unsafe-html", name, "skipped", "no web UI detected")
+        return _check_item("unsafe-html", name, "not_configured", "no web UI detected")
     problems: list[str] = []
     for f in walk_files(target):
         if f.suffix.lower() not in SCRIPT_EXTS:
             continue
         problems.extend(unsafe_html_problems(f.relative_to(target).as_posix(), _read_text(f)))
     if not problems:
-        return _check_item("unsafe-html", name, "worked", "no innerHTML built from fetched data")
+        return _check_item("unsafe-html", name, "healthy", "no innerHTML built from fetched data")
     shown = "; ".join(problems[:8])
     more = f" (+{len(problems) - 8} more)" if len(problems) > 8 else ""
-    return _check_item("unsafe-html", name, "needs_fix",
+    return _check_item("unsafe-html", name, "needs_attention",
                        f"{len(problems)} spot(s): {shown}{more}", "use textContent or escape")
 
 
@@ -2769,13 +2802,13 @@ def check_secrets(cc, target: Path) -> dict:
     try:
         hits = cc.scan_surface(target)
     except OSError as e:
-        return _check_item("secrets", name, "skipped", f"scan could not run: {e}")
+        return _check_item("secrets", name, "unknown", f"scan could not run: {e}")
     if not hits:
-        return _check_item("secrets", name, "worked",
+        return _check_item("secrets", name, "healthy",
                            "no banned public-boundary shapes found (values redacted scan)")
     shown = "; ".join(f"{h['path']}: {h['pattern']}" for h in hits[:8])
     more = f" (+{len(hits) - 8} more)" if len(hits) > 8 else ""
-    return _check_item("secrets", name, "needs_fix", f"{len(hits)} finding(s): {shown}{more}",
+    return _check_item("secrets", name, "needs_attention", f"{len(hits)} finding(s): {shown}{more}",
                        "remove the values; names and where they are stored are fine (floor rule 11)")
 
 
@@ -2803,11 +2836,11 @@ def check_adoption(cc, target: Path, lib: Path, index: dict) -> dict:
     name = "Adoption manifest"
     mf = target / ".contracts" / "adoption.yaml"
     if not mf.is_file():
-        return _check_item("adoption", name, "skipped", "no .contracts/adoption.yaml")
+        return _check_item("adoption", name, "not_configured", "no .contracts/adoption.yaml")
     try:
         manifest = cc.load_adoption(mf)
     except cc.CTError as e:
-        return _check_item("adoption", name, "needs_fix", f"manifest invalid: {e}",
+        return _check_item("adoption", name, "needs_attention", f"manifest invalid: {e}",
                            "fix .contracts/adoption.yaml (contractctl adopt shows the rules)")
     refs = list(manifest.get("always") or [])
     for cids in (manifest.get("triggers") or {}).values():
@@ -2815,11 +2848,11 @@ def check_adoption(cc, target: Path, lib: Path, index: dict) -> dict:
     problems: list[str] = []
     suggestions: list[str] = []
     for raw in refs:
-        cid = canonical_read_id(str(raw), index)
+        cid = canonical_read_id(cc, str(raw), index)
         if cid is None:
             problems.append(f"'{raw}' is not a library contract and has no alias")
         elif str(raw) != cid:
-            if index["ids"].get(cid) == "retired":
+            if index.get(cid) == "retired":
                 problems.append(f"'{raw}' maps to retired '{cid}' — drop it or name a live one")
             else:
                 suggestions.append(f"'{raw}' now lives as '{cid}'")
@@ -2846,11 +2879,11 @@ def check_adoption(cc, target: Path, lib: Path, index: dict) -> dict:
             msg += " (this is the library itself: set source.self: true to check by ancestry)"
         problems.append(msg)
     if problems:
-        return _check_item("adoption", name, "needs_fix", "; ".join(problems), fix)
+        return _check_item("adoption", name, "needs_attention", "; ".join(problems), fix)
     words = f"all manifest ids resolve; {pin_words}"
     if suggestions:
         words += " — retired ids: " + "; ".join(sorted(set(suggestions)))
-    return _check_item("adoption", name, "worked", words)
+    return _check_item("adoption", name, "healthy", words)
 
 
 # ------------------------------------------------------------- check: repo
@@ -2861,9 +2894,9 @@ def run_repo_check(target: Path, badge: str | None) -> dict:
         if not target.is_dir():
             raise CheckUnavailable(f"{target} is not a folder")
         lib = v2_library_root(target)
-        floor = load_v2_floor(lib)
-        index = load_v2_index(lib)
         cc = import_contractctl(lib)
+        floor = load_v2_floor(cc)
+        index = load_v2_index(cc)
     except (CheckUnavailable, PlayNiceError) as e:
         hint = (
             "point playnice check at an existing folder, or a https:// URL"
@@ -2966,8 +2999,8 @@ def run_url_check(url: str, badge: str | None) -> dict:
     base = url.rstrip("/")
     try:
         lib = v2_library_root(Path.cwd())
-        floor = load_v2_floor(lib)
-    except CheckUnavailable as e:
+        floor = load_v2_floor(import_contractctl(lib))
+    except (CheckUnavailable, PlayNiceError) as e:
         return {"mode": "url", "target": url, "state": "unknown", "exit": 2,
                 "error": str(e), "next": "set PLAY_NICE_LIBRARY to a play-nice-contracts checkout"}
     checks: list[dict] = []
@@ -2979,7 +3012,7 @@ def run_url_check(url: str, badge: str | None) -> dict:
         return {"mode": "url", "target": url, "state": "unknown", "exit": 2,
                 "error": str(e), "next": "check the address or try again later"}
     if code == 404:
-        checks.append(_check_item("site-file", name, "needs_fix",
+        checks.append(_check_item("site-file", name, "needs_attention",
                                   "no /.well-known/play-nice.json — the site makes no Play-Nice claim",
                                   "publish version, packs, contact and expires (schema/play-nice-site.schema.json)"))
     elif code != 200:
@@ -2995,13 +3028,13 @@ def run_url_check(url: str, badge: str | None) -> dict:
         else:
             problems = validate_site_claim(data)
         if problems:
-            checks.append(_check_item("site-file", name, "needs_fix",
+            checks.append(_check_item("site-file", name, "needs_attention",
                                       "; ".join(problems),
                                       "fix /.well-known/play-nice.json to match schema/play-nice-site.schema.json"))
         else:
             site_version = str(data["version"])
             checks.append(_check_item(
-                "site-file", name, "worked",
+                "site-file", name, "healthy",
                 f"version {site_version}, packs {', '.join(data['packs'])}, "
                 f"contact {data['contact']}, expires {data['expires']}"))
     # the delivered page: same html-basics as a repo
@@ -3012,31 +3045,31 @@ def run_url_check(url: str, badge: str | None) -> dict:
                 "error": str(e), "next": "check the address or try again later"}
     if code != 200:
         checks.append(_check_item("html-basics", "HTML basics (labels, lang, alt, headings)",
-                                  "needs_fix", f"site root answered HTTP {code}",
+                                  "needs_attention", f"site root answered HTTP {code}",
                                   "make https://... serve the page"))
     else:
         problems = html_basics_problems(base + "/", body.decode("utf-8", errors="replace"))
         if problems:
             checks.append(_check_item("html-basics", "HTML basics (labels, lang, alt, headings)",
-                                      "needs_fix",
+                                      "needs_attention",
                                       f"{len(problems)} problem(s): " + "; ".join(problems[:8]),
                                       "add the missing label/alt/lang; keep heading levels in order"))
         else:
             checks.append(_check_item("html-basics", "HTML basics (labels, lang, alt, headings)",
-                                      "worked", "the delivered page passes html-basics"))
+                                      "healthy", "the delivered page passes html-basics"))
     # /llms.txt: a SHOULD — skipped with a note when absent
     try:
         code, _ = _fetch(base + "/llms.txt")
     except CheckUnavailable:
-        checks.append(_check_item("llms-txt", "/llms.txt", "skipped", "could not be reached"))
+        checks.append(_check_item("llms-txt", "/llms.txt", "unavailable", "could not be reached"))
     else:
         if code == 200:
-            checks.append(_check_item("llms-txt", "/llms.txt", "worked", "published"))
+            checks.append(_check_item("llms-txt", "/llms.txt", "healthy", "published"))
         elif code == 404:
-            checks.append(_check_item("llms-txt", "/llms.txt", "skipped",
+            checks.append(_check_item("llms-txt", "/llms.txt", "not_configured",
                                       "not published (the sites pack recommends it)"))
         else:
-            checks.append(_check_item("llms-txt", "/llms.txt", "skipped", f"HTTP {code}"))
+            checks.append(_check_item("llms-txt", "/llms.txt", "unavailable", f"HTTP {code}"))
     summary = summarize(checks, site_version, floor["version"])
     result = {
         "mode": "url", "target": base,
@@ -3079,9 +3112,9 @@ def cmd_check(args) -> int:
         print(f"  next: {result.get('next', '')}")
         return result["exit"]
     for c in result["checks"]:
-        print(f"  {c['state']:9s} {c['name']}: {c['words']}")
-        if c["state"] == "needs_fix" and c.get("fix"):
-            print(f"            fix: {c['fix']}")
+        print(f"  {c['state']:{CHECK_STATE_WIDTH}s} {c['name']}: {c['words']}")
+        if c["state"] == "needs_attention" and c.get("fix"):
+            print(f"  {'':{CHECK_STATE_WIDTH}s} fix: {c['fix']}")
     print(f"STATE: {result['label']}")
     if result.get("badge"):
         print(f"badge: wrote {result['badge']}")
@@ -3149,8 +3182,8 @@ def cmd_start(args) -> int:
         if not target.is_dir():
             raise CheckUnavailable(f"{target} is not a folder")
         lib = v2_library_root(target)
-        floor = load_v2_floor(lib)
-    except CheckUnavailable as e:
+        floor = load_v2_floor(import_contractctl(lib))
+    except (CheckUnavailable, PlayNiceError) as e:
         if args.json_output:
             print(json.dumps({"command": "start", "path": str(target), "state": "error",
                               "exit": 2, "error": str(e)}, indent=2, sort_keys=True))
@@ -3167,6 +3200,9 @@ def cmd_start(args) -> int:
     has_readme = readme.is_file()
     readme_needs = has_readme and "playnice-badge.svg" not in _read_text(readme)
     has_github = (target / ".github").is_dir()
+    writes_workflow = has_github and not args.no_workflow
+    # the badge links to a check run only when there is a workflow to run it
+    has_workflow = writes_workflow or workflow.is_file()
 
     if args.dry_run:
         plan = {
@@ -3178,7 +3214,8 @@ def cmd_start(args) -> int:
                 ("add badge line to README.md" if readme_needs else
                  ("README.md already has the badge" if has_readme else "no README.md — skipped")),
                 "run check and write playnice-badge.svg",
-                ("write .github/workflows/playnice.yml" if has_github
+                ("write .github/workflows/playnice.yml" if writes_workflow
+                 else "--no-workflow — no workflow written" if has_github
                  else "no .github/ — no workflow written"),
             ],
             "exit": 0,
@@ -3204,7 +3241,7 @@ def cmd_start(args) -> int:
         lines = text.splitlines()
         at = next((i for i, ln in enumerate(lines) if ln.startswith("# ")), None)
         insert = at + 1 if at is not None else 0
-        snippet = ["", f"[![Play-Nice](playnice-badge.svg)]({_badge_link(target, has_github)})"]
+        snippet = ["", f"[![Play-Nice](playnice-badge.svg)]({_badge_link(target, has_workflow)})"]
         lines[insert:insert] = snippet
         readme.write_text("\n".join(lines) + "\n", encoding="utf-8")
         actions.append("added the badge line to README.md")
@@ -3213,14 +3250,16 @@ def cmd_start(args) -> int:
     result = run_repo_check(target, str(badge))
     if result.get("badge"):
         actions.append(f"wrote {badge.name} ({result['label']})")
-    if has_github:
+    if writes_workflow:
         workflow.parent.mkdir(parents=True, exist_ok=True)
         workflow.write_text(WORKFLOW_YML, encoding="utf-8")
         actions.append("wrote .github/workflows/playnice.yml")
+    elif has_github:
+        actions.append("--no-workflow — skipped the workflow")
     else:
         actions.append("no .github/ — skipped the workflow")
 
-    nxt = ("CI will redraw the badge on every push" if has_github
+    nxt = ("CI will redraw the badge on every push" if has_workflow
            else "playnice check")
     if args.json_output:
         print(json.dumps({
@@ -3295,10 +3334,14 @@ def build_parser() -> argparse.ArgumentParser:
         help="set a repo up for Play-Nice — zero questions (exit 0/2)",
         description="Writes the play-nice block into AGENTS.md (floor rules verbatim, "
         "pack links for what this repo is), the badge line into README.md, the badge "
-        "itself, and a CI workflow when .github/ exists.",
+        "itself, and a CI workflow when .github/ exists (unless --no-workflow).",
     )
     p.add_argument("path", nargs="?", default=".", help="repo path (default: .)")
     p.add_argument("--dry-run", action="store_true", help="print the plan; write nothing")
+    p.add_argument(
+        "--no-workflow", action="store_true",
+        help="do not write .github/workflows/playnice.yml (for a repo with its own CI)",
+    )
     p.add_argument("--json", action="store_true", dest="json_output")
     p.set_defaults(func=cmd_start)
 
