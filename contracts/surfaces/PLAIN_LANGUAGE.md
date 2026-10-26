@@ -1,11 +1,11 @@
 ---
 contract_id: plain-language
 title: Plain Language
-version: 2.1.0
+version: 2.1.1
 status: canonical
 layer: surfaces
 applies: [humans, agents, ui, apis, clis, docs]
-triggers: [wording, copy, error message, error, message, ui text, label, button text, documentation, web page, page, form, screen, ui, cli, api, endpoint, settings]
+triggers: [wording, copy, error message, error, message, ui text, label, button text, documentation, web page, page, form, screen, ui, cli, api, endpoint, settings, website, docs]
 rationale: Words are part of every surface, so they get the same care as the rest: honest, short, and actionable.
 ---
 
