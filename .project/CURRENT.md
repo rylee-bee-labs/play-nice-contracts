@@ -19,8 +19,8 @@ command. Check its status line before starting milestone work.
 ## Verify
 
 - `./tools/check.sh` must print `CHECK: PASS`; it runs what CI runs.
-- In a fresh cloud container, first: `pip install pytest pytest-xdist pyyaml`
-  (no SessionStart hook does this yet; see Open decisions).
+- Cloud sessions get pytest, pytest-xdist and pyyaml from the SessionStart
+  hook (`.claude/hooks/session-start.sh`); elsewhere, `pip install` them.
 
 ## Generated files
 
@@ -31,27 +31,17 @@ columns of `CONTRACT_INDEX.md`, the `play-nice` block in `AGENTS.md`,
 
 ## Open decisions
 
-From the 2026-10-26 review (PR `claude/effortless-maintenance`). Rylee decides;
-delete a line when it is settled.
+Rylee decides; delete a line when it is settled. Settled on 2026-10-26 and
+merged: #87 to #91 (enforcement, bump, scanner hash, setup hook, contract
+wording and triggers, one default set, status words, shared helpers).
 
-- **Tag a release.** There are no git tags, so the generated CHANGELOG
-  block and RELEASE_NOTES.md call everything "unreleased 0.1.0" while
-  `VERSION` is 2.0.0. Tagging `v2.0.0` (or the next version) fixes both.
-- **Scanner pattern list.** `SCAN_PATTERNS` in contractctl spells out a
-  private domain in this public repo. Option: match a hash of the domain
-  instead of the text. A security-boundary change, so not done unasked.
-- **SessionStart hook** for cloud sessions (installs the test tools so
-  `./tools/check.sh` runs at once). Writing `.claude/settings.json` needs
-  Rylee's go-ahead.
-- **contract-proof wording** (PATCH): rule 5 and the machine notes say the
-  badge always links to a check run and that `playnice check` writes the
-  badge, and point at docs/PLAYNICE.md for the legacy gate. None of these
-  is quite true (see docs/MAINTAINING.md).
-- **Trigger gaps** (PATCH each): `playnice rules "build a website"` misses
-  accessibility and plain-language; "docs" misses plain-language.
-- **One default contract set.** With no manifest the agent default set
-  includes contract-proof; `init-adoption`'s set does not.
-- **`playnice check` status words** (`worked`, `needs_fix`, `skipped`)
-  are not the shared status words (floor rule 8).
-- **Duplicate helpers** between playnice and contractctl (YAML parsing,
-  floor/receipt reading, remote URL) have started to drift.
+- **Release tags:** tag `v2.0.0` at the #38 merge, then cut 2.1.0 (part of
+  the 2.1.0 milestone). Ask Rylee before any tag is pushed.
+- **Plan questions** in docs/decisions/2026-10-26-play-nice-neat.md: GitHub
+  Pages, how a uv/pipx install finds the contracts, when to cut 3.0.0,
+  milestone issues.
+- **Small follow-ups seen in review, not yet asked:** `human`/`service` role
+  sets could include the four everyone basics; `playnice work` still prints
+  its own status words; `playnice check` reads only `.contracts/adoption.yaml`
+  (not `.project/contracts/`); `index --write` could also repair Title and
+  Purpose cells.

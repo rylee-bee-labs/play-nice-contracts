@@ -6,9 +6,9 @@
   "contracts": [
     {
       "id": "accessibility",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "path": "contracts/people/ACCESSIBILITY.md",
-      "sha256": "6e2709cd91a408a0249a255f37b19a3219764e82045f5763291c5d6ca53a71ed",
+      "sha256": "a8c9bdcba0e90f6dbf78b2b22693441771d826f0fff370b516fcf7c8e9c6a351",
       "receipt": "slate-porch-kestrel",
       "status": "canonical"
     },
@@ -54,9 +54,9 @@
     },
     {
       "id": "calling-other-services",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "path": "contracts/integration/CALLING_OTHER_SERVICES.md",
-      "sha256": "cfd1c0dc26e08690563582b8b8bfed39e817815fcb7f3060bfa787b55404873d",
+      "sha256": "2868ec32133932ef99e0d53e3e6a9d53df21c643c0e57cbaeca3cec8ee470b33",
       "receipt": "kiln-larch-copper",
       "status": "canonical"
     },
@@ -78,9 +78,9 @@
     },
     {
       "id": "contract-proof",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "path": "contracts/work/CONTRACT_PROOF.md",
-      "sha256": "5e5729b4427fb39d0e61ee3b27f0060ebed7dd23fcbf260d85bdeab80ba5acf5",
+      "sha256": "b4deb618bc2b6d1f352c619d453b6dde9064118a015c7157caa41d9af66f60a1",
       "receipt": "aspen-nimbus-reef",
       "status": "canonical"
     },
@@ -134,9 +134,9 @@
     },
     {
       "id": "handoff-and-continuity",
-      "version": "2.1.0",
+      "version": "2.1.1",
       "path": "contracts/work/HANDOFF_AND_CONTINUITY.md",
-      "sha256": "d2da15495abaf17c4ee22cfbd5bbaa08cd771510ce98af227b4d7c5e3b85a9b9",
+      "sha256": "f553aca8674ce9f542737233dd8d29ecf31e38bd81d2c27e8643cab21cf55666",
       "receipt": "meadow-lantern-thrush",
       "status": "canonical"
     },
@@ -150,9 +150,9 @@
     },
     {
       "id": "identity-and-roles",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "path": "contracts/access/IDENTITY_AND_ROLES.md",
-      "sha256": "cdca2014c25d5fbcb60727cab3e8efd69a1bdc5e5d8c0fa43c405b383d70ec35",
+      "sha256": "54712b60ab7f7b3881bc5c0bab348240b020a021b5cb94a28a98af9ce10a8a89",
       "receipt": "anchor-fennel-postbox",
       "status": "canonical"
     },
@@ -198,9 +198,9 @@
     },
     {
       "id": "plain-language",
-      "version": "2.1.0",
+      "version": "2.1.1",
       "path": "contracts/surfaces/PLAIN_LANGUAGE.md",
-      "sha256": "c4911da6aa0f271b6f9af394a9479704ed658489cbc7401073dfacf35c6562c7",
+      "sha256": "e0217f839b828cab0bc44407b313013c58f47a5037ddb6278ae9601e0cf3e0bc",
       "receipt": "lantern-bridge-thimble",
       "status": "canonical"
     },
@@ -302,9 +302,9 @@
     },
     {
       "id": "versions-and-discovery",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "path": "contracts/integration/VERSIONS_AND_DISCOVERY.md",
-      "sha256": "66ec884809501a55839298ffc6f0d4a6521ef2a85cb40b81b563aeec57e33d3c",
+      "sha256": "1a0a717e82fbb69578645210ec6c621a6f115b2b035549a6aee582c041b46c6a",
       "receipt": "signpost-alabaster-crag",
       "status": "canonical"
     },

@@ -125,21 +125,10 @@ def test_receipts_unique(lib):
 
 
 def test_all_contracts_dual_use_structure(lib):
-    """Each contract uses one complete shape: the v1 dual-use headings, or
-    the v2 shape from docs/DESIGN_PHILOSOPHY.md (migration in progress)."""
-    v1 = [
-        "## Purpose",
-        "## NORMATIVE RULES",
-        "## RATIONALE",
-        "## HUMAN EXAMPLES",
-        "## ANTI-PATTERNS",
-        "## ACCEPTANCE CHECKS",
-    ]
-    v2 = ["## In short", "## Applies when", "## Rules", "## Why", "## You're done when"]
-    for c in lib.load_library():
-        shape = v2 if "## In short" in c["text"] else v1
-        for sec in shape:
-            assert sec in c["text"], f"{c['rel_path']} missing {sec!r}"
+    """Each contract has the v2 body sections from docs/DESIGN_PHILOSOPHY.md.
+    The list is contractctl.REQUIRED_SECTIONS; validate enforces it."""
+    errors = [e for e in lib.validate_library() if "missing body section" in e]
+    assert errors == [], "\n".join(errors)
 
 
 def test_contract_count(lib):
@@ -2546,6 +2535,29 @@ def test_scan_reports_redacted_findings(lib, tmp_path):
     blob = json.dumps(hits)
     assert ("AK" + "IA") not in blob, "findings must be redacted (never the value)"
     assert "EXAMPLE1234567890" not in blob
+
+
+def test_scan_catches_hashed_hosts_and_subdomains(lib, tmp_path, monkeypatch):
+    """Private hostnames are listed by hash, so the scanner catches them (and
+    their subdomains) without the public repo spelling them out."""
+    import hashlib
+
+    name = "example-private.test"
+    digest = hashlib.sha256(name.encode()).hexdigest()
+    monkeypatch.setattr(lib, "SCAN_HASHED_HOSTS", (("topology:private-domain", digest),))
+    (tmp_path / "a.md").write_text("see https://API.Example-Private.test/health\n")
+    (tmp_path / "b.md").write_text("example-private.testing.org is someone else\n")
+    hits = lib.scan_surface(tmp_path)
+    assert [(h["path"], h["pattern"]) for h in hits] == [("a.md", "topology:private-domain")]
+    assert name not in json.dumps(hits).lower()
+
+
+def test_scan_patterns_spell_out_no_private_hostnames(lib):
+    """Hostnames belong in SCAN_HASHED_HOSTS (as hashes), never as plain needles."""
+    for label, needle in lib.SCAN_PATTERNS:
+        assert not lib._HOSTNAME_RE.fullmatch(needle) or label.endswith("private-ip"), (
+            f"{label}: put hostnames in SCAN_HASHED_HOSTS as a SHA-256, not in SCAN_PATTERNS"
+        )
 
 
 def test_scan_clean_tree(lib, tmp_path):

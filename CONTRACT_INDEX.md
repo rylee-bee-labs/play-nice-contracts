@@ -27,9 +27,9 @@ AI agents and anyone doing the work: bounded work, handoffs, testing, git, proof
 |---|---|---|---|---|
 | `agent-behavior` | Agent Behavior | 2.0.0 | canonical | One page for how an agent behaves while it works, including how to pick which model does a job. |
 | `bounded-work` | Bounded Work | 2.0.0 | canonical | A job with a defined finish can be finished; a job without one grows until someone pays to stop it. |
-| `contract-proof` | Contract Proof | 2.0.1 | canonical | Being current with the rules needs one cheap, checkable statement per kind of participant, not a ceremony that proves reading instead of following. |
+| `contract-proof` | Contract Proof | 2.0.2 | canonical | Being current with the rules needs one cheap, checkable statement per kind of participant, not a ceremony that proves reading instead of following. |
 | `git-and-worktrees` | Git and Worktrees | 2.1.0 | canonical | Branches and worktrees record who owns which work in flight, so parallel work stays safe and nothing real is deleted on a guess. |
-| `handoff-and-continuity` | Handoff and Continuity | 2.1.0 | canonical | The expensive part of resuming work is re-deriving what the last session knew, and a handoff plus current docs make that a lookup instead. |
+| `handoff-and-continuity` | Handoff and Continuity | 2.1.1 | canonical | The expensive part of resuming work is re-deriving what the last session knew, and a handoff plus current docs make that a lookup instead. |
 | `observability` | Observability | 2.0.0 | canonical | Logs and status surfaces exist so the next person or agent can diagnose a failure without reverse engineering it or leaking secrets while doing so. |
 | `orchestration` | Orchestration | 2.0.0 | canonical | Splitting work between people and agents only works when each role, each work packet, and each check is explicit. |
 | `search-before-building` | Search Before Building | 2.0.0 | canonical | New things are easy to add and hard to remove, so an existing thing that already owns the job beats a new parallel one. |
@@ -41,7 +41,7 @@ Anything a person uses: attention, accessibility, sensory safety, depth, themes.
 
 | ID | Title | Ver | Status | Purpose |
 |---|---|---|---|---|
-| `accessibility` | Accessibility | 2.0.1 | canonical | The default product already works for people with different vision, motor control and assistive technology; preferences may add comfort but never lower the floor. |
+| `accessibility` | Accessibility | 2.0.2 | canonical | The default product already works for people with different vision, motor control and assistive technology; preferences may add comfort but never lower the floor. |
 | `attention-and-quiet` | Attention and Quiet | 2.0.0 | canonical | A person's attention is borrowed, not owned; healthy systems spend almost none of it, and pausing and coming back is designed for, not suffered. |
 | `depth-on-demand` | Depth on Demand | 2.1.0 | canonical | Useful complexity is kept, not deleted; it is organized so a beginner has a clear path and an expert can drill all the way down. |
 | `human-reliability` | Human Reliability | 2.0.0 | canonical | A system must stay safe and understandable when the person using it is tired, interrupted or new, not only at their best. |
@@ -58,10 +58,10 @@ APIs, CLIs, web UIs, rooms: plain words, one truth for people and machines, setu
 | `api` | API | 2.0.0 | canonical | The API is the seam every other surface builds on, so it must be versioned, documented, discoverable, and honest about errors. |
 | `cli` | CLI | 2.0.0 | canonical | The command line is a first-class view of the system: usable by a tired human, scriptable by cron, inspectable by agents. |
 | `design-fidelity` | Design Fidelity | 2.0.0 | canonical | The approved design is data in the repo, checked layer by layer, so what ships matches what was decided — with no design tool required. |
-| `one-truth-two-views` | One Truth, Two Views | 2.0.0 | canonical | One fact stored once and shown twice: plain words for people, stable shapes for machines, both generated from the same source. |
-| `plain-language` | Plain Language | 2.1.0 | canonical | Words are part of every surface, so they get the same care as the rest: honest, short, and actionable. |
-| `room` | Room | 2.2.0 | canonical | Many small independent backends can share one front door only if each serves the same few endpoints with the same honest shapes. |
 | `library` | Library | 1.2.0 | canonical | Many apps can teach people how they work only if their books share one shape that a beginner and an expert can both read, and one home can gather them without rewriting them. |
+| `one-truth-two-views` | One Truth, Two Views | 2.0.0 | canonical | One fact stored once and shown twice: plain words for people, stable shapes for machines, both generated from the same source. |
+| `plain-language` | Plain Language | 2.1.1 | canonical | Words are part of every surface, so they get the same care as the rest: honest, short, and actionable. |
+| `room` | Room | 2.2.0 | canonical | Many small independent backends can share one front door only if each serves the same few endpoints with the same honest shapes. |
 | `setup-checks-itself` | Setup Checks Itself | 1.0.0 | canonical | A setup that ends in "should work now" is a guess, so every setup offers a real check the person can run on the spot. |
 | `web-ui` | Web UI | 2.0.1 | canonical | The web UI is one view of the same truth the API and CLI show: honest about state, usable by everyone, and never the only way in. |
 
@@ -79,10 +79,10 @@ Connecting to other services: capabilities not vendors, calls, events, versions.
 
 | ID | Title | Ver | Status | Purpose |
 |---|---|---|---|---|
-| `calling-other-services` | Calling Other Services | 2.0.0 | canonical | Calling someone else's system well — learn first, respect limits, write small, verify, stay safe to repeat — is what keeps integrations running. |
+| `calling-other-services` | Calling Other Services | 2.0.1 | canonical | Calling someone else's system well — learn first, respect limits, write small, verify, stay safe to repeat — is what keeps integrations running. |
 | `capabilities-not-vendors` | Capabilities, Not Vendors | 2.0.0 | canonical | Your system's meaning should not depend on any one outside product, so that product can be swapped or lost without losing the feature. |
 | `events-and-caching` | Events and Caching | 2.0.0 | canonical | Learn about changes without spamming the source: get told when you can, poll politely when you can't, and keep cached data honest about its age. |
-| `versions-and-discovery` | Versions and Discovery | 2.0.0 | canonical | Systems stop misreading each other when versions are declared and checked, and stop guessing when they can ask what a system supports. |
+| `versions-and-discovery` | Versions and Discovery | 2.0.1 | canonical | Systems stop misreading each other when versions are declared and checked, and stop guessing when they can ask what a system supports. |
 
 ## Access
 
@@ -90,7 +90,7 @@ Identity and roles, secrets and data, public and private.
 
 | ID | Title | Ver | Status | Purpose |
 |---|---|---|---|---|
-| `identity-and-roles` | Identity and Roles | 2.0.1 | canonical | One contract for who someone is and what they may do — identity proved with current evidence, access decided with named permissions, every grant bounded, dated and revocable. |
+| `identity-and-roles` | Identity and Roles | 2.0.2 | canonical | One contract for who someone is and what they may do — identity proved with current evidence, access decided with named permissions, every grant bounded, dated and revocable. |
 | `public-and-private` | Public and Private | 2.0.0 | canonical | A repository that is public now or later is held to the public standard today, and canary tests — not intentions — enforce that boundary. |
 | `secrets-and-data` | Secrets and Data | 2.0.0 | canonical | Secret values live only in secret storage, every record carries a class that decides where it may appear, and both are enforced by structure and tests, not by memory. |
 

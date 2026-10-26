@@ -192,11 +192,14 @@ def test_check_clean_repo_plays_nice(tmp_path):
     assert data["state"] == "plays nice"
     assert data["label"] == f"plays nice · v{FLOOR_V}"
     ids = {c["id"]: c for c in data["checks"]}
-    assert ids["agents-file"]["state"] == "worked"
-    assert ids["html-basics"]["state"] == "skipped"
-    assert ids["secrets"]["state"] == "worked"
-    assert ids["adoption"]["state"] == "skipped"
-    assert ids["unsafe-html"]["state"] == "skipped"
+    assert ids["agents-file"]["state"] == "healthy"
+    assert ids["html-basics"]["state"] == "not_configured"
+    assert ids["secrets"]["state"] == "healthy"
+    assert ids["adoption"]["state"] == "not_configured"
+    assert ids["unsafe-html"]["state"] == "not_configured"
+    # the replaced words stay in JSON for one release
+    assert ids["agents-file"]["legacy_state"] == "worked"
+    assert ids["adoption"]["legacy_state"] == "skipped"
 
 
 def test_check_missing_agents_fix_needed_points_at_start(tmp_path):
@@ -352,11 +355,44 @@ def test_check_json_and_plain_carry_the_same_states(tmp_path):
     js = run_pn(["check", str(repo), "--json"], tmp_path)
     assert plain.returncode == js.returncode == 1
     data = json.loads(js.stdout)
+    width = max(len(s) for s in ("healthy", "needs_attention", "not_configured"))
     for c in data["checks"]:
-        assert set(c) == {"id", "name", "state", "words", "fix"}
-        assert c["state"] in ("worked", "needs_fix", "skipped")
-        if c["state"] == "needs_fix":
-            assert f"{c['state']:9s} {c['name']}" in plain.stdout
+        assert set(c) == {"id", "name", "state", "words", "fix", "legacy_state"}
+        assert c["state"] in ("healthy", "needs_attention", "not_configured")
+        assert c["legacy_state"] == {"healthy": "worked", "needs_attention": "needs_fix",
+                                     "not_configured": "skipped"}[c["state"]]
+        if c["state"] == "needs_attention":
+            assert f"{c['state']:{width}s} {c['name']}" in plain.stdout
+
+
+def test_every_check_state_is_a_shared_status_word(tmp_path):
+    """Floor rule 8: each per-check result `check` prints, in plain text and
+    JSON, is a word from schema/status.schema.json."""
+    enum = set(json.loads((REPO / "schema" / "status.schema.json").read_text())["enum"])
+    sys.path.insert(0, str(REPO / "tools" / "playnice"))
+    try:
+        import playnice as pn
+    finally:
+        sys.path.pop(0)
+    assert set(pn.CHECK_STATES) <= enum
+    assert set(pn.LEGACY_CHECK_STATES) == set(pn.CHECK_STATES)
+    clean = tmp_path / "clean"
+    clean.mkdir()
+    (clean / "AGENTS.md").write_text(agents_block(), encoding="utf-8")
+    messy = tmp_path / "messy"
+    messy.mkdir()
+    (messy / "page.html").write_text("<html><body><img src='x'></body></html>", encoding="utf-8")
+    seen = set()
+    for repo in (clean, messy, REPO):
+        data = json.loads(run_pn(["check", str(repo), "--json"], tmp_path).stdout)
+        plain = run_pn(["check", str(repo)], tmp_path).stdout
+        for c in data["checks"]:
+            seen.add(c["state"])
+            assert re.search(rf"(?m)^  {re.escape(c['state'])} +{re.escape(c['name'])}:", plain)
+        printed = re.findall(r"(?m)^  ([a-z_]+) +[A-Z/]", plain)
+        assert printed and set(printed) <= enum, printed
+    assert seen <= enum
+    assert {"healthy", "needs_attention", "not_configured"} <= seen
 
 
 # ---------------------------------------------------------------- check: URL
@@ -416,7 +452,7 @@ def test_check_url_good_site(tmp_path, serve):
     data = json.loads(r.stdout)
     assert data["mode"] == "url" and data["state"] == "plays nice"
     states = {c["id"]: c["state"] for c in data["checks"]}
-    assert states == {"site-file": "worked", "html-basics": "worked", "llms-txt": "worked"}
+    assert states == {"site-file": "healthy", "html-basics": "healthy", "llms-txt": "healthy"}
     assert data["label"] == f"plays nice · v{FLOOR_V}"
 
 
@@ -482,6 +518,10 @@ def test_check_url_no_llms_txt_skipped_with_note(tmp_path, serve):
     r = run_pn(["check", url], tmp_path)
     assert r.returncode == 0, r.stdout
     assert "llms.txt" in r.stdout and "not published" in r.stdout
+    assert re.search(r"(?m)^  not_configured +/llms\.txt: not published", r.stdout)
+    data = json.loads(run_pn(["check", url, "--json"], tmp_path).stdout)
+    enum = set(json.loads((REPO / "schema" / "status.schema.json").read_text())["enum"])
+    assert {c["state"] for c in data["checks"]} <= enum
 
 
 def test_check_url_site_behind_library(tmp_path, serve):

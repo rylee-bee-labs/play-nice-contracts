@@ -96,7 +96,7 @@ def test_self_adoption_passes_by_ancestry_after_later_merges(lib):
     commit(repo, "a contract-text change", "contracts/everyone/NOTE.txt")
     code, item = check(repo)
     assert code == 0, item
-    assert item["state"] == "worked"
+    assert item["state"] == "healthy"
     assert "self-adoption" in item["words"] and "in this checkout's history" in item["words"]
 
 
@@ -105,7 +105,7 @@ def test_self_pin_that_is_not_a_commit_is_a_fix(lib):
     set_pin(repo, "e570e2630702ddb6c61f7d1d89ab0ce439cdc608")
     code, item = check(repo)
     assert code == 1
-    assert item["state"] == "needs_fix"
+    assert item["state"] == "needs_attention"
     assert "not a commit in this repository" in item["words"]
 
 

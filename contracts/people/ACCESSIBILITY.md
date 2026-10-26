@@ -1,11 +1,11 @@
 ---
 contract_id: accessibility
 title: Accessibility
-version: 2.0.1
+version: 2.0.2
 status: canonical
 layer: people
 applies: [ui, web, sites, product]
-triggers: [ui, frontend, web page, page, form, screen, button, menu, modal, dialog, navigation, keyboard, screen reader, contrast, zoom, layout, accessibility, a11y]
+triggers: [ui, frontend, web page, page, form, screen, button, menu, modal, dialog, navigation, keyboard, screen reader, contrast, zoom, layout, accessibility, a11y, website]
 rationale: The default product already works for people with different vision, motor control and assistive technology; preferences may add comfort but never lower the floor.
 ---
 
