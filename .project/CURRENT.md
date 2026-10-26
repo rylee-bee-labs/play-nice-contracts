@@ -4,6 +4,12 @@
 
 Notes below are hand-written: decisions in flight, why something is paused, what to read first.
 
+## Direction
+
+The plan is [docs/decisions/2026-10-26-play-nice-neat.md](../docs/decisions/2026-10-26-play-nice-neat.md):
+2.1.0 tidy and self-running, 2.2.0 pack cards + site + uv install, 3.0.0 one
+command. Check its status line before starting milestone work.
+
 ## Start here (cold session)
 
 - Read `AGENTS.md`, then `docs/MAINTAINING.md` → "Start here" (proof line,
