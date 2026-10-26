@@ -1770,43 +1770,80 @@ def verify_commitment_artifact(
     return errors
 
 
-def check_receipt_rotation(lib: list[dict]) -> list[str]:
-    """Mechanical enforcement: meaningful contract changes rotate receipts.
+BASE_ENV = "PLAY_NICE_BASE"
 
-    For each canonical contract with a committed previous version in Git
-    history: if content changed AND the semantic version changed beyond a
-    pure PATCH clarification, the receipt MUST also have changed. This makes
-    'meaningful change -> version change -> receipt change' checkable rather
-    than memory-driven. Skipped (reported, not failed) when Git history is
-    unavailable (e.g. a fresh export).
+
+def _git_out(*args: str) -> str | None:
+    """stdout of a git command in the library checkout, or None on failure."""
+    try:
+        r = subprocess.run(
+            ["git", "-C", str(REPO_ROOT), *args],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        return r.stdout if r.returncode == 0 else None
+    except Exception:
+        return None
+
+
+def comparison_base() -> tuple[str | None, str | None]:
+    """The revision contract changes are judged against: (rev, error).
+
+    Comparing against HEAD only works before a commit: once a change is
+    committed (and always in CI) HEAD *is* the change, so nothing is checked.
+    Order: $PLAY_NICE_BASE (set by `validate --base`; CI passes the PR's base
+    commit), then the merge-base of HEAD and origin/main, then HEAD. No Git
+    history at all gives (None, None): the checks are skipped, as documented.
     """
-    import subprocess
+    if _git_out("rev-parse", "--git-dir") is None:
+        return None, None
+    override = os.environ.get(BASE_ENV, "").strip()
+    if override:
+        if _git_out("rev-parse", "--verify", "--quiet", f"{override}^{{commit}}") is None:
+            return None, f"base: revision {override!r} not found (fetch it, or drop --base)"
+        return override, None
+    if _git_out("rev-parse", "--verify", "--quiet", "refs/remotes/origin/main") is not None:
+        mb = _git_out("merge-base", "HEAD", "refs/remotes/origin/main")
+        if mb and mb.strip():
+            return mb.strip(), None
+    return "HEAD", None
 
-    def git(*args: str) -> str | None:
-        try:
-            r = subprocess.run(
-                ["git", "-C", str(REPO_ROOT), *args],
-                capture_output=True,
-                text=True,
-                timeout=10,
-            )
-            return r.stdout if r.returncode == 0 else None
-        except Exception:
-            return None
 
-    if git("rev-parse", "--git-dir") is None:
-        return []  # no history available; cannot enforce (documented limitation)
-
-    errors: list[str] = []
+def _changed_since_base(lib: list[dict]) -> tuple[str | None, list[tuple[dict, str]], list[str]]:
+    """(base, [(contract, text at base)] for canonical contracts whose text
+    differs from the base, errors). New files are not listed."""
+    base, err = comparison_base()
+    if base is None:
+        return None, [], [err] if err else []
+    changed = []
     for c in lib:
-        fm = c["front_matter"]
-        if fm.get("status") != "canonical":
+        if c["front_matter"].get("status") != "canonical":
             continue
-        rel = c["rel_path"]
-        prev = git("show", f"HEAD:{rel}")
+        prev = _git_out("show", f"{base}:{c['rel_path']}")
         if prev is None or prev == c["text"]:
-            continue  # unchanged or brand-new file
-        prev_fm = None
+            continue
+        changed.append((c, prev))
+    return base, changed, []
+
+
+def _short(rev: str) -> str:
+    return rev if rev == "HEAD" else rev[:12]
+
+
+def check_receipt_rotation(lib: list[dict]) -> list[str]:
+    """Mechanical enforcement: every contract change bumps the version, and
+    meaningful (MINOR/MAJOR) changes rotate the receipt.
+
+    Judged against comparison_base(), not just HEAD, so the rule still holds
+    after the change is committed and in CI. Skipped (not failed) when Git
+    history is unavailable (e.g. a fresh export).
+    """
+    base, changed, errors = _changed_since_base(lib)
+    for c, prev in changed:
+        fm = c["front_matter"]
+        rel = c["rel_path"]
+        cid = fm.get("contract_id", "?")
         try:
             prev_fm = parse_front_matter(prev)
         except CTError:
@@ -1814,25 +1851,17 @@ def check_receipt_rotation(lib: list[dict]) -> list[str]:
         prev_version = str(prev_fm.get("version", ""))
         cur_version = str(fm.get("version", ""))
         if prev_version == cur_version:
-            # content changed with NO version bump: that's a lock-drift class
-            # error already caught elsewhere; here, unchanged receipt is expected
+            errors.append(
+                f"{rel}: content changed since {_short(base)} but version is "
+                f"still {cur_version} (bump it: contractctl bump {cid} --patch, "
+                "or --minor for a new rule)"
+            )
             continue
-        # version changed: is it beyond a pure PATCH?
-        try:
-            pm, pd, pp = (int(x) for x in prev_version.split("."))
-            cm, cd, cp = (int(x) for x in cur_version.split("."))
-        except ValueError:
+        if not _beyond_patch(prev_version, cur_version):
+            # PATCH = clarification only: no receipt rotation needed
             continue
-        patch_only = (
-            pm == cm and pd == cd and cp == pp + 1
-        ) and cur_version != prev_version
         prev_receipts = RECEIPT_RE.findall(prev)
         cur_receipts = c["receipts"]
-        if patch_only:
-            # PATCH = clarification only: content may change without receipt
-            # rotation, but any receipt change must stay unique (checked elsewhere)
-            continue
-        # MINOR/MAJOR = meaningful change: receipt MUST rotate
         if prev_receipts and cur_receipts and prev_receipts[0] == cur_receipts[0]:
             errors.append(
                 f"{rel}: version changed {prev_version} -> {cur_version} "
@@ -1851,25 +1880,12 @@ def check_changelog_discipline(lib: list[dict]) -> list[str]:
     receipt rotation — no Git history means no claims):
       1. CHANGELOG.md must carry an [Unreleased] section for landed-but-
          unreleased changes.
-      2. Every canonical contract whose content changed against HEAD with a
-         version bump beyond PATCH must be mentioned by a NEW bullet in the
-         [Unreleased] section (diffed against HEAD's copy of the changelog).
+      2. Every canonical contract whose content changed against the
+         comparison base with a version bump beyond PATCH must be mentioned
+         by a NEW bullet in the [Unreleased] section (diffed against the
+         base's copy of the changelog).
     """
-    import subprocess
-
-    def git(*args: str) -> str | None:
-        try:
-            r = subprocess.run(
-                ["git", "-C", str(REPO_ROOT), *args],
-                capture_output=True,
-                text=True,
-                timeout=10,
-            )
-            return r.stdout if r.returncode == 0 else None
-        except Exception:
-            return None
-
-    if git("rev-parse", "--git-dir") is None:
+    if _git_out("rev-parse", "--git-dir") is None:
         return []  # no history available; cannot enforce (documented limitation)
     if not CHANGELOG_FILE.is_file():
         return ["changelog: CHANGELOG.md is missing"]
@@ -1885,37 +1901,33 @@ def check_changelog_discipline(lib: list[dict]) -> list[str]:
         return {ln.strip() for ln in m.group(1).splitlines() if ln.strip().startswith("-")}
 
     cur_text = CHANGELOG_FILE.read_text(encoding="utf-8")
-    head_text = git("show", "HEAD:CHANGELOG.md")
     errors: list[str] = []
     if "## [Unreleased]" not in cur_text:
         errors.append(
             "changelog: missing '## [Unreleased]' section — landed changes "
             "need a home before the next release bump"
         )
+    base, changed, base_errors = _changed_since_base(lib)
+    if base is None:
+        return errors  # base problems are reported once, by receipt rotation
     changed_meaningful: list[str] = []
-    for c in lib:
-        fm = c["front_matter"]
-        if fm.get("status") != "canonical":
-            continue
-        rel = c["rel_path"]
-        prev = git("show", f"HEAD:{rel}")
-        if prev is None or prev == c["text"]:
-            continue
+    for c, prev in changed:
         try:
             prev_version = str(parse_front_matter(prev).get("version", ""))
         except CTError:
             continue
-        cur_version = str(fm.get("version", ""))
+        cur_version = str(c["front_matter"].get("version", ""))
         if prev_version != cur_version and _beyond_patch(prev_version, cur_version):
-            changed_meaningful.append(str(fm["contract_id"]))
-    if changed_meaningful and head_text is not None:
-        new_bullets = _unreleased_bullets(cur_text) - _unreleased_bullets(head_text)
+            changed_meaningful.append(str(c["front_matter"]["contract_id"]))
+    base_text = _git_out("show", f"{base}:CHANGELOG.md")
+    if changed_meaningful and base_text is not None:
+        new_bullets = _unreleased_bullets(cur_text) - _unreleased_bullets(base_text)
         blob = "\n".join(new_bullets).lower()
         for cid in changed_meaningful:
             if cid.lower() not in blob:
                 errors.append(
-                    f"changelog: '{cid}' has a meaningful version change vs HEAD "
-                    "but no new [Unreleased] bullet mentions it"
+                    f"changelog: '{cid}' has a meaningful version change since "
+                    f"{_short(base)} but no new [Unreleased] bullet mentions it"
                 )
     return errors
 
@@ -3107,7 +3119,189 @@ def cmd_show(args) -> int:
     return 1
 
 
-def cmd_validate(_args) -> int:
+def fix_hints(errors: list[str]) -> list[str]:
+    """The command that fixes each class of validate error, in the order to run them."""
+    hints: list[str] = []
+
+    def add(h: str) -> None:
+        if h not in hints:
+            hints.append(h)
+
+    for e in errors:
+        if "but version is still" in e or "receipt did not rotate" in e:
+            add("contractctl bump <id> --patch|--minor|--major --note \"...\" (sets version, receipt, changelog, index, lock)")
+        elif e.startswith("changelog:") and "bullet" in e:
+            add("add a bullet naming the contract under '## [Unreleased]' in CHANGELOG.md (or: contractctl bump <id> --minor --note \"...\")")
+        elif e.startswith("index drift: '") and "row says" in e:
+            add("contractctl index --write")
+        elif e.startswith("index drift:"):
+            add("add or remove the row by hand in CONTRACT_INDEX.md (purpose = the contract's rationale)")
+        elif e.startswith("base:"):
+            add("git fetch origin main, or pass --base <rev> that exists here")
+    if any(h.startswith("contractctl bump") for h in hints):
+        # bump also writes the changelog bullet, the index row and the lock
+        return [h for h in hints if not (
+            h.startswith("contractctl index") or h.startswith("add a bullet"))]
+    if any(e.startswith("lock drift") or "contracts.lock.json missing" in e for e in errors):
+        add("contractctl lock")
+    return hints
+
+
+def print_fix_hints(errors: list[str], stream=None) -> None:
+    for h in fix_hints(errors):
+        print(f"next: {h}", file=stream or sys.stdout)
+
+
+BUMP_LEVELS = ("patch", "minor", "major")
+
+
+def _bumped(version: str, level: str) -> str:
+    ma, mi, pa = (int(x) for x in version.split("."))
+    if level == "major":
+        return f"{ma + 1}.0.0"
+    if level == "minor":
+        return f"{ma}.{mi + 1}.0"
+    return f"{ma}.{mi}.{pa + 1}"
+
+
+def receipts_ever_used(lib: list[dict]) -> set[str]:
+    """Every contract receipt in the library now or anywhere in its Git history."""
+    used = {r for c in lib for r in c["receipts"]}
+    log = _git_out("log", "--all", "-p", "--format=", "--", "contracts")
+    if log:
+        used.update(RECEIPT_RE.findall(log))
+    return used
+
+
+def new_receipt(seed: str, used: set[str]) -> str:
+    """A deterministic three-word receipt that has never been used."""
+    words = _RECEIPT_WORDS
+    n = len(words)
+    for k in range(10000):
+        i = int(hashlib.sha256(f"{seed}#{k}".encode("utf-8")).hexdigest()[:16], 16)
+        trio = (words[i % n], words[(i >> 20) % n], words[(i >> 40) % n])
+        word = "-".join(trio)
+        if len(set(trio)) == 3 and word not in used:
+            return word
+    raise CTError("could not find an unused receipt word")
+
+
+def add_unreleased_bullet(text: str, bullet: str) -> str:
+    """Insert bullet under '### Changed' in the hand-written '## [Unreleased]'
+    section of CHANGELOG.md, creating the subheading if needed."""
+    m = re.search(r"^## \[Unreleased\][^\n]*\n", text, re.MULTILINE)
+    if not m:
+        raise CTError("CHANGELOG.md has no '## [Unreleased]' section")
+    nxt = re.search(r"^## \[", text[m.end():], re.MULTILINE)
+    section = text[m.end(): m.end() + nxt.start()] if nxt else text[m.end():]
+    h = re.search(r"^### Changed[ \t]*\n", section, re.MULTILINE)
+    if h:
+        pos = m.end() + h.end()
+        return text[:pos] + bullet + "\n" + text[pos:]
+    return text[: m.end()] + "\n### Changed\n" + bullet + "\n" + text[m.end():]
+
+
+def bump_contract(cid: str, level: str, note: str | None) -> tuple[str, list[str], list[str]]:
+    """Version, receipt, changelog, index and lock for one edited contract.
+
+    Judged against comparison_base(), so running it twice (or switching
+    --patch to --minor) gives the same result instead of bumping twice.
+    Returns (contract id, what it did, remaining validate errors)."""
+    if level not in BUMP_LEVELS:
+        raise CTError(f"level must be one of {BUMP_LEVELS}")
+    lib = load_library()
+    by_id = {c["front_matter"]["contract_id"]: c for c in lib}
+    cid = canonical_id(cid, by_id)
+    if cid not in by_id:
+        raise CTError(f"unknown contract '{cid}'")
+    c = by_id[cid]
+    meaningful = level != "patch"
+    if meaningful and not (note and note.strip()):
+        raise CTError(f"--{level} is a meaningful change: say what changed with --note \"...\"")
+    text = c["text"]
+    cur_version = str(c["front_matter"]["version"])
+    base, _err = comparison_base()
+    prev = _git_out("show", f"{base}:{c['rel_path']}") if base else None
+    from_version, from_receipt = cur_version, (c["receipts"][0] if c["receipts"] else None)
+    if prev is not None:
+        try:
+            from_version = str(parse_front_matter(prev).get("version", cur_version))
+        except CTError:
+            pass
+        old = RECEIPT_RE.findall(prev)
+        from_receipt = old[0] if old else from_receipt
+    target = _bumped(from_version, level)
+    done: list[str] = []
+
+    fm_end = text.index("\n---", 3)
+    head, rest = text[:fm_end], text[fm_end:]
+    head, n = re.subn(r"^version:[ \t]*\S+[ \t]*$", f"version: {target}", head, count=1, flags=re.MULTILINE)
+    if n != 1:
+        raise CTError(f"{c['rel_path']}: no 'version:' line in front matter")
+    text = head + rest
+    done.append(f"version {from_version} → {target}" + ("" if target != cur_version else " (already set)"))
+
+    cur_receipt = c["receipts"][0] if c["receipts"] else None
+    if meaningful and cur_receipt and cur_receipt == from_receipt:
+        word = new_receipt(f"{cid}@{target}#{cur_receipt}", receipts_ever_used(lib))
+        text = RECEIPT_RE.sub(f"<!-- contract-receipt: {word} -->", text, count=1)
+        done.append("receipt rotated")
+    elif meaningful:
+        done.append("receipt already rotated")
+    c["path"].write_text(text, encoding="utf-8", newline="\n")
+
+    if note and note.strip():
+        cl = CHANGELOG_FILE.read_text(encoding="utf-8")
+        base_cl = _git_out("show", f"{base}:CHANGELOG.md") if base else None
+        if base_cl is not None and cl != base_cl and f"**{cid}**" in cl and f"**{cid}**" not in base_cl:
+            done.append("CHANGELOG.md already has a new bullet for it")
+        else:
+            bullet = f"- **{cid}** {from_version} → {target}: {note.strip()}"
+            CHANGELOG_FILE.write_text(add_unreleased_bullet(cl, bullet), encoding="utf-8", newline="\n")
+            done.append("CHANGELOG.md bullet added under [Unreleased]")
+
+    lib = load_library()
+    details = index_drift_details(lib)
+    if details:
+        idx = INDEX_FILE.read_text(encoding="utf-8")
+        for rcid, _gv, _gs, wv, ws in details:
+            idx, _n = rewrite_index_row(idx, rcid, wv, ws)
+        INDEX_FILE.write_text(idx, encoding="utf-8", newline="\n")
+        done.append("CONTRACT_INDEX.md row updated")
+    errors = validate_library(load_library())
+    if not errors:
+        write_lock()
+        done.append("contracts.lock.json regenerated")
+    return cid, done, errors
+
+
+def cmd_bump(args) -> int:
+    level = "major" if args.major else "minor" if args.minor else "patch"
+    try:
+        cid, done, errors = bump_contract(args.contract_id, level, args.note)
+    except CTError as e:
+        print(f"BUMP: FAILED — {e}", file=sys.stderr)
+        return 1
+    print(f"BUMP: {cid} ({level})")
+    for d in done:
+        print(f"  - {d}")
+    if errors:
+        print("not locked; fix these first:")
+        for e in errors:
+            print(f"  - {e}")
+        print_fix_hints(errors)
+        return 1
+    if cid == "floor":
+        print("next: playnice start .  (rewrites this repo's AGENTS.md block and badge)")
+        print("next: update the floor proof-line examples the tests name, then ./tools/check.sh")
+    else:
+        print("next: ./tools/check.sh")
+    return 0
+
+
+def cmd_validate(args) -> int:
+    if getattr(args, "base", None):
+        os.environ[BASE_ENV] = args.base
     lib = load_library()
     errors = validate_library(lib)
     lock_errors = (
@@ -3120,6 +3314,7 @@ def cmd_validate(_args) -> int:
         print(f"INVALID — {len(errors)} problem(s):")
         for e in errors:
             print(f"  - {e}")
+        print_fix_hints(errors)
         return 1
     print(
         f"VALID — {len(lib)} contracts; lockfile verified; receipts unique; index in sync"
@@ -3134,6 +3329,7 @@ def cmd_lock(_args) -> int:
         print("cannot lock an invalid library:", file=sys.stderr)
         for e in errors:
             print(f"  - {e}", file=sys.stderr)
+        print_fix_hints(errors, sys.stderr)
         return 1
     lock = write_lock()
     print(
@@ -4069,6 +4265,7 @@ def cmd_index(args) -> int:
         print("cannot rewrite an index with unresolved errors:", file=sys.stderr)
         for e in other:
             print(f"  - {e}", file=sys.stderr)
+        print_fix_hints(other, sys.stderr)
         return 1
     if not details:
         print("INDEX: already in sync (no changes)")
@@ -4304,7 +4501,27 @@ def main(argv=None) -> int:
     p.set_defaults(func=cmd_show)
 
     p = sub.add_parser("validate", help="validate library + lockfile")
+    p.add_argument(
+        "--base",
+        default=None,
+        metavar="REV",
+        help="judge contract changes against this revision (default: merge-base "
+        "of HEAD and origin/main, else HEAD; env " + BASE_ENV + ")",
+    )
     p.set_defaults(func=cmd_validate)
+
+    p = sub.add_parser(
+        "bump",
+        help="after editing a contract: set its version, rotate its receipt "
+        "(minor/major), add the changelog bullet, refresh index and lock",
+    )
+    p.add_argument("contract_id")
+    lv = p.add_mutually_exclusive_group(required=True)
+    lv.add_argument("--patch", action="store_true", help="clarification; same meaning")
+    lv.add_argument("--minor", action="store_true", help="compatible new rule (rotates the receipt)")
+    lv.add_argument("--major", action="store_true", help="incompatible change (rotates the receipt)")
+    p.add_argument("--note", default=None, help="changelog bullet text (required for --minor/--major)")
+    p.set_defaults(func=cmd_bump)
 
     p = sub.add_parser("resolve", help="resolve applicable contracts for a task")
     p.add_argument(

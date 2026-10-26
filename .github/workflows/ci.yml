@@ -83,6 +83,11 @@ jobs:
           PYEOF
 
       - name: Validate library
+        # Contract changes (version bump, receipt rotation, changelog bullet)
+        # are judged against the PR's base commit; on a push, against the
+        # merge-base with origin/main.
+        env:
+          PLAY_NICE_BASE: ${{ github.event.pull_request.base.sha }}
         run: python3 tools/contractctl/contractctl.py validate
 
       - name: Lock determinism (regenerate twice, byte-compare)

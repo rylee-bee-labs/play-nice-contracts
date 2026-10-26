@@ -115,6 +115,18 @@ def test_verify_out_of_date_old_version(tmp_path):
     assert f"OUT OF DATE: floor is now {FLOOR_V}, read contracts/everyone/FLOOR.md" in r.stdout
 
 
+def test_verify_newer_floor_than_library_is_invalid_not_out_of_date(tmp_path):
+    """A floor this library has never had is not "out of date": re-reading the
+    current floor would not help, so say what the two possibilities are."""
+    major = int(FLOOR_V.split(".")[0]) + 1
+    r = run_pn(["verify", f"Play-Nice floor {major}.0.0 · receipt {FLOOR_R}", "--json"], tmp_path)
+    assert r.returncode == 2, r.stdout
+    data = json.loads(r.stdout)
+    assert data["state"] == "INVALID"
+    assert "newer than this library" in data["message"] and "git pull" in data["next"]
+    assert FLOOR_R not in data["message"] + data["next"]
+
+
 def test_verify_wrong_receipt_on_current_version_is_invalid(tmp_path):
     r = run_pn(["verify", f"Play-Nice floor {FLOOR_V} · receipt wrong-word-here"], tmp_path)
     assert r.returncode == 2

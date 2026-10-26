@@ -288,6 +288,7 @@ def test_missing_receipt_fails(tmp_repo):
 def test_invalid_version_fails(tmp_repo):
     ct = _load_ct_from(tmp_repo)
     target = tmp_repo / "contracts" / "everyone" / "RECOVERY_AND_HISTORY.md"
+    assert "version: 2.0.0" in target.read_text(), "fixture: version moved; update the test"
     text = target.read_text().replace("version: 2.0.0", "version: banana")
     target.write_text(text)
     errors = ct.validate_library()
@@ -349,6 +350,7 @@ def test_changelog_guard_flags_unrecorded_meaningful_change(tmp_repo):
     recording it clears the error. PATCH-only changes are exempt."""
     ct = _load_ct_from(tmp_repo)
     t = tmp_repo / "contracts" / "everyone" / "TRUTH_AND_EVIDENCE.md"
+    assert "version: 2.0.0" in t.read_text(), "fixture: version moved; update the test"
     text = t.read_text().replace("version: 2.0.0", "version: 2.1.0")
     text = text.replace(
         "<!-- contract-receipt: kestrel-flint-loom -->",
@@ -378,9 +380,11 @@ def test_changelog_guard_flags_unrecorded_meaningful_change(tmp_repo):
 def test_diff_command_reports_changes(tmp_repo):
     """contractctl diff answers what changed between two revisions, including
     receipt rotation and always-set impact — the BEHIND-resolution question."""
-    base = run_ct(["diff", "--from", "HEAD~1", "--to", "HEAD"], cwd=str(tmp_repo))
-    # tmp_repo has one commit only; use HEAD..HEAD instead (zero-diff path)
-    r = run_ct(["diff", "--from", "HEAD", "--to", "HEAD"], cwd=str(tmp_repo))
+    # Run the copy's own contractctl so its REPO_ROOT is the copy: the count
+    # below comes from the copy's history, not the real checkout's.
+    ct_path = tmp_repo / "tools" / "contractctl" / "contractctl.py"
+    # tmp_repo has one commit only; use HEAD..HEAD (zero-diff path)
+    r = run_ct(["diff", "--from", "HEAD", "--to", "HEAD"], cwd=str(tmp_repo), ct_path=ct_path)
     assert r.returncode == 0, r.stdout + r.stderr
     # Count comes from the committed library, not a hard-coded number.
     committed = subprocess.run(
@@ -391,11 +395,12 @@ def test_diff_command_reports_changes(tmp_repo):
     assert f"unchanged: {n}" in r.stdout
     j = json.loads(
         run_ct(
-            ["diff", "--from", "HEAD", "--to", "HEAD", "--json"], cwd=str(tmp_repo)
+            ["diff", "--from", "HEAD", "--to", "HEAD", "--json"], cwd=str(tmp_repo),
+            ct_path=ct_path,
         ).stdout
     )
     assert j["added"] == [] and j["removed"] == [] and j["changed"] == []
-    bad = run_ct(["diff", "--from", "deadbeef", "--to", "HEAD"], cwd=str(tmp_repo))
+    bad = run_ct(["diff", "--from", "deadbeef", "--to", "HEAD"], cwd=str(tmp_repo), ct_path=ct_path)
     assert bad.returncode == 2
     assert "UNKNOWN" in bad.stdout + bad.stderr  # fail closed, never guesses
 
@@ -857,14 +862,18 @@ def test_stale_bundle_invalidates_commitment(tmp_repo):
         ).returncode
         == 0
     )
-    # change the library → relock → commitment must go STALE
+    # change the library (a PATCH, versioned as validate requires) → relock →
+    # commitment must go STALE
     target = tmp_repo / "contracts" / "everyone" / "TRUTH_AND_EVIDENCE.md"
+    text = target.read_text()
+    assert "version: 2.0.0" in text and "Keep honesty cheap." in text
     target.write_text(
-        target.read_text().replace(
-            "Keep honesty cheap.", "Keep honesty cheap and durable."
+        text.replace("Keep honesty cheap.", "Keep honesty cheap and durable.").replace(
+            "version: 2.0.0", "version: 2.0.1"
         )
     )
-    run_ct(["lock"], cwd=str(tmp_repo), ct_path=ct_path)
+    run_ct(["index", "--write"], cwd=str(tmp_repo), ct_path=ct_path)
+    assert run_ct(["lock"], cwd=str(tmp_repo), ct_path=ct_path).returncode == 0
     s = run_ct(
         ["session-status", "--manifest", str(manifest), "--task", task],
         cwd=str(tmp_repo),
@@ -1933,9 +1942,11 @@ def test_floor_carries_good_faith(lib):
     ]
     assert len(c) == 1
     c = c[0]
-    assert c["front_matter"]["version"] == "1.0.0"
+    # Version and receipt are pinned by contracts.lock.json, not here, so a
+    # floor bump does not need a test edit.
+    assert lib.SEMVER_RE.match(str(c["front_matter"]["version"]))
     assert c["front_matter"]["layer"] == "everyone"
-    assert c["receipts"] == ["honey-cell-lantern"]
+    assert len(c["receipts"]) == 1
     t = " ".join(c["text"].split())
     assert "Assume good faith" in t
     assert "Critique the work, not the worker, and aim at a fix" in t
@@ -2048,6 +2059,114 @@ def test_receipt_rotation_clean_when_compliant(tmp_repo):
     ct = _load_ct_from(tmp_repo)
     errors = ct.check_receipt_rotation(ct.load_library())
     assert errors == [], errors
+
+
+def _commit_all(repo, msg):
+    subprocess.run(["git", "-C", str(repo), "add", "-A"], check=True, capture_output=True)
+    subprocess.run(
+        ["git", "-C", str(repo), "commit", "-qm", msg, "--no-gpg-sign"],
+        check=True, capture_output=True,
+    )
+
+
+def _head(repo):
+    return subprocess.run(
+        ["git", "-C", str(repo), "rev-parse", "HEAD"], check=True, capture_output=True, text=True
+    ).stdout.strip()
+
+
+def test_receipt_rotation_still_enforced_after_commit(tmp_repo, monkeypatch):
+    """Comparing only against HEAD let a committed MINOR bump keep its receipt
+    (HEAD *is* the change, and CI always sees it committed). Judged against a
+    base revision, the rule holds after commit."""
+    ct = _load_ct_from(tmp_repo)
+    monkeypatch.setenv("PLAY_NICE_BASE", _head(tmp_repo))
+    target = tmp_repo / "contracts" / "work" / "ORCHESTRATION.md"
+    text = target.read_text()
+    assert "version: 2.0.0" in text
+    target.write_text(text.replace("version: 2.0.0", "version: 2.1.0"))
+    _commit_all(tmp_repo, "minor bump, receipt kept")
+    errors = ct.check_receipt_rotation(ct.load_library())
+    assert any("receipt did not rotate" in e and "ORCHESTRATION" in e for e in errors), errors
+    errors = ct.check_changelog_discipline(ct.load_library())
+    assert any("'orchestration'" in e and "bullet" in e for e in errors), errors
+
+
+def test_content_change_without_version_bump_fails(tmp_repo, monkeypatch):
+    ct = _load_ct_from(tmp_repo)
+    monkeypatch.setenv("PLAY_NICE_BASE", _head(tmp_repo))
+    target = tmp_repo / "contracts" / "work" / "ORCHESTRATION.md"
+    target.write_text(target.read_text() + "\nOne more sentence.\n")
+    _commit_all(tmp_repo, "edit, no bump")
+    errors = ct.check_receipt_rotation(ct.load_library())
+    assert any(
+        "ORCHESTRATION" in e and "version is still" in e and "contractctl bump orchestration" in e
+        for e in errors
+    ), errors
+
+
+def test_unknown_base_fails_closed(tmp_repo, monkeypatch):
+    ct = _load_ct_from(tmp_repo)
+    monkeypatch.setenv("PLAY_NICE_BASE", "no-such-rev")
+    errors = ct.validate_library()
+    assert any(e.startswith("base:") and "no-such-rev" in e for e in errors), errors
+
+
+def test_bump_minor_does_every_step(tmp_repo, monkeypatch):
+    """One command after editing: version, a never-used receipt, the
+    changelog bullet, the index row and the lock. The result validates
+    before and after commit, and running it again changes nothing."""
+    ct = _load_ct_from(tmp_repo)
+    monkeypatch.setenv("PLAY_NICE_BASE", _head(tmp_repo))
+    target = tmp_repo / "contracts" / "work" / "ORCHESTRATION.md"
+    before = ct.RECEIPT_RE.findall(target.read_text())[0]
+    target.write_text(target.read_text() + "\nA new compatible rule.\n")
+    with pytest.raises(ct.CTError, match="--note"):
+        ct.bump_contract("orchestration", "minor", None)
+    cid, done, errors = ct.bump_contract("orchestration", "minor", "add a rule")
+    assert cid == "orchestration" and errors == [], (done, errors)
+    text = target.read_text()
+    assert "version: 2.1.0" in text
+    after = ct.RECEIPT_RE.findall(text)[0]
+    assert after != before
+    assert after not in {r for c in ct.load_library() if c["rel_path"] != "contracts/work/ORCHESTRATION.md" for r in c["receipts"]}
+    assert "- **orchestration** 2.0.0 → 2.1.0: add a rule" in (tmp_repo / "CHANGELOG.md").read_text()
+    assert "| `orchestration` | Orchestration | 2.1.0 | canonical |" in (tmp_repo / "CONTRACT_INDEX.md").read_text()
+    assert ct.validate_library() == [] and ct.verify_lock() == []
+    snapshot = {p: p.read_text() for p in (target, tmp_repo / "CHANGELOG.md", tmp_repo / "contracts.lock.json")}
+    ct.bump_contract("orchestration", "minor", "add a rule")
+    assert {p: p.read_text() for p in snapshot} == snapshot
+    _commit_all(tmp_repo, "bumped")
+    assert ct.validate_library() == [] and ct.verify_lock() == []
+
+
+def test_bump_patch_keeps_receipt_and_accepts_old_ids(tmp_repo, monkeypatch):
+    ct = _load_ct_from(tmp_repo)
+    monkeypatch.setenv("PLAY_NICE_BASE", _head(tmp_repo))
+    target = tmp_repo / "contracts" / "work" / "ORCHESTRATION.md"
+    before = ct.RECEIPT_RE.findall(target.read_text())[0]
+    target.write_text(target.read_text() + "\nClearer wording.\n")
+    cid, _done, errors = ct.bump_contract("worker-contract", "patch", None)  # v1 alias
+    assert cid == "orchestration" and errors == []
+    assert "version: 2.0.1" in target.read_text()
+    assert ct.RECEIPT_RE.findall(target.read_text())[0] == before
+
+
+def test_fix_hints_name_the_command():
+    sys.path.insert(0, str(REPO / "tools" / "contractctl"))
+    import contractctl as ct
+
+    sys.path.pop(0)
+    assert ct.fix_hints(["lock drift: 'x' content hash changed (was a, now b)"]) == ["contractctl lock"]
+    assert ct.fix_hints(["index drift: 'x' row says 1.0.0/canonical, canonical is 1.0.1/canonical"]) == [
+        "contractctl index --write"
+    ]
+    hints = ct.fix_hints([
+        "contracts/x.md: content changed since HEAD but version is still 1.0.0 (bump it)",
+        "index drift: 'x' row says 1.0.0/canonical, canonical is 1.0.1/canonical",
+        "lock drift: 'x' content hash changed (was a, now b)",
+    ])
+    assert len(hints) == 1 and hints[0].startswith("contractctl bump")
 
 
 # --------------------------------------------------------------- ask-for-help
@@ -2465,6 +2584,7 @@ def test_index_write_refuses_when_otherwise_invalid(tmp_repo, capsys):
     ct = _load_ct_from(tmp_repo)
     # break a contract version to make the library invalid, then ask index to write
     t = tmp_repo / "contracts" / "everyone" / "RECOVERY_AND_HISTORY.md"
+    assert "version: 2.0.0" in t.read_text(), "fixture: version moved; update the test"
     t.write_text(t.read_text().replace("version: 2.0.0", "version: banana"))
     assert ct.cmd_index(argparse.Namespace(write=True)) == 1
     assert "unresolved errors" in capsys.readouterr().err

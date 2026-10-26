@@ -330,8 +330,21 @@ def _split_scalar(content: str, where: str, lineno: int) -> tuple[str, str]:
     return key, val
 
 
+def _strip_comment(v: str) -> str:
+    """Drop a trailing YAML comment (` #` or tab-# to end of line) outside quotes."""
+    if v[:1] in ('"', "'"):
+        end = v.find(v[0], 1)
+        if end > 0 and v[end + 1 :].lstrip().startswith("#"):
+            return v[: end + 1]
+        return v
+    for sep in (" #", "\t#"):
+        if sep in v:
+            v = v.split(sep, 1)[0]
+    return v.strip()
+
+
 def _coerce(val: str):
-    v = val.strip()
+    v = _strip_comment(val.strip())
     if not v:
         return ""
     if v.startswith('"') and v.endswith('"') and len(v) >= 2:
@@ -2439,6 +2452,18 @@ def cmd_verify(args) -> int:
             state="INVALID", exit=2,
             message=f"that receipt word is not on floor {floor['version']}",
             next=f"read {FLOOR_REL} and copy the receipt word from it",
+        )
+    elif version_tuple(parsed["version"]) > version_tuple(floor["version"]):
+        out.update(
+            state="INVALID", exit=2,
+            message=(
+                f"floor {parsed['version']} is newer than this library's floor "
+                f"{floor['version']}, so it cannot be checked here"
+            ),
+            next=(
+                f"if you read a newer floor, update this library (git pull); "
+                f"otherwise copy the version and receipt word from {FLOOR_REL}"
+            ),
         )
     else:
         out.update(
