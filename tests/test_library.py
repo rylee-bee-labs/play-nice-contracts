@@ -2537,6 +2537,29 @@ def test_scan_reports_redacted_findings(lib, tmp_path):
     assert "EXAMPLE1234567890" not in blob
 
 
+def test_scan_catches_hashed_hosts_and_subdomains(lib, tmp_path, monkeypatch):
+    """Private hostnames are listed by hash, so the scanner catches them (and
+    their subdomains) without the public repo spelling them out."""
+    import hashlib
+
+    name = "example-private.test"
+    digest = hashlib.sha256(name.encode()).hexdigest()
+    monkeypatch.setattr(lib, "SCAN_HASHED_HOSTS", (("topology:private-domain", digest),))
+    (tmp_path / "a.md").write_text("see https://API.Example-Private.test/health\n")
+    (tmp_path / "b.md").write_text("example-private.testing.org is someone else\n")
+    hits = lib.scan_surface(tmp_path)
+    assert [(h["path"], h["pattern"]) for h in hits] == [("a.md", "topology:private-domain")]
+    assert name not in json.dumps(hits).lower()
+
+
+def test_scan_patterns_spell_out_no_private_hostnames(lib):
+    """Hostnames belong in SCAN_HASHED_HOSTS (as hashes), never as plain needles."""
+    for label, needle in lib.SCAN_PATTERNS:
+        assert not lib._HOSTNAME_RE.fullmatch(needle) or label.endswith("private-ip"), (
+            f"{label}: put hostnames in SCAN_HASHED_HOSTS as a SHA-256, not in SCAN_PATTERNS"
+        )
+
+
 def test_scan_clean_tree(lib, tmp_path):
     (tmp_path / "ok.txt").write_text("nothing sensitive here\n")
     assert lib.scan_surface(tmp_path) == []

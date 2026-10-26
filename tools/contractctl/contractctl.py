@@ -698,9 +698,34 @@ SCAN_PATTERNS: tuple[tuple[str, str], ...] = (
     ("key-header:private-key", "BEGIN PRIVATE " + "KEY"),
     ("key-header:rsa", "BEGIN " + "RSA"),
     ("topology:private-ip", "192.168" + "."),
-    ("topology:private-domain", "hulganfamily.duck" + "dns.org"),
     ("topology:private-ip", "10.0" + "."),
 )
+# Private hostnames the scan must catch but this public repo must not spell
+# out: stored as the SHA-256 of the lowercased name. Every hostname-shaped
+# word in a file, and each of its parent domains (so subdomains match), is
+# hashed and compared. Add one with:
+#   python3 -c 'import hashlib,sys;print(hashlib.sha256(sys.argv[1].lower().encode()).hexdigest())' <name>
+SCAN_HASHED_HOSTS: tuple[tuple[str, str], ...] = (
+    ("topology:private-domain", "1a93d3a4a930778a09cfa6b7d14158aa5aef6e5925e9b91cd5a83b84177690fa"),
+)
+_HOSTNAME_RE = re.compile(
+    r"[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)+"
+)
+
+
+def _hashed_host_labels(text: str) -> set[str]:
+    """Labels of SCAN_HASHED_HOSTS entries whose hostname appears in text."""
+    want = {digest: label for label, digest in SCAN_HASHED_HOSTS}
+    found: set[str] = set()
+    for m in _HOSTNAME_RE.finditer(text):
+        parts = m.group(0).lower().split(".")
+        for i in range(len(parts) - 1):
+            digest = hashlib.sha256(".".join(parts[i:]).encode("utf-8")).hexdigest()
+            if digest in want:
+                found.add(want[digest])
+    return found
+
+
 SCAN_SKIP_PARTS = (".git", ".venv", "__pycache__", ".pytest_cache", ".contract-commitments")
 
 
@@ -714,13 +739,14 @@ def scan_surface(root: Path) -> list[dict]:
             text = f.read_text(encoding="utf-8")
         except (UnicodeDecodeError, ValueError, OSError):
             continue  # binary/unreadable: the text scanner skips (documented)
-        for label, needle in SCAN_PATTERNS:
-            if needle in text:
-                hits.append({
-                    "path": f.relative_to(root).as_posix(),
-                    "kind": label.split(":", 1)[0],
-                    "pattern": label,
-                })
+        labels = [label for label, needle in SCAN_PATTERNS if needle in text]
+        labels += sorted(_hashed_host_labels(text))
+        for label in labels:
+            hits.append({
+                "path": f.relative_to(root).as_posix(),
+                "kind": label.split(":", 1)[0],
+                "pattern": label,
+            })
     return hits
 
 

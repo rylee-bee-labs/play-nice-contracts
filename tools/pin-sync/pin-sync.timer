@@ -10,8 +10,8 @@ Description=Run the Play-Nice pin robot every 15 minutes
 # failed unit and no journal entry after the last good run. That is what froze
 # chat-sync.timer on 2026-10-02 for four days. The relative cadence below is kept
 # for its own semantics; OnCalendar is the backstop that makes the timer self-heal.
-# anchor: every 5 min, offset :09
-OnCalendar=*:09/5
+# anchor: every 15 min (minutes 09, 24, 39, 54)
+OnCalendar=*:09/15
 OnBootSec=5min
 OnUnitActiveSec=15min
 Persistent=true
