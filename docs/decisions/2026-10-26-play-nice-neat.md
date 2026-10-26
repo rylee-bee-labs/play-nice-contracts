@@ -38,7 +38,9 @@ owner only reviews). No contract rule changes to get there.
    - delete the 21 pointer files;
    - move `harness/` under `docs/background/`, which keeps one short
      index of everything there;
-   - move `profiles/` to `examples/profiles/` (it stays MIT).
+   - move `profiles/` to `examples/profiles/` (it stays MIT). *Amended
+     2026-10-26: the owner chose this split so the move changes no file's
+     license; the first text moved both under `docs/background/`.*
 3. **Release automation:**
    - merging a `VERSION` bump tags `vX.Y.Z`;
    - it publishes a GitHub release from the `[Unreleased]` changelog
