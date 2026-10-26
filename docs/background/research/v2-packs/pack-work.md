@@ -187,8 +187,8 @@ integration):
   something else; worth a rename at integration.
 
 Non-contract files naming removed ids that the orchestrator owns:
-`.contracts/adoption.yaml`, `profiles/baseline.yaml`,
-`profiles/examples/rylee.yaml`, `examples/*.adoption.yaml`,
+`.contracts/adoption.yaml`, `examples/profiles/baseline.yaml`,
+`examples/profiles/rylee.yaml`, `examples/*.adoption.yaml`,
 `examples/session-handoff.md`, `schema/global-playnice.schema.json`,
 `CONTRACT_INDEX.md`, `docs/QUICK_REFERENCE.md`, and tests
 (test_library.py pins contract count 68, orchestration 1.4.0 with rule

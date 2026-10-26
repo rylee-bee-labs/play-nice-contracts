@@ -255,7 +255,7 @@ An Icebreaker provides:
 
 - `~/vefr/.project/benchmark_r3_results.json` — Raw benchmark data
 - `~/vefr/.project/FINAL-REPORT.md` — VEFR final report
-- `~/play-nice-contracts/profiles/granite-4.1-3b.md` — Granite profile
+- `~/play-nice-contracts/examples/profiles/granite-4.1-3b.md` — Granite profile
 
 ---
 

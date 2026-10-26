@@ -36,8 +36,9 @@ owner only reviews). No contract rule changes to get there.
    per test.
 2. **Trim history in place:**
    - delete the 21 pointer files;
-   - move `harness/` and `profiles/` under `docs/background/`, which keeps
-     one short index of everything there.
+   - move `harness/` under `docs/background/`, which keeps one short
+     index of everything there;
+   - move `profiles/` to `examples/profiles/` (it stays MIT).
 3. **Release automation:**
    - merging a `VERSION` bump tags `vX.Y.Z`;
    - it publishes a GitHub release from the `[Unreleased]` changelog

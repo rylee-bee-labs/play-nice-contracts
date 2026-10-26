@@ -127,6 +127,7 @@ the library itself. The badge above is that check's result.
 
 Contract text (`contracts/`) and docs (`docs/`) are CC BY-SA 4.0 — copy, quote
 and adapt freely; attribution is a legal term of the license, and your own
-projects and code are unaffected. Tooling, schemas, lockfile and tests are MIT.
+projects and code are unaffected. Tooling, schemas, lockfile, tests and
+`examples/` (including `examples/profiles/`) are MIT.
 [TRADEMARKS.md](TRADEMARKS.md) governs identity and fork naming; the optional
 acknowledgement is credit, never endorsement.

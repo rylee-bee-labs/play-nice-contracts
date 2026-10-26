@@ -66,7 +66,7 @@ Existing participant packs and verification evidence can identify rules that alr
 
 ## Evidence ledger
 
-Use `harness/EVIDENCE-LEDGER.md`. Every proposed universal law should have supporting evidence, counterexamples, transfer notes, and a confidence level. Negative evidence is valuable.
+Use [EVIDENCE-LEDGER.md](EVIDENCE-LEDGER.md). Every proposed universal law should have supporting evidence, counterexamples, transfer notes, and a confidence level. Negative evidence is valuable.
 
 ## Kernel vs adapters
 
