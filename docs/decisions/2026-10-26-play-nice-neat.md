@@ -105,7 +105,10 @@ owner only reviews). No contract rule changes to get there.
 - **How the uv/pipx install finds the contracts:** ship them inside the
   tool, or fetch them into `~/.cache/play-nice` as `playnice` already does
   for adopters? Recommendation: fetch, so a tool install never pins stale
-  rules. Decide in the 2.2.0 PR.
+  rules. *Proposed 2026-10-27 in the install PR: fetch. The package is
+  only a launcher that runs `playnice.py` from a checkout (the one you are
+  in, `PLAY_NICE_LIBRARY`, or a cache clone updated at most daily).
+  Settled when that PR merges.*
 - **When to cut 3.0.0:** recommendation is after 2.2.0 has run on the
   owner's repos for a while.
 - **Roadmap issues:** whether to open one GitHub issue per milestone so the

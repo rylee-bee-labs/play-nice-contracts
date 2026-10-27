@@ -20,4 +20,11 @@ CLAUDE.local.md
 
 # Agent worktrees (Claude Code); never part of the repo.
 .claude/worktrees/
+
+# Package build output (pip/uv/pipx build the `playnice` package from here).
+build/
+dist/
+*.egg-info/
+
+# The generated website (tools/site/build_site.py).
 _site/
