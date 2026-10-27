@@ -4,7 +4,7 @@
 
 Identity and roles, secrets and data, public and private.
 
-3 contracts, each in short with the rules it marks MUST. The full text of each contract governs; this card is generated from it. Nothing in a pack may go below [the floor](../everyone/FLOOR.md). All packs: [the index](../../CONTRACT_INDEX.md).
+3 contracts, each in short with the headlines of the rules it marks MUST. This card only routes: **read the full contract** (each title links to it) before you rely on a rule. It is generated from the contracts. Nothing in a pack may go below [the floor](../everyone/FLOOR.md). All packs: [the index](../../CONTRACT_INDEX.md).
 
 | Contract | ID | Version | Rules marked MUST |
 |---|---|---|---|
@@ -18,21 +18,21 @@ Identity and roles, secrets and data, public and private.
 
 Prove who is acting with current evidence. Decide access by asking "can this actor do X?" about named permissions, never names or role strings. Grant only what the job needs, with an expiry and a revoke.
 
-Rules marked MUST:
+Rules marked MUST, in short ([all the rules](IDENTITY_AND_ROLES.md#rules)):
 
-- **1.** Identity comes from current evidence: a credential, session or token that is valid right now. Network position, hostname or being "internal" is never identity, and client-supplied identity headers are never believed unless they come from a trusted front door that proves itself (a shared secret or mutual TLS).
-- **2.** Keep more than one way in, and treat each as first-class: browser sessions for people, tokens for CLIs, agents and services. The sign-in provider is swappable configuration, not architecture.
-- **3.** The owner always has a tested local path in, and no group or role mapping can demote the owner or lock the owner out.
-- **4.** Code asks "can this actor do X?" against named permissions. It never checks names, group membership, or role strings. A role is just a named bundle of permissions; editing a bundle changes permissions and nothing else.
-- **5.** Every grant is explicit and bounded: named actor, named permission, named scope, expiry, revocable. Nothing is granted "just in case"; admin credentials are never shared. Authority widens only by a recorded, explicit change.
-- **6.** Ambiguous authority means no: deny, name the permission that was missing, say how to get it, and leave the refusal visible.
-- **7.** Sessions are bounded and inspectable: you can see who you are and when the session ends; any session can be revoked; losing session storage costs nothing important.
-- **8.** Risky actions step up: policy changes, reading stored secrets, destructive operations. They need fresh proof of authority, even on remembered devices. A remembered choice keeps a boundary; it never erases one.
-- **9.** Running a system is not reading its contents: administrative ability never grants routine access to other people's private material.
-- **10.** A request cannot promote itself: a role, level or class declared inside a payload, header or record is stored data, not authority. The system assigns them.
-- **11.** A helper works from a consented, expiring grant: who allowed what, for which job, until when. No standing keys.
-- **12.** An agent acts with the lesser of its task's scopes and the permissions of the person who dispatched it — never more.
-- **13.** Keep environments apart: development credentials and grants never reach production.
+- **1.** Identity comes from current evidence
+- **2.** Keep more than one way in, and treat each as first-class
+- **3.** The owner always has a tested local path in…
+- **4.** Code asks "can this actor do X?" against named permissions.
+- **5.** Every grant is explicit and bounded
+- **6.** Ambiguous authority means no
+- **7.** Sessions are bounded and inspectable
+- **8.** Risky actions step up
+- **9.** Running a system is not reading its contents
+- **10.** A request cannot promote itself
+- **11.** A helper works from a consented, expiring grant
+- **12.** An agent acts with the lesser of its task's scopes and the permissions of…
+- **13.** Keep environments apart
 
 ## Public and Private
 
@@ -40,17 +40,17 @@ Rules marked MUST:
 
 Decide now whether a repository may be public, and hold it to that standard today. Real hosts, private topology and personal history never enter tracked files; a canary test proves it, not good intent.
 
-Rules marked MUST:
+Rules marked MUST, in short ([all the rules](PUBLIC_AND_PRIVATE.md#rules)):
 
-- **1.** Every repository has one recorded status: publishable, or private. Treat "probably fine someday" as publishable.
-- **2.** In a publishable repository, no tracked file carries private endpoints, real hostnames, internal IP addresses, credentials, personal data or deployment topology.
-- **3.** Tests, docs and examples use reserved names (`service.example.invalid`) and synthetic tokens: real enough to catch carelessness, harmless to publish.
-- **4.** Look beyond code: screenshots, SVG metadata, archives, design exports, and every file in a pull request. Leaks hide in attachments.
-- **5.** An ignore rule neither untracks a tracked file nor erases history. Never treat it as protection.
-- **6.** A canary scan runs locally and in CI over every tracked text file. It extends the credential-shape check (secrets-and-data) to private IP ranges and plausible real hostnames. Findings report type, path and line — never the matched value.
-- **7.** A deliberate synthetic canary carries a visible marker (`pn-safety: synthetic`), so every exception stays reviewable.
-- **8.** When the scan catches a real value, the exposure rule in secrets-and-data applies: revoke and rotate first, discuss only by type and location.
-- **9.** Health history stays personal: diagnoses, medications and symptoms do not enter shared material. Keep the engineering lesson (say, motion that is safe for migraines); drop the personal reason.
+- **1.** Every repository has one recorded status
+- **2.** In a publishable repository, no tracked file carries private endpoints, real hostnames…
+- **3.** Tests, docs and examples use reserved names (`service.example.invalid`) and synthetic tokens
+- **4.** Look beyond code
+- **5.** An ignore rule neither untracks a tracked file nor erases history.
+- **6.** A canary scan runs locally and in CI over every tracked text file.
+- **7.** A deliberate synthetic canary carries a visible marker (`pn-safety: synthetic`)…
+- **8.** When the scan catches a real value, the exposure rule in secrets-and-data applies
+- **9.** Health history stays personal
 
 ## Secrets and Data
 
@@ -58,14 +58,14 @@ Rules marked MUST:
 
 Configs carry references; values live in secret storage. Every record has a class — public, private, secret — that decides where it may appear. Enforce both by construction, not by care alone.
 
-Rules marked MUST:
+Rules marked MUST, in short ([all the rules](SECRETS_AND_DATA.md#rules)):
 
-- **1.** Secret values live only in secret storage. Configs, code and docs name them (`token_env: GITEA_TOKEN`); the environment or a secret manager resolves the name at run time.
-- **3.** A value that left secret storage is compromised: revoke and rotate with the issuer first, investigate use after, and discuss it only by type, path and commit — never by re-transmitting the value. Deleting or rewriting history is a last resort and never recalls a copy.
-- **4.** Checking is structural, not by memory: a validator or CI scan rejects credential-shaped values in tracked text and reports findings redacted — type and path, never the value.
-- **5.** Every record carries a class: at minimum `public` (may appear anywhere), `private` (owner-scoped, never in shared output), `secret` (rule 1). A system may add classes; the set stays closed, documented, and checked on import.
-- **6.** Your system assigns classes when data is written. A payload's or provider's self-declared class is ignored; provenance does not launder classification.
-- **7.** Handling follows the class automatically: exports, screens, logs and model context filter by the stored class, never by a decision made at render time. Unknown class is treated as at least `private`, never as `public`.
+- **1.** Secret values live only in secret storage.
+- **3.** A value that left secret storage is compromised
+- **4.** Checking is structural, not by memory
+- **5.** Every record carries a class
+- **6.** Your system assigns classes when data is written.
+- **7.** Handling follows the class automatically
 - **8.** Exports cannot carry secret values, and they carry per-record classes so imports preserve them.
-- **9.** One person's `private` material is invisible to everyone else, including administrators — absent from the other's data, not merely hidden in the UI.
-- **10.** Secret values appear only inside an explicitly authorized, step-up-checked workflow (see identity-and-roles). A debugging agent stays blind to the token it is fixing.
+- **9.** One person's `private` material is invisible to everyone else, including administrators
+- **10.** Secret values appear only inside an explicitly authorized, step-up-checked workflow (see identity-and-roles).

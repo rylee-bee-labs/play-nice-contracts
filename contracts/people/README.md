@@ -4,7 +4,7 @@
 
 Anything a person uses: attention, accessibility, sensory safety, depth, themes.
 
-7 contracts, each in short with the rules it marks MUST. The full text of each contract governs; this card is generated from it. Nothing in a pack may go below [the floor](../everyone/FLOOR.md). All packs: [the index](../../CONTRACT_INDEX.md).
+7 contracts, each in short with the headlines of the rules it marks MUST. This card only routes: **read the full contract** (each title links to it) before you rely on a rule. It is generated from the contracts. Nothing in a pack may go below [the floor](../everyone/FLOOR.md). All packs: [the index](../../CONTRACT_INDEX.md).
 
 | Contract | ID | Version | Rules marked MUST |
 |---|---|---|---|
@@ -22,7 +22,7 @@ Anything a person uses: attention, accessibility, sensory safety, depth, themes.
 
 The default product already works for different vision, movement and assistive technology. Preferences may add comfort; nothing may drop below this floor (see the floor, rule 14).
 
-Its rules, by headline (this contract marks none MUST):
+Its rules in short (it marks none MUST) ([all the rules](ACCESSIBILITY.md#rules)):
 
 - **1.** Keyboard first-class.
 - **2.** Focus visible.
@@ -46,7 +46,7 @@ Its rules, by headline (this contract marks none MUST):
 
 Routine success costs no attention; only things needing a person interrupt. Write down whatever a person would otherwise have to remember. Interruption is normal; coming back must be easy.
 
-Its rules, by headline (this contract marks none MUST):
+Its rules in short (it marks none MUST) ([all the rules](ATTENTION_AND_QUIET.md#rules)):
 
 - **1.** Exceptions get attention.
 - **2.** Announce changes, not observations.
@@ -69,7 +69,7 @@ Its rules, by headline (this contract marks none MUST):
 
 Keep the depth; control when it shows. Smallest useful amount first, honest steps down to full detail, and an optional guided path for genuinely complex flows. Familiar explanations and analogies may help someone enter; they never replace the path to the real system.
 
-Its rules, by headline (this contract marks none MUST):
+Its rules in short (it marks none MUST) ([all the rules](DEPTH_ON_DEMAND.md#rules)):
 
 - **1.** Organize complexity, don't delete it.
 - **2.** First view stands alone.
@@ -92,16 +92,16 @@ Its rules, by headline (this contract marks none MUST):
 
 No heroics required: a tired, interrupted or unfamiliar person operates the system correctly. The system holds the complexity; the person holds the judgment.
 
-Its rules (this contract marks none MUST):
+Its rules in short (it marks none MUST) ([all the rules](HUMAN_RELIABILITY.md#rules)):
 
-- **1.** **No heroics.** Correct use must not depend on perfect concentration, noticing subtle visual differences, remembering undocumented state, re-checking healthy things "just in case", or reconstructing why a decision was made.
-- **2.** **Unnecessary cognitive load is technical debt.** Track it and pay it down like any other debt.
-- **3.** **Choose the reliable default:** visible state over remembered state; safe defaults over perfect recall; explicit uncertainty over false confidence; reversible actions over fragile ones; one obvious path over several equal ones; automation over repetitive vigilance; natural stopping points over endless work.
-- **4.** **Write for a strained reader.** Short sentences, stable terms, meaningful headings; don't assume maximum working memory (see the floor, rule 12).
-- **5.** **A calm surface never hides truth.** Simplicity may fold detail away (see depth-on-demand) but never removes or conceals anything important.
-- **6.** **Never imply obligation.** "More work is possible" is not "you should continue"; a healthy, stable system may stay unchanged, and "no action needed" remains a valid, desirable result.
-- **7.** **Make pushback cheap and honored.** "Not this way", "not this much", "not right now", "show me less", "just the recommendation" are easy to say, and the system changes in response — machinery carries the volume, the person carries the judgment.
-- **8.** **Put checking in the machine.** If safety depends on a person catching a subtle change, move that check into the system and have it report in plain words (see attention-and-quiet).
+- **1.** No heroics.
+- **2.** Unnecessary cognitive load is technical debt.
+- **3.** Choose the reliable default
+- **4.** Write for a strained reader.
+- **5.** A calm surface never hides truth.
+- **6.** Never imply obligation.
+- **7.** Make pushback cheap and honored.
+- **8.** Put checking in the machine.
 
 ## Sensory Safety
 
@@ -109,7 +109,7 @@ Its rules (this contract marks none MUST):
 
 Start still: no flashing, no ambient motion, no unasked sound. Motion is allowed only when it means something, stays short, and always has a static version.
 
-Its rules, by headline (this contract marks none MUST):
+Its rules in short (it marks none MUST) ([all the rules](SENSORY_SAFETY.md#rules)):
 
 - **1.** Never flash or strobe.
 - **2.** Calm by default.
@@ -130,7 +130,7 @@ Its rules, by headline (this contract marks none MUST):
 
 Let people make it theirs. One stack decides who wins: the floor, then packs, then project, then personal preferences, then theme. Nothing lower breaks what is above.
 
-Its rules, by headline (this contract marks none MUST):
+Its rules in short (it marks none MUST) ([all the rules](THEMES_AND_PERSONALIZATION.md#rules)):
 
 - **1.** One authority stack.
 - **2.** Every theme ships on the floor.
@@ -149,7 +149,7 @@ Its rules, by headline (this contract marks none MUST):
 
 Every important state and message answers: what happened, why it matters, what's next — including "nothing needed". Done is a real state: say it, mean it, keep it.
 
-Its rules, by headline (this contract marks none MUST):
+Its rules in short (it marks none MUST) ([all the rules](WHAT_WHY_NEXT.md#rules)):
 
 - **1.** Answer the three questions.
 - **2.** "Nothing needed" is a first-class answer.

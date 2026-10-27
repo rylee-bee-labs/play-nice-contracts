@@ -54,14 +54,34 @@ def test_card_shows_must_rules_with_their_own_numbers(lib):
     assert "[full text](BOUNDED_WORK.md)" in text
 
 
-def test_unmarked_contracts_fall_back_to_headlines_or_full_text(lib):
+def test_unmarked_contracts_list_every_rule_by_headline(lib):
     entries = {e["id"]: e for card in lib.pack_cards() for e in card["contracts"]}
     acc = entries["accessibility"]
-    assert acc["shown"] == "headlines" and acc["rules"][0]["text"] == "Keyboard first-class."
-    # floor rule 6's bold lead is not a whole sentence, so the floor shows full text
+    assert acc["shown"] == "all" and acc["rules"][0]["text"] == "Keyboard first-class."
     floor = entries["floor"]
-    assert floor["shown"] == "all"
-    assert any("keep a way back" in r["text"] for r in floor["rules"])
+    assert floor["shown"] == "all" and len(floor["rules"]) == 17
+    assert floor["rules"][5]["text"] == "Ask before anything hard to undo, public or costly"
+
+
+def test_rule_headlines_are_short_and_never_split_markup(lib):
+    h = lib.rule_headline
+    assert h("**Focus visible.** A clear focus indicator follows reading order.") == "Focus visible."
+    assert h("**Generated content says so:** every generated file") == "Generated content says so"
+    assert h("Report evidence: exact command, exact result.") == "Report evidence"
+    assert h("Stay in the task. Findings outside it go on a list.") == "Stay in the task."
+    assert h("Use a field (e.g. `name`) in replies. Then more.") == "Use a field (e.g. `name`) in replies."
+    long = ("An agent starts substantial work with one line, written from the files "
+            "it actually read and nothing else at all")
+    assert h(long) == "An agent starts substantial work with one line…"
+    # a code span is kept whole, even when the cut lands on it
+    out = h("Every published interface declares its version explicitly with a "
+            "field and a header `x-version: 1` in every reply")
+    assert out.count("`") % 2 == 0 and out.endswith("…")
+    for card in lib.pack_cards():
+        for e in card["contracts"]:
+            for r in e["rules"]:
+                assert len(r["text"].split()) <= lib.HEADLINE_WORDS + 1, (e["id"], r)
+                assert r["text"].count("`") % 2 == 0 and r["text"].count("**") % 2 == 0
 
 
 def test_card_links_stay_inside_the_library(lib):
