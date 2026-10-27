@@ -20,3 +20,4 @@ CLAUDE.local.md
 
 # Agent worktrees (Claude Code); never part of the repo.
 .claude/worktrees/
+_site/
