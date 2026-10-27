@@ -58,7 +58,7 @@ link the `playnice` command onto your PATH:
 ```bash
 git clone https://github.com/rylee-bee-labs/play-nice-contracts ~/code/play-nice-contracts
 ln -s ~/code/play-nice-contracts/tools/playnice/playnice ~/.local/bin/playnice
-playnice --version    # playnice 0.1.0 · library 2.0.0 · floor 1.0.0
+playnice --version    # playnice 0.1.0 · library 2.1.0 · floor 1.0.0
 ```
 
 Without the link, `python3 tools/playnice/playnice.py` from the checkout does
@@ -100,7 +100,7 @@ They version different things, so they differ on purpose:
 
 | Number | Where | Versions |
 |---|---|---|
-| Library `2.0.0` | `VERSION` | the contract set as a whole |
+| Library `2.1.0` | `VERSION` | the contract set as a whole |
 | Floor `1.0.0` | `contracts/everyone/FLOOR.md` | the 17 floor rules; the one proof lines name |
 | Contract `x.y.z` | each contract's front matter | that one contract |
 | `playnice 0.1.0` | `--version` | the command-line tool itself |

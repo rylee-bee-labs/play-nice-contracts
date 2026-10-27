@@ -36,9 +36,14 @@ def _next_minor(v):
 def test_release_moves_unreleased_and_bumps_version(lib_copy):
     old = (lib_copy / "VERSION").read_text().strip()
     new = _next_minor(old)
-    before = (lib_copy / "CHANGELOG.md").read_text()
+    # give the copy an entry of its own: right after a release the real
+    # [Unreleased] is empty
+    cl = lib_copy / "CHANGELOG.md"
+    cl.write_text(cl.read_text().replace(
+        "## [Unreleased]\n", "## [Unreleased]\n\n### Added\n- a test entry\n", 1))
+    before = cl.read_text()
     unreleased = before.split("## [Unreleased]", 1)[1].split("\n## [", 1)[0].strip()
-    assert unreleased, "fixture: the copy has unreleased entries"
+    assert unreleased == "### Added\n- a test entry"
     r = ct(lib_copy, "release", new, "--date", "2026-10-27")
     assert r.returncode == 0, r.stdout + r.stderr
     assert (lib_copy / "VERSION").read_text().strip() == new
