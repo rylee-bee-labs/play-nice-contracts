@@ -1,3 +1,12 @@
+# Estate dependabot template (agent-platform docs/ops/dependabot.md, 2026-10-27):
+# - minor + patch arrive as ONE grouped PR per ecosystem; a major arrives as its own PR;
+# - security updates are grouped too, and are not delayed by the cooldown;
+# - a 3-day cooldown (14 for majors) lets a bad release get yanked before it reaches us;
+# - docs/archive/** is frozen history and never gets a bump;
+# - monthly (not a live service), on wednesday: each repo has its own weekday,
+#   so the estate's shared runners do not get every repo's PRs on the same morning.
+#
+# From the previous file (repo-specific, still true unless the template above says otherwise):
 # Dependabot configuration for Play Nice Contracts
 #
 # The library is stdlib-only at runtime. The test-only tools
@@ -8,15 +17,27 @@
 #
 # If the test tools are ever pinned, add a pip updater with the
 # same grouping style as the GitHub Actions updater below.
-
 version: 2
 updates:
-  - package-ecosystem: "github-actions"
+  - package-ecosystem: github-actions
     directory: "/"
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: monthly
+      day: wednesday
+      time: "05:30"
+      timezone: America/Chicago
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+    cooldown:
+      default-days: 3
+      semver-major-days: 14
+    exclude-paths:
+      - "docs/archive/**"
     groups:
-      actions:
-        patterns:
-          - "*"
+      actions-security:
+        applies-to: security-updates
+        patterns: ["*"]
+      actions-minor-patch:
+        update-types: [minor, patch]
+        patterns: ["*"]
