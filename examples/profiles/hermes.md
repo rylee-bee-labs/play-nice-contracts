@@ -28,7 +28,7 @@ Demonstrated in onboarding and Qwen profiling:
   (file reading, CLI execution), not a reasoning claim.
 - **UNKNOWN preservation** — reported Trusted Translation as absent from the
   stale checkout rather than fabricating knowledge of it. After sync, reported
-  Big Pickle as genuinely absent from the repo (not in profiles/, not in
+  Big Pickle as genuinely absent from the repo (not in examples/profiles/, not in
   examples/, not in project-context/). Preserved UNKNOWN for Big Pickle's
   capabilities rather than inferring from the name.
 - **Honest correction** — when the checkout turned out to be stale, did not
@@ -66,7 +66,7 @@ Demonstrated in onboarding and Qwen profiling:
   tests. All 106 tests pass. CI green.
 - **Participant discovery scope correction** — initially missed Big Pickle's
   project-local participant pack. Lesson recorded: check both global
-  (profiles/) and project-local (.project/participants/) before concluding
+  (examples/profiles/) and project-local (.project/participants/) before concluding
   UNKNOWN.
 - **Live-state re-observation** — initially observed no service on
   localhost:8000 (correct at observation time). Another participant deployed
@@ -135,7 +135,7 @@ No evidence of strength in these areas:
 | Could over-trust worker reports without integration verification | Orchestration contract rule 6: worker-green is not integration-green |
 | Model identity changes between sessions; must track current brain | Record CURRENT BRAIN in profile; do not inherit claims from previous models |
 | No observed multi-worker parallel orchestration yet | Start with serial integration; prove parallel capability before relying on it |
-| **Discovery scope** — initially searched only global profile locations and missed Big Pickle's project-local participant pack | Check both global (profiles/) and project-local (.project/participants/) before concluding UNKNOWN |
+| **Discovery scope** — initially searched only global profile locations and missed Big Pickle's project-local participant pack | Check both global (examples/profiles/) and project-local (.project/participants/) before concluding UNKNOWN |
 | **Live-state freshness** — a correct observation may become stale while another participant changes the system | Timestamp observations; re-observe before consequential live-state recommendations |
 
 ## AUTHORITY

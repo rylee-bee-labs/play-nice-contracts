@@ -22,6 +22,8 @@ explanatory documentation under `docs/`, including:
 - `docs/background/principles/`, `docs/background/roles/`
 - `docs/background/research/`, `docs/decisions/`,
   `docs/background/participant-notes/`
+- `docs/background/harness/` (experimental research: hypotheses and the
+  evidence ledger)
 - `docs/QUICK_REFERENCE.md`, `docs/PLAYNICE.md`
 - `docs/ACKNOWLEDGEMENT.md`
 
