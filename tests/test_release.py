@@ -88,3 +88,6 @@ def test_release_workflow_publishes_from_release_notes():
     assert all(ln.strip().startswith("IN_VERSION:") for ln in lines), lines
     assert "git rev-list --reverse origin/main -- VERSION" in wf
     assert '--latest="$latest"' in wf
+    # a by-hand run for an existing release refreshes its notes, nothing else
+    assert 'gh release edit "$tag" --notes-file' in wf
+    assert '"$GITHUB_EVENT_NAME" = "workflow_dispatch"' in wf
