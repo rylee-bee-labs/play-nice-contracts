@@ -149,6 +149,13 @@ def library_git_copy(tmp_path_factory):
                 ("init", "-q", "-b", "main"),
                 ("config", "user.email", "test@example.invalid"),
                 ("config", "user.name", "Test"),
+                # no background maintenance: `git commit` can start a detached
+                # `git maintenance run` whose lock and temp-pack files vanish
+                # while copytree copies this repo for a test (seen on CI).
+                # The copies inherit these settings.
+                ("config", "maintenance.auto", "false"),
+                ("config", "gc.auto", "0"),
+                ("config", "gc.autoDetach", "false"),
                 ("add", "-A"),
                 ("commit", "-qm", "baseline", "--no-gpg-sign"),
                 # one pack file instead of ~250 loose objects: every copy
