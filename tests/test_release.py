@@ -75,3 +75,11 @@ def test_release_workflow_publishes_from_release_notes():
     wf = (REPO / ".github" / "workflows" / "release.yml").read_text()
     assert "VERSION" in wf and "release-notes" in wf and "gh release create" in wf
     assert "contents: write" in wf
+    # by-hand runs for an earlier version: the input reaches the script only
+    # through env (never pasted into it), and the tag goes on the commit where
+    # VERSION became that version, found from main's history
+    assert "IN_VERSION: ${{ inputs.version }}" in wf
+    lines = [ln for ln in wf.splitlines() if "${{ inputs." in ln]
+    assert all(ln.strip().startswith("IN_VERSION:") for ln in lines), lines
+    assert "git rev-list --reverse origin/main -- VERSION" in wf
+    assert '--latest="$latest"' in wf
