@@ -25,7 +25,8 @@ command. Check its status line before starting milestone work.
 ## Generated files
 
 Never edit these by hand: `contracts.lock.json`, the version and status
-columns of `CONTRACT_INDEX.md`, the `play-nice` block in `AGENTS.md`,
+columns of `CONTRACT_INDEX.md`, the pack cards (`contracts/<pack>/README.md`),
+the `play-nice` block in `AGENTS.md`,
 `playnice-badge.svg`, and anything between `docsgen` markers. The table in
 `docs/MAINTAINING.md` → "Generated files" names the command for each.
 

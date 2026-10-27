@@ -3,7 +3,7 @@
 #
 # Never edits anything: a stale file is reported with the one command that
 # regenerates it, and the script exits 1. Used by ./tools/check.sh and CI.
-# New generated files (pack cards, the site) add one check here.
+# New generated files add one check here.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -39,6 +39,10 @@ cp "$tmp/lock.orig" contracts.lock.json
 # CONTRACT_INDEX.md version and status columns.
 rc=0; $CT index >/dev/null 2>&1 || rc=1
 report "CONTRACT_INDEX.md (version/status columns)" $rc "$CT index --write"
+
+# contracts/<pack>/README.md: the pack cards.
+rc=0; $CT cards >/dev/null 2>&1 || rc=1
+report "pack cards (contracts/<pack>/README.md)" $rc "$CT cards --write"
 
 # playnice-badge.svg: what `playnice check .` draws today.
 $PN check . --badge "$tmp/badge.svg" >/dev/null 2>&1 || true

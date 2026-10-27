@@ -13,7 +13,9 @@ the rules for agents working on this repository.
 ## The packs
 
 The floor is for everyone. Each pack goes deeper for one kind of work; nothing
-in a pack may go below the floor.
+in a pack may go below the floor. Each pack folder opens on its card: every
+contract in short, with the headlines of its MUST rules and a link to the
+full text.
 
 | Pack | For |
 |---|---|
