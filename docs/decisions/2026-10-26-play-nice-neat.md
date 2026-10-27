@@ -1,8 +1,8 @@
 # Decision: Play-Nice, neat — smaller, one front door, lovely, runs itself
 
-Date: 2026-10-26. **Status: Proposed.** The owner chose every direction below
-in an interactive review on this date; the record becomes Approved when its
-pull request merges. Each milestone still lands as its own reviewed PRs.
+Date: 2026-10-26. **Status: Approved** (PR #92, merged 2026-10-26). The
+owner chose every direction below in an interactive review on this date.
+Each milestone still lands as its own reviewed PRs.
 
 ## In short
 
