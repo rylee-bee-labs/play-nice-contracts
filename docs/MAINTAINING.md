@@ -208,6 +208,11 @@ the README's [version table](../README.md#version-numbers).
    changelog section) as the GitHub release. If the tag exists, it does
    nothing.
 
+A release is always tagged on the first commit on `main` whose `VERSION`
+says that version. To publish an earlier version that was never tagged, run
+the workflow by hand (Actions → release → Run workflow) with its `version`;
+it finds that commit and does not mark the release latest.
+
 Contract versions and the floor version are separate: `contractctl bump`
 changes those, and a library release just collects what has landed.
 

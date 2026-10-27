@@ -5,12 +5,22 @@ name: release
 # [X.Y.Z] in CHANGELOG.md and writes VERSION); merging it to main runs this,
 # which tags vX.Y.Z and publishes that changelog section as the release notes.
 # Nothing to do when the tag already exists.
+#
+# Every release is tagged on the first commit on main whose VERSION file
+# says that version, the commit where it landed. Run by hand (Actions →
+# release → Run workflow) with `version` to publish an earlier version there;
+# it is not marked latest.
 
 on:
   push:
     branches: [main]
     paths: [VERSION]
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish (X.Y.Z). Empty: the one in VERSION"
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -31,18 +41,31 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Tag and publish the version in VERSION
+      - name: Tag and publish the version
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+          IN_VERSION: ${{ inputs.version }}
         run: |
-          version="$(tr -d '[:space:]' < VERSION)"
+          current="$(tr -d '[:space:]' < VERSION)"
+          version="${IN_VERSION:-$current}"
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::version must be X.Y.Z, got '$version'"; exit 1; }
           tag="v$version"
           if git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
             echo "$tag already exists; nothing to publish"
             exit 0
           fi
+          # the commit where VERSION first became this version, on main
+          target=""
+          for c in $(git rev-list --reverse origin/main -- VERSION); do
+            if [ "$(git show "$c:VERSION" | tr -d '[:space:]')" = "$version" ]; then
+              target="$c"; break
+            fi
+          done
+          [ -n "$target" ] || { echo "::error::no commit on main sets VERSION to $version"; exit 1; }
+          latest=true
+          [ "$version" = "$current" ] || latest=false
           python3 tools/contractctl/contractctl.py release-notes "$version" > "$RUNNER_TEMP/notes.md"
-          gh release create "$tag" --target "$GITHUB_SHA" \
+          gh release create "$tag" --target "$target" --latest="$latest" \
             --title "Play-Nice $version" --notes-file "$RUNNER_TEMP/notes.md"
-          echo "published $tag"
+          echo "published $tag at $target (latest: $latest)"
