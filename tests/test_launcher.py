@@ -31,8 +31,8 @@ def remote(library_git_copy, tmp_path):
 
 
 def test_env_override_wins(launcher, tmp_path):
-    lib, warning = launcher.find_library(tmp_path, {"PLAY_NICE_LIBRARY": str(REPO)})
-    assert lib == REPO and warning is None
+    lib, how, warning = launcher.find_library(tmp_path, {"PLAY_NICE_LIBRARY": str(REPO)})
+    assert (lib, how, warning) == (REPO, "PLAY_NICE_LIBRARY", None)
 
 
 def test_env_override_must_be_a_library(launcher, tmp_path):
@@ -41,16 +41,16 @@ def test_env_override_must_be_a_library(launcher, tmp_path):
 
 
 def test_folder_inside_a_checkout_is_used(launcher):
-    lib, _ = launcher.find_library(REPO / "contracts" / "work", {})
-    assert lib == REPO
+    lib, how, _ = launcher.find_library(REPO / "contracts" / "work", {})
+    assert (lib, how) == (REPO, "the checkout you are in")
 
 
 def test_first_use_clones_into_the_cache(launcher, remote, tmp_path):
     work, bare = remote
     env = {"PLAY_NICE_CACHE": str(tmp_path / "cache"), "PLAY_NICE_REPOSITORY": str(bare)}
-    lib, warning = launcher.find_library(tmp_path / "elsewhere", env)
+    lib, how, warning = launcher.find_library(tmp_path / "elsewhere", env)
     assert lib == tmp_path / "cache" / "contracts"
-    assert warning is None
+    assert how == "managed clone" and warning is None
     assert head(lib) == head(work)
 
 
@@ -70,16 +70,35 @@ def test_the_clone_is_fast_forwarded_once_a_day(launcher, remote, tmp_path):
     assert (target / "NEW.txt").is_file()
 
 
-def test_offline_keeps_the_clone_and_warns(launcher, remote, tmp_path):
+def test_offline_keeps_the_clone_and_warns_until_it_updates(launcher, remote, tmp_path):
     _work, bare = remote
     target = tmp_path / "cache" / "contracts"
     launcher.ensure_clone(target, str(bare))
     git0(target, "remote", "set-url", "origin", str(tmp_path / "gone.git"))
-    warning = launcher.ensure_clone(target, str(bare), now=time.time() + 2 * 86400)
-    assert warning and "using it as it is" in warning
-    # one attempt a day: the next run is quiet again
-    assert launcher.ensure_clone(target, str(bare), now=time.time() + 2 * 86400) is None
+    later = time.time() + 2 * 86400
+    warning = launcher.ensure_clone(target, str(bare), now=later)
+    assert warning and "may be out of date" in warning and "last updated" in warning
+    # no new attempt within the day, but the warning stays: never "fresh"
+    again = launcher.ensure_clone(target, str(bare), now=later + 60)
+    assert again and "may be out of date" in again
+    assert "last update failed" in launcher.describe(target, "managed clone")
+    # back online: the next day's update succeeds and the warning goes
+    git0(target, "remote", "set-url", "origin", str(bare))
+    assert launcher.ensure_clone(target, str(bare), now=later + 2 * 86400) is None
+    assert "last update failed" not in launcher.describe(target, "managed clone")
     assert launcher.is_library(target)
+
+
+def test_version_names_the_checkout_and_commit(remote, tmp_path):
+    work, bare = remote
+    env = with_env(PLAY_NICE_CACHE=str(tmp_path / "cache"), PLAY_NICE_REPOSITORY=str(bare))
+    env.pop("PLAY_NICE_LIBRARY", None)
+    r = run_py(LAUNCHER, ["--version"], cwd=tmp_path, env=env)
+    assert r.returncode == 0, r.stderr
+    first, second = r.stdout.strip().splitlines()
+    assert first.startswith("playnice ") and "floor " in first
+    assert f"at commit {head(work)[:12]}" in second
+    assert "(managed clone, last updated " in second
 
 
 def test_a_foreign_folder_in_the_cache_is_never_overwritten(launcher, tmp_path):
@@ -96,6 +115,7 @@ def test_command_runs_the_checkouts_playnice(tmp_path):
                env=with_env(PLAY_NICE_LIBRARY=str(REPO)))
     assert r.returncode == 0, r.stderr
     assert r.stdout.startswith("playnice ") and "floor " in r.stdout
+    assert f"rules from {REPO} at commit " in r.stdout and "(PLAY_NICE_LIBRARY)" in r.stdout
 
 
 def test_command_explains_when_no_library_can_be_found(tmp_path):
@@ -105,6 +125,7 @@ def test_command_explains_when_no_library_can_be_found(tmp_path):
     r = run_py(LAUNCHER, ["--version"], cwd=tmp_path, env=env)
     assert r.returncode == 2
     assert "cannot find the Play-Nice library" in r.stderr
+    assert "first use clones the library" in r.stderr
     assert "next:" in r.stderr
 
 

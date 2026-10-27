@@ -62,10 +62,12 @@ playnice --version    # playnice 0.1.0 · library 2.1.0 · floor 1.0.0
 ```
 
 The installed command carries no copy of the rules. On first use it clones
-the library into `~/.cache/play-nice/contracts` and fast-forwards that clone
-at most once a day, so it never checks against old rules; offline, it uses
-the clone it has. Inside a library checkout, or with `PLAY_NICE_LIBRARY` set
-to one, it uses that checkout instead.
+the library into `~/.cache/play-nice/contracts` (so first use needs git and
+the network) and fast-forwards that clone at most once a day. When an update
+fails, offline say, it keeps using the clone it has and warns on every run
+until an update succeeds. Inside a library checkout, or with
+`PLAY_NICE_LIBRARY` set to one, it uses that checkout instead.
+`playnice --version` says which checkout and commit the rules come from.
 
 Or without installing anything: clone the library and link the command onto
 your PATH.
