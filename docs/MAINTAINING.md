@@ -125,8 +125,11 @@ contract text from other repos; never copy it. It is not its own
 governance body: contract changes are proposals that Rylee reviews.
 
 - **Standard library only.** Tools import nothing beyond Python 3.10+'s
-  standard library (CI tests 3.10 to 3.12). `pyproject.toml` only declares
-  test extras. Adding a runtime dependency is a decision for Rylee.
+  standard library (CI tests 3.10 to 3.12). `pyproject.toml` builds a
+  package with no dependencies that installs only
+  `tools/playnice/playnice_launcher.py` (it runs `playnice.py` from a
+  library checkout), plus the test extras. Adding a runtime dependency is a
+  decision for Rylee.
 - **Contract text is the product.** State your intent and show the diff
   before rewriting normative language, and follow [the recipe](#changing-a-contract).
 - **Changelog.** Every landed change gets a bullet under `## [Unreleased]`
