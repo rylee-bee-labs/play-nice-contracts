@@ -98,6 +98,15 @@ jobs:
       - name: Full test suite
         run: python3 -m pytest tests/ -q -n auto
 
+      - name: Install the playnice command (as uv and pipx do)
+        # builds the package from this checkout into a fresh venv; the
+        # installed command must run this checkout's playnice.py
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --quiet .
+          cd "$RUNNER_TEMP"
+          PLAY_NICE_LIBRARY="$GITHUB_WORKSPACE" "$RUNNER_TEMP/venv/bin/playnice" --version
+
       - name: Secret / private-material scan (library surfaces)
         run: python3 tools/contractctl/contractctl.py scan
 

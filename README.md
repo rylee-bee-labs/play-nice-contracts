@@ -52,13 +52,29 @@ rediscovering them.
 
 ## Get the command (one time)
 
-No installer and nothing beyond Python 3.10+ and git. Clone the library and
-link the `playnice` command onto your PATH:
+Needs Python 3.10+ and git, nothing else. With [uv](https://docs.astral.sh/uv/)
+or [pipx](https://pipx.pypa.io/):
+
+```bash
+uv tool install git+https://github.com/rylee-bee-labs/play-nice-contracts
+# or: pipx install git+https://github.com/rylee-bee-labs/play-nice-contracts
+playnice --version    # playnice 0.1.0 · library 2.1.0 · floor 1.0.0
+```
+
+The installed command carries no copy of the rules. On first use it clones
+the library into `~/.cache/play-nice/contracts` (so first use needs git and
+the network) and fast-forwards that clone at most once a day. When an update
+fails, offline say, it keeps using the clone it has and warns on every run
+until an update succeeds. Inside a library checkout, or with
+`PLAY_NICE_LIBRARY` set to one, it uses that checkout instead.
+`playnice --version` says which checkout and commit the rules come from.
+
+Or without installing anything: clone the library and link the command onto
+your PATH.
 
 ```bash
 git clone https://github.com/rylee-bee-labs/play-nice-contracts ~/code/play-nice-contracts
 ln -s ~/code/play-nice-contracts/tools/playnice/playnice ~/.local/bin/playnice
-playnice --version    # playnice 0.1.0 · library 2.1.0 · floor 1.0.0
 ```
 
 Without the link, `python3 tools/playnice/playnice.py` from the checkout does
@@ -106,8 +122,7 @@ They version different things, so they differ on purpose:
 | `playnice 0.1.0` | `--version` | the command-line tool itself |
 
 `playnice --version` and `contractctl --version` print the tool, library and
-floor together. `pyproject.toml` only declares test tools and carries no
-release number.
+floor together. The installed package's version is the library version.
 
 ## Is the library healthy?
 

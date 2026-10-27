@@ -1,18 +1,34 @@
-# play-nice-contracts — dev environment declaration.
+# play-nice-contracts — the installable `playnice` command and the test tools.
 #
 # RUNTIME INVARIANT (docs/MAINTAINING.md): contractctl and playnice import nothing
-# beyond the Python standard library (3.10+). This file declares TEST-ONLY
-# dependencies so `pip install -e .[dev]` / editors / CI can resolve the
-# suite without any magic incantation. There is deliberately no build-system
-# table: this repo ships files, not wheels — there is nothing to install and
-# stdlib-only stays the runtime rule, enforced by tests, not by packaging.
+# beyond the Python standard library (3.10+), and the package has no
+# dependencies. It installs one module, tools/playnice/playnice_launcher.py,
+# which runs playnice.py from a library checkout (see that file), so the rules
+# are never copied into the install:
+#
+#   uv tool install git+https://github.com/rylee-bee-labs/play-nice-contracts
+#   pipx install git+https://github.com/rylee-bee-labs/play-nice-contracts
+#
+# The package version is the library version (VERSION). setuptools is needed
+# only to build the package, never at run time.
+
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
 
 [project]
-name = "play-nice-contracts-dev"
-version = "0"  # placeholder required by packaging; not a release number. The library
-             # version is VERSION; tool versions print with `playnice --version`.
-description = "Dev/test extras for the Play-Nice contract library (tooling stays stdlib-only)"
+name = "playnice"
+dynamic = ["version"]
+description = "The playnice command: check a project, a website or a proof line against the Play-Nice contracts"
+readme = "README.md"
 requires-python = ">=3.10"
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/rylee-bee-labs/play-nice-contracts"
+
+[project.scripts]
+playnice = "playnice_launcher:main"
 
 [project.optional-dependencies]
 dev = [
@@ -20,3 +36,10 @@ dev = [
     "pytest-xdist>=3",  # optional speed-up: `pytest -n auto`
     "pyyaml>=6",
 ]
+
+[tool.setuptools]
+package-dir = { "" = "tools/playnice" }
+py-modules = ["playnice_launcher"]
+
+[tool.setuptools.dynamic]
+version = { file = "VERSION" }
