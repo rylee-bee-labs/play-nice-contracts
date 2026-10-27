@@ -3474,6 +3474,105 @@ def bump_contract(cid: str, level: str, note: str | None) -> tuple[str, list[str
     return cid, done, errors
 
 
+def _changelog_section(text: str, version: str) -> tuple[int, int] | None:
+    """(start of body, end of body) of the hand-written `## [version]` section."""
+    m = re.search(rf"^## \[{re.escape(version)}\][^\n]*\n", text, re.MULTILINE)
+    if not m:
+        return None
+    nxt = re.search(r"^## \[", text[m.end():], re.MULTILINE)
+    return m.end(), (m.end() + nxt.start()) if nxt else len(text)
+
+
+def release_notes(version: str) -> str:
+    """The body of CHANGELOG.md's `## [version]` section: the release notes."""
+    text = CHANGELOG_FILE.read_text(encoding="utf-8")
+    span = _changelog_section(text, version)
+    if span is None:
+        raise CTError(
+            f"CHANGELOG.md has no '## [{version}]' section (cut it with: contractctl release {version})"
+        )
+    body = text[span[0]: span[1]].strip()
+    if not body:
+        raise CTError(f"CHANGELOG.md '## [{version}]' section is empty")
+    return body + "\n"
+
+
+def _semver_tuple(v: str) -> tuple[int, int, int]:
+    if not SEMVER_RE.match(v):
+        raise CTError(f"not a version: {v!r} (want X.Y.Z)")
+    a, b, c = (int(x) for x in v.split("."))
+    return a, b, c
+
+
+# "library 2.0.0" and "Library `2.0.0`" in README.md (tests/test_doc_facts.py
+# holds these to VERSION, so a release updates them in the same change).
+_README_LIBRARY_CLAIM = r"(\blibrary\b[ \t`*]*v?){old}\b"
+
+
+def cut_release(version: str, date: str) -> list[str]:
+    """Prepare a library release in the working tree: move the hand-written
+    [Unreleased] entries under `## [version] - date`, leave an empty
+    [Unreleased], write VERSION and the README version mentions. Merging that
+    change to main is what publishes it (.github/workflows/release.yml)."""
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", date):
+        raise CTError(f"not a date: {date!r} (want YYYY-MM-DD)")
+    current = library_version()
+    if _semver_tuple(version) <= _semver_tuple(current):
+        raise CTError(f"{version} is not newer than VERSION ({current})")
+    text = CHANGELOG_FILE.read_text(encoding="utf-8")
+    if _changelog_section(text, version) is not None:
+        raise CTError(f"CHANGELOG.md already has a '## [{version}]' section")
+    span = _changelog_section(text, "Unreleased")
+    if span is None:
+        raise CTError("CHANGELOG.md has no '## [Unreleased]' section")
+    body = text[span[0]: span[1]]
+    if not re.search(r"^\s*- ", body, re.MULTILINE):
+        raise CTError("'## [Unreleased]' has no entries: nothing to release")
+    new = (
+        text[: span[0]] + f"\n## [{version}] - {date}\n\n" + body.strip("\n") + "\n\n" + text[span[1]:]
+    )
+    CHANGELOG_FILE.write_text(new, encoding="utf-8", newline="\n")
+    VERSION_FILE.write_text(version + "\n", encoding="utf-8", newline="\n")
+    done = [
+        f"CHANGELOG.md: [Unreleased] entries moved under [{version}] - {date}",
+        f"VERSION: {current} → {version}",
+    ]
+    readme = REPO_ROOT / "README.md"
+    if readme.is_file():
+        rt = readme.read_text(encoding="utf-8")
+        rt2, n = re.subn(
+            _README_LIBRARY_CLAIM.format(old=re.escape(current)), rf"\g<1>{version}", rt, flags=re.IGNORECASE
+        )
+        if n:
+            readme.write_text(rt2, encoding="utf-8", newline="\n")
+            done.append(f"README.md: {n} library version mention(s) updated")
+    return done
+
+
+def cmd_release(args) -> int:
+    date = args.date or datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    try:
+        done = cut_release(args.version, date)
+    except CTError as e:
+        print(f"RELEASE: FAILED — {e}", file=sys.stderr)
+        return 1
+    print(f"RELEASE: {args.version} prepared")
+    for d in done:
+        print(f"  - {d}")
+    print("next: ./tools/check.sh, then open a pull request; merging it tags "
+          f"v{args.version} and publishes the release")
+    return 0
+
+
+def cmd_release_notes(args) -> int:
+    try:
+        sys.stdout.write(release_notes(args.version))
+    except CTError as e:
+        print(f"RELEASE NOTES: FAILED — {e}", file=sys.stderr)
+        return 1
+    return 0
+
+
 def cmd_bump(args) -> int:
     level = "major" if args.major else "minor" if args.minor else "patch"
     try:
@@ -4714,6 +4813,8 @@ COMMAND_GROUPS: tuple[tuple[str, tuple[tuple[str, str], ...]], ...] = (
         ("bump", "after editing a contract: set its version, rotate its receipt "
                  "(minor/major), add the changelog bullet, refresh index and lock"),
         ("lock", "regenerate contracts.lock.json (deterministic)"),
+        ("release", "prepare a library release: changelog section, VERSION, README"),
+        ("release-notes", "print a released version's changelog section"),
         ("index", "report or repair CONTRACT_INDEX.md rows"),
         ("list", "list contracts (id, version, status, pack)"),
         ("show", "print a contract's canonical content"),
@@ -4796,6 +4897,15 @@ def main(argv=None) -> int:
         "of HEAD and origin/main, else HEAD; env " + BASE_ENV + ")",
     )
     p.set_defaults(func=cmd_validate)
+
+    p = add_command("release")
+    p.add_argument("version", help="the new library version, X.Y.Z")
+    p.add_argument("--date", default=None, help="release date (default: today, UTC)")
+    p.set_defaults(func=cmd_release)
+
+    p = add_command("release-notes")
+    p.add_argument("version")
+    p.set_defaults(func=cmd_release_notes)
 
     p = add_command("bump")
     p.add_argument("contract_id")

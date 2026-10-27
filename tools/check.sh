@@ -11,18 +11,8 @@ CT="python3 tools/contractctl/contractctl.py"
 echo "==> validate library + lockfile"
 $CT validate
 
-echo "==> lock determinism (regenerate twice, byte-compare)"
-tmp1=$(mktemp); tmp2=$(mktemp)
-trap 'rm -f "$tmp1" "$tmp2"' EXIT
-cp contracts.lock.json "$tmp1"
-$CT lock >/dev/null
-cp contracts.lock.json "$tmp2"
-$CT lock >/dev/null
-cmp -s "$tmp1" contracts.lock.json || {
-  echo "FAIL: committed lock differs from regeneration — run: $CT lock and commit"; exit 1; }
-cmp -s "$tmp2" contracts.lock.json || {
-  echo "FAIL: lock regeneration is not deterministic (two runs differ)"; exit 1; }
-echo "lock regeneration byte-identical"
+echo "==> generated files are current (lock, index columns, badge, AGENTS block)"
+./tools/check-generated.sh
 
 echo "==> test suite"
 # pytest-xdist is optional: with it the suite runs on every core (about
