@@ -93,7 +93,7 @@ def test_contract_count(lib):
     files = sorted(
         str(f.relative_to(REPO))
         for f in (REPO / "contracts").rglob("*.md")
-        if f.name != "LICENSE.md"
+        if f.name not in ("LICENSE.md", lib.CARD_NAME)  # pack cards are generated
     )
     assert len(lib_all) == len(files)
     assert sorted(c["rel_path"] for c in lib_all) == files
@@ -320,7 +320,8 @@ def test_diff_command_reports_changes(tmp_repo):
         ["git", "ls-tree", "-r", "--name-only", "HEAD", "contracts/"],
         cwd=str(tmp_repo), capture_output=True, text=True, check=True,
     ).stdout.split()
-    n = sum(1 for f in committed if f.endswith(".md") and not f.endswith("LICENSE.md"))
+    n = sum(1 for f in committed if f.endswith(".md")
+            and not f.endswith(("LICENSE.md", "/README.md")))  # README: pack cards
     assert f"unchanged: {n}" in r.stdout
     j = json.loads(
         run_ct(

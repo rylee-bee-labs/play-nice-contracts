@@ -34,7 +34,8 @@ sets the new version in the contract's front matter. For `--minor` and
 `--major` it also picks a new receipt word the library has never used, and
 requires `--note`, which it adds as a bullet under `## [Unreleased]` in
 `CHANGELOG.md` (for `--patch` the note is optional). It then refreshes the
-version column in `CONTRACT_INDEX.md` and regenerates `contracts.lock.json`.
+version column in `CONTRACT_INDEX.md`, the pack card, and
+`contracts.lock.json`.
 
 **C. New contract.** Copy an existing contract in the same pack as a
 template and save it as `contracts/<pack>/<ID_UPPER>.md`.
@@ -49,6 +50,7 @@ template and save it as `contracts/<pack>/<ID_UPPER>.md`.
 - `contractctl index --write` adds its row to its pack's table in
   `CONTRACT_INDEX.md` (title, version, status, and the rationale as the
   Purpose).
+- `contractctl cards --write` adds it to its pack's card.
 - `contractctl lock`, commit, `./tools/check.sh`.
 
 **D. Floor change.** Edit `contracts/everyone/FLOOR.md` →
@@ -83,13 +85,14 @@ that fixes them.
 
 Never edit these by hand; run the command instead.
 `./tools/check-generated.sh` (part of `./tools/check.sh` and CI) checks the
-first four and prints the exact command for any that are stale; it never
+first five and prints the exact command for any that are stale; it never
 edits a file. A new generated file gets one check there.
 
 | File | Written by |
 |---|---|
 | `contracts.lock.json` | `contractctl lock` (also `bump`) |
 | `CONTRACT_INDEX.md` missing rows, and the version and status columns | `contractctl index --write` (also `bump`, for the columns) |
+| `contracts/<pack>/README.md`, the pack cards (each contract's In short and the headlines of its MUST rules) | `contractctl cards --write` (also `bump`) |
 | AGENTS.md, between `<!-- play-nice:start -->` and `<!-- play-nice:end -->` | `playnice start . --no-workflow` |
 | `playnice-badge.svg` | `playnice check . --badge playnice-badge.svg` |
 | `docsgen` blocks in README, CHANGELOG, ROADMAP, RELEASE_NOTES | `lab docs gen` (outside this repo) |
