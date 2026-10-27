@@ -35,13 +35,11 @@ Rylee decides; delete a line when it is settled. Settled on 2026-10-26 and
 merged: #87 to #91 (enforcement, bump, scanner hash, setup hook, contract
 wording and triggers, one default set, status words, shared helpers).
 
-- **Release tags:** `v2.0.0` exists but points at `a9c4197` (main on
-  2026-10-27), not at `c7b1f71` where 2.0.0 landed; Rylee chose to leave it.
-  The release workflow got `HTTP 403: Resource not accessible by
-  integration` creating a release (token had `Contents: write`; no tag
-  rulesets exist), cause unknown. This session cannot push or delete tags or
-  delete branches. Leftover branch `claude/release-v2.0.0-target` can be
-  deleted.
+- **Leftover branch** `claude/release-v2.0.0-target` (points at `c7b1f71`)
+  can be deleted; this session cannot delete branches or push tags. Releases
+  themselves work: the workflow published v2.1.0 and v2.0.0 on 2026-10-27.
+  Its one failure that day (`HTTP 403` creating v2.0.0) came while a
+  v2.0.0 release was also being made by hand; it has not recurred.
 - **Plan questions** in docs/decisions/2026-10-26-play-nice-neat.md: GitHub
   Pages, how a uv/pipx install finds the contracts, when to cut 3.0.0,
   milestone issues.

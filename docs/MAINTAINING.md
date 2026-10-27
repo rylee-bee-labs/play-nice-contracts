@@ -211,7 +211,9 @@ the README's [version table](../README.md#version-numbers).
 A release is always tagged on the first commit on `main` whose `VERSION`
 says that version. To publish an earlier version that was never tagged, run
 the workflow by hand (Actions → release → Run workflow) with its `version`;
-it finds that commit and does not mark the release latest.
+it finds that commit and does not mark the release latest. Run it by hand
+for a version that is already released and it refreshes that release's notes
+from `CHANGELOG.md` instead (fix the changelog first, by PR).
 
 Contract versions and the floor version are separate: `contractctl bump`
 changes those, and a library release just collects what has landed.

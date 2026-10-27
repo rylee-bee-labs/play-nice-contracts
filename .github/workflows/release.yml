@@ -9,7 +9,8 @@ name: release
 # Every release is tagged on the first commit on main whose VERSION file
 # says that version, the commit where it landed. Run by hand (Actions →
 # release → Run workflow) with `version` to publish an earlier version there;
-# it is not marked latest.
+# it is not marked latest. A by-hand run for a version already released
+# refreshes that release's notes from CHANGELOG.md instead.
 
 on:
   push:
@@ -52,7 +53,14 @@ jobs:
           [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::version must be X.Y.Z, got '$version'"; exit 1; }
           tag="v$version"
           if git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
-            echo "$tag already exists; nothing to publish"
+            if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+              # by hand: bring the existing release's notes up to date
+              python3 tools/contractctl/contractctl.py release-notes "$version" > "$RUNNER_TEMP/notes.md"
+              gh release edit "$tag" --notes-file "$RUNNER_TEMP/notes.md"
+              echo "$tag exists; refreshed its notes from CHANGELOG.md"
+            else
+              echo "$tag already exists; nothing to publish"
+            fi
             exit 0
           fi
           # the commit where VERSION first became this version, on main

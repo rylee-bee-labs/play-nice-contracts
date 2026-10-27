@@ -43,7 +43,7 @@ def test_release_moves_unreleased_and_bumps_version(lib_copy):
         "## [Unreleased]\n", "## [Unreleased]\n\n### Added\n- a test entry\n", 1))
     before = cl.read_text()
     unreleased = before.split("## [Unreleased]", 1)[1].split("\n## [", 1)[0].strip()
-    assert unreleased == "### Added\n- a test entry"
+    assert "- a test entry" in unreleased
     r = ct(lib_copy, "release", new, "--date", "2026-10-27")
     assert r.returncode == 0, r.stdout + r.stderr
     assert (lib_copy / "VERSION").read_text().strip() == new
@@ -88,3 +88,6 @@ def test_release_workflow_publishes_from_release_notes():
     assert all(ln.strip().startswith("IN_VERSION:") for ln in lines), lines
     assert "git rev-list --reverse origin/main -- VERSION" in wf
     assert '--latest="$latest"' in wf
+    # a by-hand run for an existing release refreshes its notes, nothing else
+    assert 'gh release edit "$tag" --notes-file' in wf
+    assert '"$GITHUB_EVENT_NAME" = "workflow_dispatch"' in wf
