@@ -29,59 +29,25 @@ import re
 import shutil
 import subprocess
 import sys
-from pathlib import Path
-
 import pytest
 
-REPO = Path(__file__).resolve().parent.parent
-CT = REPO / "tools" / "contractctl" / "contractctl.py"
-
+from conftest import CT, REPO, _load_ct_from, run_py, with_env
 
 # --------------------------------------------------------------- fixtures
+# `lib` (contractctl imported from this checkout) comes from conftest.py.
 
 
 @pytest.fixture()
-def lib():
-    sys.path.insert(0, str(REPO / "tools" / "contractctl"))
-    import contractctl as ct
-
-    yield ct
-    sys.path.pop(0)
-
-
-@pytest.fixture()
-def tmp_repo(tmp_path, lib):
+def tmp_repo(tmp_path, lib, library_git_copy):
     """A copy of the library for mutation tests (keeps the real tree safe).
     Initialized as a Git repo with one baseline commit so Git-history-based
     enforcement (receipt rotation) is exercisable."""
     dest = tmp_path / "play-nice-contracts"
-    shutil.copytree(
-        REPO,
-        dest / "play-nice-contracts",
-        symlinks=True,
-        ignore=shutil.ignore_patterns(
-            ".git", ".venv", "__pycache__", ".pytest_cache", ".contract-commitments"
-        ),
-    )
-    repo = dest / "play-nice-contracts"
-
-    def _git(*args):
-        return subprocess.run(
-            ["git", "-C", str(repo), *args], capture_output=True, text=True, timeout=30
-        )
-
-    _git("init", "-b", "main")
-    _git("config", "user.email", "test@example.invalid")
-    _git("config", "user.name", "Test")
-    _git("add", "-A")
-    _git("commit", "-m", "baseline", "--no-gpg-sign")
+    repo = library_git_copy(dest / "play-nice-contracts")
     # contractctl resolves REPO_ROOT from its own path; run against the copy
     ct_path = repo / "tools" / "contractctl" / "contractctl.py"
     (repo / ".tests-ct-path").write_text(str(ct_path))
     yield repo
-
-
-import os as _os
 
 
 def artifact_dir(repo, manifest_rel="examples/homelab.adoption.yaml"):
@@ -94,18 +60,7 @@ def artifact_dir(repo, manifest_rel="examples/homelab.adoption.yaml"):
 
 
 def run_ct(args, cwd=None, ct_path=None, env=None):
-    ct = ct_path or CT
-    full_env = _os.environ.copy()
-    if env:
-        full_env.update(env)
-    return subprocess.run(
-        [sys.executable, str(ct), *args],
-        capture_output=True,
-        text=True,
-        cwd=cwd or str(REPO),
-        timeout=60,
-        env=full_env,
-    )
+    return run_py(ct_path or CT, args, cwd=cwd or REPO, env=with_env(env))
 
 
 # --------------------------------------------------------------- library validity
@@ -223,22 +178,7 @@ def test_assume_unknown_case_study_preserves_evidence_boundary():
 
 # --------------------------------------------------------------- validation failures (mutation tests)
 
-_CT_CACHE = {}
-
-
-def _load_ct_from(tmp_repo):
-    """Import contractctl from the copied repo, bypassing module cache."""
-    import importlib.util
-
-    key = str(tmp_repo)
-    if key in _CT_CACHE:
-        return _CT_CACHE[key]
-    path = tmp_repo / "tools" / "contractctl" / "contractctl.py"
-    spec = importlib.util.spec_from_file_location(f"ct_{abs(hash(key))}", path)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    _CT_CACHE[key] = mod
-    return mod
+# _load_ct_from (import contractctl from the copied repo) is in conftest.py.
 
 
 def test_duplicate_id_fails(tmp_repo):

@@ -11,34 +11,25 @@ import re
 import shutil
 import subprocess
 import sys
-from pathlib import Path
 
 import pytest
 
-REPO = Path(__file__).resolve().parent.parent
+from conftest import REPO, git0
+
+# This module's copies keep .contract-commitments (the others skip it).
+_SKIP = (".git", ".venv", "__pycache__", ".pytest_cache")
 
 
 def git(repo, *a):
-    r = subprocess.run(["git", "-C", str(repo), *a], capture_output=True, text=True, timeout=60)
+    r = git0(repo, *a)
     assert r.returncode == 0, r.stderr
     return r.stdout.strip()
 
 
 @pytest.fixture()
-def lib(tmp_path):
+def lib(tmp_path, library_git_copy):
     """A git copy of the library whose own manifest is a self-adoption."""
-    repo = tmp_path / "lib"
-    shutil.copytree(
-        REPO,
-        repo,
-        symlinks=True,
-        ignore=shutil.ignore_patterns(".git", ".venv", "__pycache__", ".pytest_cache"),
-    )
-    git(repo, "init", "-q", "-b", "main")
-    git(repo, "config", "user.email", "test@example.invalid")
-    git(repo, "config", "user.name", "Test")
-    git(repo, "add", "-A")
-    git(repo, "commit", "-qm", "baseline", "--no-gpg-sign")
+    repo = library_git_copy(tmp_path / "lib", skip=_SKIP)
     remote = tmp_path / "remote.git"
     subprocess.run(["git", "clone", "-q", "--bare", str(repo), str(remote)], check=True)
     set_pin(repo, git(repo, "rev-parse", "HEAD"), repository=str(remote))

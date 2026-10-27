@@ -18,15 +18,10 @@ the authoritative remote — no test depends on live GitHub network access:
 
 import json
 import re
-import shutil
-import subprocess
-import sys
-from pathlib import Path
 
 import pytest
 
-REPO = Path(__file__).resolve().parent.parent
-CT = REPO / "tools" / "contractctl" / "contractctl.py"
+from conftest import CT, bare_clone, git0, run_py, with_env
 
 _TASK = "rotate the deploy credentials and update the health checks"
 _TASK_IMPACT = {
@@ -47,28 +42,11 @@ _INHERITED_IMPACT = {f"{k}=inherited: {k} governed" for k in _TASK_IMPACT}
 
 _RUNTIME = {"ct_path": CT}
 
-git0 = lambda repo, *a: subprocess.run(
-    ["git", "-C", str(repo), *a], capture_output=True, text=True, timeout=30
-)
-
 
 @pytest.fixture()
-def tmp_repo(tmp_path):
+def tmp_repo(tmp_path, library_git_copy):
     """A git-initialized copy of the library (the consuming context)."""
-    shutil.copytree(
-        REPO,
-        tmp_path / "lib",
-        symlinks=True,
-        ignore=shutil.ignore_patterns(
-            ".git", ".venv", "__pycache__", ".pytest_cache", ".contract-commitments"
-        ),
-    )
-    repo = tmp_path / "lib"
-    git0(repo, "init", "-q", "-b", "main")
-    git0(repo, "config", "user.email", "test@example.invalid")
-    git0(repo, "config", "user.name", "Test")
-    git0(repo, "add", "-A")
-    git0(repo, "commit", "-qm", "baseline", "--no-gpg-sign")
+    repo = library_git_copy(tmp_path / "lib")
     # contractctl resolves REPO_ROOT from its own path: use THIS copy so
     # library_revision() and the merge-base ancestry checks run against it
     _RUNTIME["ct_path"] = repo / "tools" / "contractctl" / "contractctl.py"
@@ -78,15 +56,7 @@ def tmp_repo(tmp_path):
 @pytest.fixture()
 def remote(tmp_repo):
     """A local bare repo standing in for the authoritative remote."""
-    bare = tmp_repo.parent / "remote.git"
-    r = subprocess.run(
-        ["git", "clone", "--quiet", "--bare", str(tmp_repo), str(bare)],
-        capture_output=True,
-        text=True,
-        timeout=60,
-    )
-    assert r.returncode == 0, r.stderr
-    return bare
+    return bare_clone(tmp_repo, tmp_repo.parent / "remote.git")
 
 
 @pytest.fixture()
@@ -115,14 +85,7 @@ def manifest(tmp_repo, remote):
 
 
 def run_ct(args, cwd=None, ct_path=None, env=None):
-    return subprocess.run(
-        [sys.executable, str(ct_path or _RUNTIME["ct_path"]), *args],
-        capture_output=True,
-        text=True,
-        cwd=cwd,
-        timeout=60,
-        env={**__import__("os").environ, **(env or {})},
-    )
+    return run_py(ct_path or _RUNTIME["ct_path"], args, cwd=cwd, env=with_env(env))
 
 
 def impact_args(impact: dict) -> list[str]:

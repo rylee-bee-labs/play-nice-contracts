@@ -2,33 +2,20 @@
 adding rows, and grouped --help (one table registers and lists commands)."""
 
 import argparse
-import importlib.util
 import json
 import re
-import shutil
-import subprocess
-import sys
 from pathlib import Path
 
 import pytest
 
-REPO = Path(__file__).resolve().parent.parent
-CT = REPO / "tools" / "contractctl" / "contractctl.py"
+from conftest import CT, REPO, copy_library, run_py
+from conftest import load_module as _load
+
 PN = REPO / "tools" / "playnice" / "playnice.py"
 
 
-def _load(path: Path, name: str):
-    spec = importlib.util.spec_from_file_location(name, path)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
-
-
 def run_ct(args, cwd, ct_path=CT):
-    return subprocess.run(
-        [sys.executable, str(ct_path), *args],
-        capture_output=True, text=True, cwd=str(cwd), timeout=60,
-    )
+    return run_py(ct_path, args, cwd=cwd)
 
 
 @pytest.fixture()
@@ -39,12 +26,7 @@ def ct():
 @pytest.fixture()
 def copy(tmp_path):
     """A copy of the library (no Git history: base-revision checks skip)."""
-    dest = tmp_path / "lib"
-    shutil.copytree(
-        REPO, dest, symlinks=True,
-        ignore=shutil.ignore_patterns(
-            ".git", ".venv", "__pycache__", ".pytest_cache", ".contract-commitments"),
-    )
+    dest = copy_library(tmp_path / "lib")
     return dest, _load(dest / "tools" / "contractctl" / "contractctl.py", f"ct_{id(dest)}")
 
 
