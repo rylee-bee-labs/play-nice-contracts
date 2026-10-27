@@ -11,20 +11,17 @@ never hard-coded (evidence over memory).
 import functools
 import http.server
 import json
-import os
 import re
 import socket
 import subprocess
 import sys
 import threading
 from datetime import date, timedelta
-from pathlib import Path
 
 import pytest
 
-REPO = Path(__file__).resolve().parent.parent
-PLAYNICE = REPO / "tools" / "playnice" / "playnice.py"
-CONTRACTCTL = REPO / "tools" / "contractctl" / "contractctl.py"
+from conftest import CT as CONTRACTCTL
+from conftest import PLAYNICE, REPO, run_py, with_env
 
 _FLOOR_TEXT = (REPO / "contracts" / "everyone" / "FLOOR.md").read_text(encoding="utf-8")
 FLOOR_V = re.search(r"(?m)^version:\s*(\S+)", _FLOOR_TEXT).group(1)
@@ -37,19 +34,12 @@ PAST = (date.today() - timedelta(days=1)).isoformat()
 
 
 def run_pn(args, cwd, extra_env=None):
-    env = {**os.environ, "PLAY_NICE_LIBRARY": str(REPO)}
-    env.update(extra_env or {})
-    return subprocess.run(
-        [sys.executable, str(PLAYNICE), *args],
-        capture_output=True, text=True, cwd=str(cwd), env=env, timeout=120,
-    )
+    env = with_env({"PLAY_NICE_LIBRARY": str(REPO)}, **(extra_env or {}))
+    return run_py(PLAYNICE, args, cwd=cwd, env=env, timeout=120)
 
 
 def run_ct(args, cwd):
-    return subprocess.run(
-        [sys.executable, str(CONTRACTCTL), *args],
-        capture_output=True, text=True, cwd=str(cwd), timeout=120,
-    )
+    return run_py(CONTRACTCTL, args, cwd=cwd, timeout=120)
 
 
 def agents_block(version=FLOOR_V):
@@ -420,7 +410,11 @@ def serve(tmp_path):
             ("127.0.0.1", 0), functools.partial(Quiet, directory=str(root))
         )
         srv.daemon_threads = True
-        threading.Thread(target=srv.serve_forever, daemon=True).start()
+        # a short poll interval: shutdown() waits up to one interval (0.5 s
+        # by default) for serve_forever to notice
+        threading.Thread(
+            target=srv.serve_forever, kwargs={"poll_interval": 0.05}, daemon=True
+        ).start()
         servers.append(srv)
         return f"http://127.0.0.1:{srv.server_address[1]}"
 
@@ -538,11 +532,12 @@ def test_check_url_site_behind_library(tmp_path, serve):
 
 
 def test_check_url_network_error_state_unknown(tmp_path):
-    s = socket.socket()
-    s.bind(("127.0.0.1", 0))
-    port = s.getsockname()[1]
-    s.close()
-    r = run_pn(["check", f"http://127.0.0.1:{port}"], tmp_path)
+    # Keep the port bound but not listening while playnice runs: connections
+    # are refused, and no other test (under -n auto) can take the port.
+    with socket.socket() as s:
+        s.bind(("127.0.0.1", 0))
+        port = s.getsockname()[1]
+        r = run_pn(["check", f"http://127.0.0.1:{port}"], tmp_path)
     assert r.returncode == 2
     assert "could not check" in r.stdout and "next:" in r.stdout
 

@@ -29,8 +29,8 @@ from pathlib import Path
 
 import pytest
 
-REPO = Path(__file__).resolve().parent.parent
-PLAYNICE = REPO / "tools" / "playnice" / "playnice.py"
+from conftest import PLAYNICE, REPO, bare_clone, git0, head, run_py
+
 FAKEGH = REPO / "tests" / "fakegh.py"
 FAKEAGENT = REPO / "tests" / "fakeagent.py"
 EXAMPLE_CONFIG = REPO / "examples" / "global-playnice.yaml"
@@ -39,44 +39,13 @@ sys.path.insert(0, str(REPO))  # allow `import tools.playnice.playnice` in unit 
 
 _TASK = "update the onboarding checklist"
 
-git0 = lambda repo, *a: subprocess.run(  # noqa: E731
-    ["git", "-C", str(repo), *a], capture_output=True, text=True, timeout=60
-)
-
-
 # --------------------------------------------------------------- fixtures
 
 
 @pytest.fixture()
-def lib(tmp_path):
+def lib(tmp_path, library_git_copy):
     """A git-initialized copy of the library checkout (the contract source)."""
-    target = tmp_path / "lib"
-    shutil.copytree(
-        REPO,
-        target,
-        symlinks=True,
-        ignore=shutil.ignore_patterns(
-            ".git", ".venv", "__pycache__", ".pytest_cache", ".contract-commitments"
-        ),
-    )
-    git0(target, "init", "-q", "-b", "main")
-    git0(target, "config", "user.email", "test@example.invalid")
-    git0(target, "config", "user.name", "Test")
-    assert git0(target, "add", "-A").returncode == 0
-    r = git0(target, "commit", "-qm", "baseline", "--no-gpg-sign")
-    assert r.returncode == 0, r.stderr
-    return target
-
-
-def bare_clone(src, dest):
-    r = subprocess.run(
-        ["git", "clone", "--quiet", "--bare", str(src), str(dest)],
-        capture_output=True,
-        text=True,
-        timeout=120,
-    )
-    assert r.returncode == 0, r.stderr
-    return Path(dest)
+    return library_git_copy(tmp_path / "lib")
 
 
 @pytest.fixture()
@@ -93,18 +62,9 @@ def fakegh(tmp_path):
     return gh
 
 
-def head(path) -> str:
-    return git0(path, "rev-parse", "HEAD").stdout.strip()
-
-
 def run_lib_ct(lib, args):
     """Run contractctl from a library checkout copy (keeps its own lock in sync)."""
-    return subprocess.run(
-        [sys.executable, str(lib / "tools" / "contractctl" / "contractctl.py"), *args],
-        capture_output=True,
-        text=True,
-        timeout=120,
-    )
+    return run_py(lib / "tools" / "contractctl" / "contractctl.py", args, timeout=120)
 
 
 def advance_remote(repo, remote, message="new upstream commit"):
@@ -218,14 +178,7 @@ def pn_env(tmp_path, lib, gh=None, scenario=None, **extra):
 
 
 def run_pn(args, env, cwd):
-    return subprocess.run(
-        [sys.executable, str(PLAYNICE), *args],
-        capture_output=True,
-        text=True,
-        env=env,
-        cwd=str(cwd),
-        timeout=180,
-    )
+    return run_py(PLAYNICE, args, cwd=cwd, env=env, timeout=180)
 
 
 def gh_log(tmp_path):
