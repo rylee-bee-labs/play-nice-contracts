@@ -4,7 +4,7 @@
 
 AI agents and anyone doing the work: bounded work, handoffs, testing, git, proof.
 
-9 contracts, each in short with the rules it marks MUST. The full text of each contract governs; this card is generated from it. Nothing in a pack may go below [the floor](../everyone/FLOOR.md). All packs: [the index](../../CONTRACT_INDEX.md).
+9 contracts, each in short with the headlines of the rules it marks MUST. This card only routes: **read the full contract** (each title links to it) before you rely on a rule. It is generated from the contracts. Nothing in a pack may go below [the floor](../everyone/FLOOR.md). All packs: [the index](../../CONTRACT_INDEX.md).
 
 | Contract | ID | Version | Rules marked MUST |
 |---|---|---|---|
@@ -24,12 +24,12 @@ AI agents and anyone doing the work: bounded work, handoffs, testing, git, proof
 
 An agent works as a guest in a system it didn't build: inspect first, stay in scope, report evidence, stop at the line. This contract also covers choosing models for jobs honestly, with no hidden fallbacks.
 
-Rules marked MUST:
+Rules marked MUST, in short ([all the rules](AGENT_BEHAVIOR.md#rules)):
 
-- **1.** Inspect before you change. Read the current files, state, and the task's contracts first. What the repo says now beats what you remember or were told.
-- **2.** Stay in the task. Findings outside it go on a deferred list with a reason, not into the diff.
-- **4.** Report evidence: exact command, exact result, honest grade (see testing-and-evidence). "Tested" with no command is a rumor.
-- **10.** No silent paid fallback. A job configured for a local model does not quietly move to a paid provider. Any fallback is configured, explicit, and visible in the record.
+- **1.** Inspect before you change.
+- **2.** Stay in the task.
+- **4.** Report evidence
+- **10.** No silent paid fallback.
 
 ## Bounded Work
 
@@ -37,12 +37,12 @@ Rules marked MUST:
 
 Every job has one goal, limits, and named stop conditions. Stopping at a stop condition is success. Parallel work merges one lane at a time and is re-tested as a combined whole.
 
-Rules marked MUST:
+Rules marked MUST, in short ([all the rules](BOUNDED_WORK.md#rules)):
 
-- **1.** Before work starts, write down its bounds: objective, starting revision, owned paths, budget (time, tokens, spend, retries), acceptance checks, stop conditions.
-- **4.** A useful discovery outside the bounds becomes a recorded DEFERRED item with a reason. The task does not grow in silence.
-- **6.** Parallel lanes touch disjoint files. Anything shared gets one owner and runs alone while the others wait.
-- **8.** Worker-green is not system-green: test the combined state at the integration revision before claiming done.
+- **1.** Before work starts, write down its bounds
+- **4.** A useful discovery outside the bounds becomes a recorded DEFERRED item with a reason.
+- **6.** Parallel lanes touch disjoint files.
+- **8.** Worker-green is not system-green
 
 ## Contract Proof
 
@@ -50,10 +50,10 @@ Rules marked MUST:
 
 Agents start with one receipt line. Projects show a bee badge drawn by their own check. Sites publish one public file. Each is checkable in seconds; none is permission.
 
-Rules marked MUST:
+Rules marked MUST, in short ([all the rules](CONTRACT_PROOF.md#rules)):
 
-- **1.** An agent starts substantial work with one line, written from the files it actually read: `Play-Nice floor <version> · receipt <word>[ · read <id>, <id>]`. The `read` part lists the contract ids it actually read for this task (ids as they appear in this library; an old v1 id counts, because `aliases.json` resolves it); say none if you read none. Never write the line from memory or guess the words.
-- **8.** Claim only what is true right now: no packs you didn't read, no badge for a check that isn't green, and refresh a site's well-known file before its own `expires` date.
+- **1.** An agent starts substantial work with one line…
+- **8.** Claim only what is true right now
 
 ## Git and Worktrees
 
@@ -61,11 +61,11 @@ Rules marked MUST:
 
 Git is coordination, not just history: one branch per purpose, one worktree per lane, explicit staging. Delete nothing until it's proven stale — never because it looks stale.
 
-Rules marked MUST:
+Rules marked MUST, in short ([all the rules](GIT_AND_WORKTREES.md#rules)):
 
-- **2.** Parallel work uses one worktree per lane. Two people or agents never share a checkout while both are mutating.
-- **4.** Stage explicit paths. Never `git add -A` in a shared checkout: it sweeps in whatever else is in flight.
-- **5.** Prove stale, then clean. Before deleting any worktree, checkout, or branch, check: active worktrees, dirty files, commits that exist on no remote, remote backup, merge status, active owners. Ambiguous material is kept and escalated, never deleted on a guess.
+- **2.** Parallel work uses one worktree per lane.
+- **4.** Stage explicit paths.
+- **5.** Prove stale, then clean.
 
 ## Handoff and Continuity
 
@@ -73,16 +73,16 @@ Rules marked MUST:
 
 End sessions with a handoff file that lets anyone continue cold. Keep the docs beside the code, current, and short. One fact, one home.
 
-Rules marked MUST:
+Rules marked MUST, in short ([all the rules](HANDOFF_AND_CONTINUITY.md#rules)):
 
-- **1.** Substantial work ends with a handoff stored in a known location — a file or structured payload, not a chat message.
-- **2.** The handoff uses these headings: CURRENT (verified state: repo, branch, revision, deployment), CHANGED, VERIFIED (exact commands and evidence grades), CONTRACTS (what applied, and how it went), UNKNOWN, DEFERRED (with reasons), NEXT (one action, or "nothing required"). All seven are required, in this order; add any extra sections after them. Human-facing work puts accessibility and other required checks under VERIFIED.
-- **3.** Someone who was not there continues from the handoff alone: nothing depends on old chat history or on "ask me". The exact commands in VERIFIED are there so the receiver can re-run them.
-- **4.** VERIFIED contains only checks that actually ran. Anything unverified belongs in UNKNOWN, never padded upward.
-- **7.** Docs change in the same commit as the behavior they describe. A documented command that no longer runs is a defect.
-- **9.** Every doc states what it covers, who owns it, and whether it is current, historical, or archived. Old specs say "archived" and point to what replaced them.
-- **13.** **Carry accepted owner decisions across handoffs.** When the owner explicitly accepts a refined decision in a conversation, that decision is approved **direction**, not a draft awaiting another approval from each agent or tool. Include the exact owner decision and its source, scope, exclusions, autonomous work allowed, acceptance checks and any separate action gate in the handoff. Do not ask again simply because the work moves through another model, repo, chat, or Project Home.
-- **14.** **Do not erase action gates or promote undecided proposals.** Direction approval does not prove a feature is built, verified, merged, deployed or released. Retain protected canon, secrets, public/release, spending, irreversible operations and any authenticated human-action gate. Relayed text alone does not satisfy an authenticated approval ceremony. Keep deliberately parked or unaccepted ideas separate from owner-approved work; escalate only materially new scope, conflicts, or an actual authority boundary.
+- **1.** Substantial work ends with a handoff stored in a known location
+- **2.** The handoff uses these headings
+- **3.** Someone who was not there continues from the handoff alone
+- **4.** VERIFIED contains only checks that actually ran.
+- **7.** Docs change in the same commit as the behavior they describe.
+- **9.** Every doc states what it covers, who owns it, and whether it is current…
+- **13.** Carry accepted owner decisions across handoffs.
+- **14.** Do not erase action gates or promote undecided proposals.
 
 ## Observability
 
@@ -90,12 +90,12 @@ Rules marked MUST:
 
 Write logs for whoever debugs next, arriving cold: what happened, in what component, on whose behalf, with a way to follow one action across services. Errors say what to try next. Secrets never appear.
 
-Rules marked MUST:
+Rules marked MUST, in short ([all the rules](OBSERVABILITY.md#rules)):
 
-- **1.** Every log line carries the basics: timestamp, component, actor, and the source of the claim. Structured where useful, human-readable where useful.
-- **2.** An error names what failed, in which component, with what context, and points at the next thing to check. `Error: failed` is not an error message.
-- **4.** Secrets never enter logs. Redact headers, tokens, and payload fields structurally, and show the redaction (`token=***`) rather than dropping it in silence (see the floor, rule 11).
-- **8.** Health and status endpoints report observed state with `observed_at` and `source`, and never cache success. A service that was not checked reports unknown, not healthy (see the floor, rule 8).
+- **1.** Every log line carries the basics
+- **2.** An error names what failed, in which component, with what context…
+- **4.** Secrets never enter logs.
+- **8.** Health and status endpoints report observed state with `observed_at` and `source`…
 
 ## Orchestration
 
@@ -103,10 +103,10 @@ Rules marked MUST:
 
 Owner, architect, coordinator, workers, and the deterministic gate: five roles, each with clear duties. A worker gets a complete work packet, does its lane, and reports evidence; the coordinator verifies.
 
-Rules marked MUST:
+Rules marked MUST, in short ([all the rules](ORCHESTRATION.md#rules)):
 
-- **2.** The owner keeps intent, risk, permissions, and final acceptance. Everything else is machinery serving the owner.
-- **5.** Assign through a complete work packet (rule 6). If a field is missing, the task isn't ready: fix the packet instead of letting the worker guess.
+- **2.** The owner keeps intent, risk, permissions, and final acceptance.
+- **5.** Assign through a complete work packet (rule 6).
 
 ## Search Before Building
 
@@ -114,12 +114,12 @@ Rules marked MUST:
 
 Before building anything new — a tool, service, schema, or a pulled-in library — look for what already owns that job. Extend it, or record why you couldn't. Keep the dependency surface small and pinned.
 
-Rules marked MUST:
+Rules marked MUST, in short ([all the rules](SEARCH_BEFORE_BUILDING.md#rules)):
 
-- **1.** Before adding anything new — subsystem, service, daemon, framework, database, schema, cache, queue, agent, abstraction — check what already owns that responsibility and genuinely consider extending it.
-- **3.** If you add the parallel concept anyway, record the reason: what you inspected, why extension wasn't enough, and where the boundary between the two concepts runs.
-- **6.** Pin what must be reproducible: committed lockfiles, fixed versions in build paths, integrity checks where the ecosystem has them, no `curl | sh` in a build. Review dependency changes like code.
-- **7.** Two dependencies doing the same job is a defect: justify the overlap in writing, or remove the old one in the same change.
+- **1.** Before adding anything new
+- **3.** If you add the parallel concept anyway, record the reason
+- **6.** Pin what must be reproducible
+- **7.** Two dependencies doing the same job is a defect
 
 ## Testing and Evidence
 
@@ -127,10 +127,10 @@ Rules marked MUST:
 
 Use deterministic machinery first; save model calls for judgment. "It works" is a claim about evidence: name the grade, show the command, never quietly upgrade one.
 
-Rules marked MUST:
+Rules marked MUST, in short ([all the rules](TESTING_AND_EVIDENCE.md#rules)):
 
-- **2.** Ordinary operation must work with every model turned off: boot, validate, export, and verify without a model configured. A model outage may take away assistance; it may never take away operation.
-- **3.** No model calls inside deterministic paths — exports, parsers, validators, journals stay testable and offline. Where model output touches state, it proposes and a deterministic gate validates before the commit.
-- **4.** Never call it "works" merely because: a process started, an endpoint returned 200, a test passed somewhere, a worker said complete, a file exists, or a screenshot looks right.
-- **6.** Every "works" claim names its grade and the exact command or observation that produced it. "Tests pass" with no command is a rumor.
-- **7.** Never silently upgrade a grade. When in doubt, state the lower one. Marking HUMAN ACCEPTED without a human is false evidence.
+- **2.** Ordinary operation must work with every model turned off
+- **3.** No model calls inside deterministic paths
+- **4.** Never call it "works" merely because
+- **6.** Every "works" claim names its grade and the exact command or observation that produced…
+- **7.** Never silently upgrade a grade.

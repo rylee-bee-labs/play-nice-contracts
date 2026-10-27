@@ -716,7 +716,7 @@ def contract_rules(text: str) -> list[dict]:
     """The numbered items of the Rules section, each as one line of text.
 
     `must` is true when the item carries the (MUST) marker, which is removed
-    from `text`; `headline` is its bold lead-in, when it starts with one."""
+    from `text`; `headline` is its short form (rule_headline)."""
     items: list[dict] = []
     cur = None
     for line in contract_section(text, "Rules").splitlines():
@@ -733,14 +733,60 @@ def contract_rules(text: str) -> list[dict]:
         body = " ".join(it["lines"])
         must = "(MUST)" in body
         body = _MUST_MARK_RE.sub("", body).strip()
-        hm = _HEADLINE_RE.match(body)
         out.append({
             "number": it["number"],
             "text": body,
             "must": must,
-            "headline": hm.group(1) if hm else None,
+            "headline": rule_headline(body),
         })
     return out
+
+
+HEADLINE_WORDS = 14
+# kept whole: inline code, links, bold
+_PROTECTED_RE = re.compile(r"(`[^`]*`|\[[^\]]*\]\([^)]*\)|\*\*.+?\*\*)")
+# a clause ends at '.', ':' or ';' before a space or the end, or at ' — '
+_CLAUSE_END_RE = re.compile(r"(?<!\be\.g)(?<!\bi\.e)([.:;](?=\s|$)|\s—(?=\s))")
+
+
+def rule_headline(text: str) -> str:
+    """A rule in a few words: its bold lead-in when it opens with one, else
+    its first clause. A clause longer than HEADLINE_WORDS words is cut at its
+    last comma or opening bracket inside the limit, and ends in '…'. Inline
+    code, links and bold are never cut in half."""
+    hm = _HEADLINE_RE.match(text)
+    if hm:
+        return hm.group(1).strip().rstrip(":;")
+    out: list[str] = []
+    words = 0
+    soft = 0  # len(out) at the last comma or "(" with 4+ words before it
+
+    def cut() -> str:
+        return "".join(out[:soft] if soft else out).rstrip(" ,") + "…"
+
+    for k, part in enumerate(_PROTECTED_RE.split(text)):
+        if k % 2:
+            n = len(part.split())
+            if words and words + n > HEADLINE_WORDS:
+                return cut()
+            out.append(part)
+            words += n
+            continue
+        m = _CLAUSE_END_RE.search(part)
+        seg = part[: m.start() + (1 if m.group(1) == "." else 0)] if m else part
+        for tok in re.split(r"(\s+)", seg):
+            if tok.strip():
+                if words >= HEADLINE_WORDS:
+                    return cut()
+                if tok.startswith("(") and words >= 4:
+                    soft = len(out)
+                words += 1
+            out.append(tok)
+            if tok.endswith(",") and words >= 4:
+                soft = len(out)
+        if m:
+            break
+    return "".join(out).strip()
 
 
 def index_pack_blurbs(text: str | None = None) -> dict[str, str]:
@@ -756,9 +802,9 @@ def index_pack_blurbs(text: str | None = None) -> dict[str, str]:
 def pack_cards(lib: list[dict] | None = None) -> list[dict]:
     """One card per pack, in pack order: its contracts with In short and rules.
 
-    `shown` says which rules a card lists: "must" (the rules marked MUST),
-    "headlines" (the contract marks none MUST and every rule opens with a
-    bold sentence: list those) or "all" (the full text of every rule)."""
+    Each contract lists rule headlines (rule_headline), linking to the full
+    text: the rules marked MUST (`shown` "must"), or every rule when the
+    contract marks none (`shown` "all")."""
     lib = lib if lib is not None else load_library()
     blurbs = index_pack_blurbs()
     cards = []
@@ -770,12 +816,7 @@ def pack_cards(lib: list[dict] | None = None) -> list[dict]:
             fm = c["front_matter"]
             rules = contract_rules(c["text"])
             musts = [r for r in rules if r["must"]]
-            if musts:
-                shown, listed = "must", musts
-            elif rules and all((r["headline"] or "").endswith((".", "?", "!")) for r in rules):
-                shown, listed = "headlines", rules
-            else:
-                shown, listed = "all", rules
+            shown, listed = ("must", musts) if musts else ("all", rules)
             entries.append({
                 "id": str(fm.get("contract_id", "")),
                 "title": str(fm.get("title", "")),
@@ -787,11 +828,7 @@ def pack_cards(lib: list[dict] | None = None) -> list[dict]:
                 "rule_count": len(rules),
                 "must_count": len(musts),
                 "shown": shown,
-                "rules": [
-                    {"number": r["number"],
-                     "text": r["headline"] if shown == "headlines" else r["text"]}
-                    for r in listed
-                ],
+                "rules": [{"number": r["number"], "text": r["headline"]} for r in listed],
             })
         entries.sort(key=lambda e: _index_sort_key(e["id"]))
         cards.append({
@@ -805,9 +842,8 @@ def pack_cards(lib: list[dict] | None = None) -> list[dict]:
 
 
 _SHOWN_LEADS = {
-    "must": "Rules marked MUST:",
-    "headlines": "Its rules, by headline (this contract marks none MUST):",
-    "all": "Its rules (this contract marks none MUST):",
+    "must": "Rules marked MUST, in short",
+    "all": "Its rules in short (it marks none MUST)",
 }
 
 
@@ -824,9 +860,10 @@ def render_card(card: dict) -> str:
     if card["blurb"]:
         out += [card["blurb"], ""]
     out += [
-        f"{n} contract{'s' if n != 1 else ''}, each in short with the rules it "
-        "marks MUST. The full text of each contract governs; this card is "
-        f"generated from it. Nothing in a pack may go below [the floor]({floor_link}). "
+        f"{n} contract{'s' if n != 1 else ''}, each in short with the headlines "
+        "of the rules it marks MUST. This card only routes: **read the full "
+        "contract** (each title links to it) before you rely on a rule. It is "
+        f"generated from the contracts. Nothing in a pack may go below [the floor]({floor_link}). "
         "All packs: [the index](../../CONTRACT_INDEX.md).",
         "",
         "| Contract | ID | Version | Rules marked MUST |",
@@ -849,7 +886,7 @@ def render_card(card: dict) -> str:
             e["in_short"],
         ]
         if e["rules"]:
-            out += ["", _SHOWN_LEADS[e["shown"]], ""]
+            out += ["", f"{_SHOWN_LEADS[e['shown']]} ([all the rules]({e['file']}#rules)):", ""]
             out += [f"- **{r['number']}.** {r['text']}" for r in e["rules"]]
     return "\n".join(out) + "\n"
 

@@ -92,7 +92,7 @@ edits a file. A new generated file gets one check there.
 |---|---|
 | `contracts.lock.json` | `contractctl lock` (also `bump`) |
 | `CONTRACT_INDEX.md` missing rows, and the version and status columns | `contractctl index --write` (also `bump`, for the columns) |
-| `contracts/<pack>/README.md`, the pack cards (each contract's In short and its MUST rules) | `contractctl cards --write` (also `bump`) |
+| `contracts/<pack>/README.md`, the pack cards (each contract's In short and the headlines of its MUST rules) | `contractctl cards --write` (also `bump`) |
 | AGENTS.md, between `<!-- play-nice:start -->` and `<!-- play-nice:end -->` | `playnice start . --no-workflow` |
 | `playnice-badge.svg` | `playnice check . --badge playnice-badge.svg` |
 | `docsgen` blocks in README, CHANGELOG, ROADMAP, RELEASE_NOTES | `lab docs gen` (outside this repo) |

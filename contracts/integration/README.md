@@ -4,7 +4,7 @@
 
 Connecting to other services: capabilities not vendors, calls, events, versions.
 
-4 contracts, each in short with the rules it marks MUST. The full text of each contract governs; this card is generated from it. Nothing in a pack may go below [the floor](../everyone/FLOOR.md). All packs: [the index](../../CONTRACT_INDEX.md).
+4 contracts, each in short with the headlines of the rules it marks MUST. This card only routes: **read the full contract** (each title links to it) before you rely on a rule. It is generated from the contracts. Nothing in a pack may go below [the floor](../everyone/FLOOR.md). All packs: [the index](../../CONTRACT_INDEX.md).
 
 | Contract | ID | Version | Rules marked MUST |
 |---|---|---|---|
@@ -19,21 +19,21 @@ Connecting to other services: capabilities not vendors, calls, events, versions.
 
 Before you call a service: read its docs. While you call: respect its limits. When you change it: write small, verify with a fresh read, and make "run it again" safe.
 
-Rules marked MUST:
+Rules marked MUST, in short ([all the rules](CALLING_OTHER_SERVICES.md#rules)):
 
-- **1.** Learn before acting: use the current documented API, official SDKs, and supported authentication; check documented versions and deprecation notes first.
-- **2.** Don't scrape screens when an API exists, and avoid undocumented endpoints unless truly needed — then write down why.
-- **3.** Respect the service: honor pagination, rate limits, `Retry-After`, timeouts, and connection limits; use bounded concurrency.
-- **4.** Back off with jitter when retrying. Never strip protections (TLS verification, rate limits) to make a call "work".
-- **5.** Not every failure retries: authentication errors, invalid data, refusals, and a human "no" are answers, not obstacles. Stop and report.
-- **6.** For writes, go in order: read current state → name desired state → preview the diff → smallest useful change → verify with a fresh read from the source → record who did what.
-- **7.** A success code is not proof the world changed; re-read the resource. "Delete and recreate" is a last resort with a stated reason, not an update method.
-- **8.** Hard-to-undo, public, or costly external actions follow the floor, rule 6: ask first, and show the diff, how many things it touches, and whether it can be undone.
-- **9.** Automation acts only inside the boundaries it was given — visible, editable, revocable — and journals its actions. An agent never widens its own authority.
-- **10.** Make repeats safe: prefer ensure-a-result ("set to X") over do-an-action ("add X"); use the provider's idempotency keys or unique constraints where offered.
-- **11.** Never assume an endpoint tolerates repeats: treat undocumented ones as unsafe to retry.
-- **12.** Scheduled jobs treat every run as possibly a rerun: guard effects with "only if changed". Recovery replays check what already happened before acting (see recovery-and-reversibility).
-- **13.** Record every external change: actor, intent, target, time, result (see provenance-and-audit).
+- **1.** Learn before acting
+- **2.** Don't scrape screens when an API exists, and avoid undocumented endpoints unless truly needed
+- **3.** Respect the service
+- **4.** Back off with jitter when retrying.
+- **5.** Not every failure retries
+- **6.** For writes, go in order
+- **7.** A success code is not proof the world changed
+- **8.** Hard-to-undo, public, or costly external actions follow the floor, rule 6
+- **9.** Automation acts only inside the boundaries it was given
+- **10.** Make repeats safe
+- **11.** Never assume an endpoint tolerates repeats
+- **12.** Scheduled jobs treat every run as possibly a rerun
+- **13.** Record every external change
 
 ## Capabilities, Not Vendors
 
@@ -41,17 +41,17 @@ Rules marked MUST:
 
 Name what a system does (source control, secrets, media), not which product does it. Products plug in at the edges and can be swapped. Nothing a user sees or stores is shaped by one vendor's names.
 
-Rules marked MUST:
+Rules marked MUST, in short ([all the rules](CAPABILITIES_NOT_VENDORS.md#rules)):
 
-- **1.** Own each capability's meaning in your system; a provider implements or enriches it, never defines it.
-- **2.** Reach providers through adapters at the edges, so swapping one does not rewrite the core. Don't let a vendor's API shape spread through your architecture.
-- **3.** Organize navigation, vocabulary, and schemas around user tasks, not vendor products. A vendor name may appear as provenance ("via Gitea") and in detail views.
-- **4.** Keep provider-specific data namespaced and optional; the portable, generic form is the canonical copy.
-- **5.** A missing provider leaves an honest status (`not_configured`), never a broken page or a vanished concept (see the floor, rule 8).
-- **6.** One provider's failure degrades only its own capability: no corrupted state, no damage to unrelated features.
-- **8.** Treat providers as optional. Making one required is a deliberate, rare, written-down exception.
-- **9.** Adding a provider must not force a redesign; removing one must not corrupt data. Enrichment reads as an add-on to a surviving concept, not a takeover.
-- **11.** Pick participants — models, tools, services, people — by what the task needs. A bigger, dearer, or more famous name does not define the capability.
+- **1.** Own each capability's meaning in your system
+- **2.** Reach providers through adapters at the edges…
+- **3.** Organize navigation, vocabulary, and schemas around user tasks, not vendor products.
+- **4.** Keep provider-specific data namespaced and optional
+- **5.** A missing provider leaves an honest status (`not_configured`)…
+- **6.** One provider's failure degrades only its own capability
+- **8.** Treat providers as optional.
+- **9.** Adding a provider must not force a redesign
+- **11.** Pick participants
 
 ## Events and Caching
 
@@ -59,18 +59,18 @@ Rules marked MUST:
 
 Take changes from events (webhooks, change streams) where they exist; poll as a fallback, within the source's limits. Never show cached data as if it were current: it carries the time it was true.
 
-Rules marked MUST:
+Rules marked MUST, in short ([all the rules](EVENTS_AND_CACHING.md#rules)):
 
-- **1.** Prefer the event mechanism where offered; poll only as a fallback, and document the per-integration choice and its reason.
-- **2.** Poll within documented limits: honor rate limits and `Retry-After`, use conditional requests (`ETag`), back off on errors, and pick intervals from the source's guidance — not from impatience.
-- **3.** A cached value knows its age: it carries the time it was observed, and re-showing it as current is a defect (see the floor, rule 1).
-- **4.** Bound staleness: set a TTL, let writers invalidate what they change, and always give readers a refresh path.
-- **5.** Staleness is a state you can say: when data is past its age bound or the source is unreachable, report it as `stale`, not as healthy or as an error.
-- **6.** Verify a webhook's authenticity (signature or shared secret) and acknowledge it promptly; do the work after the response, not inside it.
-- **7.** Treat a webhook payload as a notification, not as truth: re-read the source before any consequential action.
-- **8.** Expect duplicate deliveries: make handlers idempotent, so redelivery changes nothing (see calling-other-services).
-- **9.** Expect missed events: run a periodic full reconciliation to catch what push missed.
-- **10.** Don't retry-storm a provider whose webhook endpoint is down; back off like any failing call.
+- **1.** Prefer the event mechanism where offered
+- **2.** Poll within documented limits
+- **3.** A cached value knows its age
+- **4.** Bound staleness
+- **5.** Staleness is a state you can say
+- **6.** Verify a webhook's authenticity (signature or shared secret) and acknowledge it promptly
+- **7.** Treat a webhook payload as a notification, not as truth
+- **8.** Expect duplicate deliveries
+- **9.** Expect missed events
+- **10.** Don't retry-storm a provider whose webhook endpoint is down
 
 ## Versions and Discovery
 
@@ -78,15 +78,15 @@ Rules marked MUST:
 
 Declare your version; check theirs before using it. Breaking changes get a new major number and a migration path. Ask what a system supports before assuming — and say honestly what you support.
 
-Rules marked MUST:
+Rules marked MUST, in short ([all the rules](VERSIONS_AND_DISCOVERY.md#rules)):
 
-- **1.** Every published interface and stored payload declares its version explicitly (a `schema_version` field, a version header or path). Nothing is unversioned.
-- **2.** Behavior never changes silently behind a version consumers already hold: a breaking change is a new MAJOR version with an explicit migration path.
+- **1.** Every published interface and stored payload declares its version explicitly (a `schema_version` field…
+- **2.** Behavior never changes silently behind a version consumers already hold
 - **4.** Readers validate the version stamp before interpreting the data.
-- **5.** An unknown version fails clearly — "schema v9 not supported (this reader handles ≤ v7)" — never by guessing a shape or reinterpreting old data.
-- **6.** Deprecation is announced, documented, and given a real migration window; removal is an explicit major event, not a surprise.
-- **8.** Ask before assuming: a client learns what a system supports before using it. A version or capability endpoint beats hard-coded per-server feature lists.
-- **10.** Never advertise a capability you can't honor. An optional feature that exists but is switched off reports its real state (`disabled`, `not_configured`, `unavailable`).
-- **11.** A missing optional capability is a normal outcome: the client skips it, falls back, or reports it. One absent feature never sinks the rest of the integration.
-- **12.** A minimal system with a small capability set is as legitimate as a maximal one; it is not a broken big one.
-- **13.** Report version mismatches at connection or negotiation time, in clear words — not at first use, as strange behavior.
+- **5.** An unknown version fails clearly
+- **6.** Deprecation is announced, documented, and given a real migration window
+- **8.** Ask before assuming
+- **10.** Never advertise a capability you can't honor.
+- **11.** A missing optional capability is a normal outcome
+- **12.** A minimal system with a small capability set is as legitimate as a maximal…
+- **13.** Report version mismatches at connection or negotiation time, in clear words

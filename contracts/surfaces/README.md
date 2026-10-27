@@ -4,7 +4,7 @@
 
 APIs, CLIs, web UIs, rooms: plain words, one truth for people and machines, setups that check themselves.
 
-9 contracts, each in short with the rules it marks MUST. The full text of each contract governs; this card is generated from it. Nothing in a pack may go below [the floor](../everyone/FLOOR.md). All packs: [the index](../../CONTRACT_INDEX.md).
+9 contracts, each in short with the headlines of the rules it marks MUST. This card only routes: **read the full contract** (each title links to it) before you rely on a rule. It is generated from the contracts. Nothing in a pack may go below [the floor](../everyone/FLOOR.md). All packs: [the index](../../CONTRACT_INDEX.md).
 
 | Contract | ID | Version | Rules marked MUST |
 |---|---|---|---|
@@ -24,20 +24,20 @@ APIs, CLIs, web UIs, rooms: plain words, one truth for people and machines, setu
 
 Version it, document it, and keep one response shape. Errors are RFC 9457 problem details with stable machine identifiers. Everything the UI and CLI can do runs through this seam.
 
-Rules marked MUST:
+Rules marked MUST, in short ([all the rules](API.md#rules)):
 
-- **1.** The API defines the programmable seam: UI, CLI, and agent tools are views over it. No surface hides private magic.
-- **2.** The API version is explicit (path or header); breaking changes bump it and ship migration notes.
-- **3.** One stable response shape across endpoints; clients learn the envelope once.
-- **4.** Errors are RFC 9457 problem details (`application/problem+json`): `type`, `title`, `status`, `detail`, plus a stable machine `error` identifier and retryability. Never a bare 500 body.
-- **5.** Status codes mean what they say: 401 unauthenticated, 403 not authorized (name the missing scope), 409 conflict, 422 validation per field, 429 rate limit with `Retry-After`, 5xx with a correlation id. Rate-limit answers stay polite, never connection resets.
-- **6.** Reported state is honest: the shared status words (see the floor, rule 8), with `observed_at` and `source` where state is shown; never a cached success served as fresh.
-- **7.** Answer "what can this API do?" from the API itself: a manifest or capability endpoint; unknown routes fail clearly, not blankly.
-- **8.** Lists paginate by default; unbounded queries are rejected or paginated; filters are documented.
-- **9.** Mutations accept idempotency keys wherever a retry could duplicate work; PUT and PATCH semantics are documented per endpoint.
-- **10.** GET only reads: side effects never hide in GETs.
-- **11.** Every protected route checks authorization centrally; none forgets.
-- **12.** Documentation is the contract: endpoints, schemas, examples, and error identifiers are written down (OpenAPI where practical) and drift-tested against reality.
+- **1.** The API defines the programmable seam
+- **2.** The API version is explicit (path or header)
+- **3.** One stable response shape across endpoints
+- **4.** Errors are RFC 9457 problem details (`application/problem+json`)
+- **5.** Status codes mean what they say
+- **6.** Reported state is honest
+- **7.** Answer "what can this API do?" from the API itself
+- **8.** Lists paginate by default
+- **9.** Mutations accept idempotency keys wherever a retry could duplicate work
+- **10.** GET only reads
+- **11.** Every protected route checks authorization centrally
+- **12.** Documentation is the contract
 
 ## CLI
 
@@ -45,18 +45,18 @@ Rules marked MUST:
 
 Quiet success, loud failure. Human text by default, stable `--json` on request, meaningful exit codes, and a next step after every error.
 
-Rules marked MUST:
+Rules marked MUST, in short ([all the rules](CLI.md#rules)):
 
-- **1.** The CLI is a full view of the system, never the UI's forgotten sibling: every routine operation can run headless.
-- **2.** Nothing forces interactivity: every prompt has a flag or environment equivalent for automation paths.
-- **3.** Human-readable by default, `--json` on request; both emit the same states and words the API uses.
-- **4.** Use the shared vocabulary: the status words (see the floor, rule 8) and the error identifiers, with no CLI-private synonyms.
-- **5.** Quiet success, loud failure: a healthy run prints briefly what it did; a failure prints what happened, why (if known), what still works, whether to retry, and the exact next command.
-- **6.** Exit codes are a contract: 0 success, non-zero failure, stable across releases; scripts rely on them.
+- **1.** The CLI is a full view of the system, never the UI's forgotten sibling
+- **2.** Nothing forces interactivity
+- **3.** Human-readable by default, `--json` on request
+- **4.** Use the shared vocabulary
+- **5.** Quiet success, loud failure
+- **6.** Exit codes are a contract
 - **7.** Repeated runs of ensure-style commands are safe and report "no change" honestly.
-- **8.** Destructive commands ask or require an explicit flag; `--dry-run` or `--preview` exists wherever the command changes something.
-- **9.** `--help` is the documentation floor: purpose, arguments, flags, and an example for every command, written for a newcomer.
-- **10.** Flag names stay stable across releases, and the precedence of config, flags, and environment is documented.
+- **8.** Destructive commands ask or require an explicit flag
+- **9.** `--help` is the documentation floor
+- **10.** Flag names stay stable across releases, and the precedence of config, flags…
 
 ## Design Fidelity
 
@@ -64,18 +64,18 @@ Rules marked MUST:
 
 Design truth lives in repo files: semantic tokens, written-down compositions, one current pointer. Passing one layer's check is never reported as checking another. Compare with the live screen, not memory.
 
-Rules marked MUST:
+Rules marked MUST, in short ([all the rules](DESIGN_FIDELITY.md#rules)):
 
-- **1.** Design truth is repo-native and portable: token files, screen references, and one "what is current" pointer. A design tool's internals or a vendor's API shape never hold it; tool representations are generated from the repo, and a drift gate checks them.
-- **2.** Token names say what they mean (`status.needs_attention`, `focus.ring`), not `Figma Variable 3348`; color literals appear only in the token-derived layer.
-- **3.** Anyone can clone the repo and implement or change the design without opening a design tool.
-- **4.** When a visual source (e.g. Figma) is the approved truth for a stage: extract the values, never eyeball them; keep file and frame ids beside the work as history, not dependency.
-- **5.** Accessibility outranks pixels: where the design fights the accessibility floor, the floor wins and the conflict is recorded back to the design. Accessibility semantics are core-owned; a design tool implements them, never owns them.
-- **6.** Meaning, tokens, composition, and behavior are four kinds of design truth, each with its own check; passing one is never reported as passing another. "Tokens green" is not "design verified".
-- **7.** Composition is written-down data, not memory: hierarchy, grouping, density, rhythm, and card-or-list choices are captured in screen specs or annotated baselines, and each screen's current approved reference is found in one lookup. Historical documents stay historical.
-- **8.** Before writing substantial UI, open the current reference and the live implementation side by side and record the meaningful differences; after, verify in a real browser, not from source code.
-- **12.** Report design verification by level: D0 tokens, D1 structure, D2 composition, D3 behavior, D4 experience. D0 alone never proves fidelity; D2 and D4 need eyes.
-- **13.** A screen that matches the mockup but breaks the calm defaults — quiet when healthy, obvious focus, depth on demand — failed the design; simplifying for attention never erases the approved personality either.
+- **1.** Design truth is repo-native and portable
+- **2.** Token names say what they mean (`status.needs_attention`, `focus.ring`)…
+- **3.** Anyone can clone the repo and implement or change the design without opening a…
+- **4.** When a visual source (e.g. Figma) is the approved truth for a stage
+- **5.** Accessibility outranks pixels
+- **6.** Meaning, tokens, composition, and behavior are four kinds of design truth…
+- **7.** Composition is written-down data, not memory
+- **8.** Before writing substantial UI…
+- **12.** Report design verification by level
+- **13.** A screen that matches the mockup but breaks the calm defaults
 
 ## Library
 
@@ -83,15 +83,15 @@ Rules marked MUST:
 
 A library is shelves of short books, each written in layers: one plain sentence, plain pages, the keeper's own voice, words to know, and what's under the hood. Any app can keep one. A home (Worlds) gathers every connected library, and never merges or rewrites another keeper's books.
 
-Rules marked MUST:
+Rules marked MUST, in short ([all the rules](LIBRARY.md#rules)):
 
-- **1.** A book has a `title`, a one-sentence `short` in plain words, and at least one page. The first page is plain words.
-- **2.** Pages come in four kinds: `plain` (no jargon), `voice` (the keeper's character speaking, e.g. a bee's word for it), `words` (each official term with its plain meaning), and `technical` (files, endpoints, code). Only `plain` is required. A `voice` or `technical` page never holds the only copy of something a person needs.
-- **3.** A book says what is true today and names where the full truth lives (`source`: a doc path or link). When they disagree, the source wins and the book is fixed.
-- **4.** Books carry no secret values and, in a public library, no private hosts, addresses or home paths (see the floor, rule 11).
-- **5.** Every library has a `keeper` (`id`, `name`). A home shows each keeper's shelves under that keeper's name, side by side. It never merges two keepers' books or rewrites them, even on the same topic.
-- **6.** `look` (on a keeper or a shelf) and `cover` (on a shelf or a book) are display hints: a look name the home may style, and a picture name the keeper serves. An unknown look falls back to a plain shelf, and a missing cover to no picture. Neither ever changes what a book says.
-- **9.** A home shows the `short` first and the `technical` pages folded away, opens a book with one tap, reads well at phone width and with a screen reader, and says when a library couldn't be read, with the last time it was.
+- **1.** A book has a `title`, a one-sentence `short` in plain words…
+- **2.** Pages come in four kinds
+- **3.** A book says what is true today and names where the full truth lives…
+- **4.** Books carry no secret values and, in a public library, no private hosts…
+- **5.** Every library has a `keeper` (`id`, `name`).
+- **6.** `look` (on a keeper or a shelf) and `cover`…
+- **9.** A home shows the `short` first and the `technical` pages folded away…
 
 ## One Truth, Two Views
 
@@ -99,19 +99,19 @@ Rules marked MUST:
 
 Keep one source of truth per fact; people get honest wording, machines get a stable schema, both generated from it. The floor (rule 13) says why; this says how.
 
-Rules marked MUST:
+Rules marked MUST, in short ([all the rules](ONE_TRUTH_TWO_VIEWS.md#rules)):
 
-- **1.** Every important state has both a human form and a machine form, generated from one source.
-- **2.** Same operation, same truth everywhere: each surface of a capability shows the same states, words, and policy. A capability lives in the system, not behind one surface.
-- **3.** Human wording is generated from machine state at the presentation boundary, never the reverse: scripts must never parse human prose.
-- **4.** Field names, shapes, and error identifiers are contracts: stable across releases; breaking changes bump a version.
-- **5.** Machine output declares its version and time (`schema`, `observed_at`, `source`), never relying on context.
-- **6.** Missing stays missing: `null`, an absent field, or `unknown` — never an invented default, an empty string, or a zero read as "not checked".
-- **7.** Every machine-relevant surface offers a machine format: CLI `--json`, structured logs where tools consume them, exports with schemas.
-- **8.** Errors carry a stable identifier, context, and retryability in machine form; the human sentence sits beside it, not instead of it (see api for HTTP bodies).
-- **9.** Bulk output is paginated or bounded with explicit totals; consumers never guess whether they got everything.
+- **1.** Every important state has both a human form and a machine form…
+- **2.** Same operation, same truth everywhere
+- **3.** Human wording is generated from machine state at the presentation boundary, never the reverse
+- **4.** Field names, shapes, and error identifiers are contracts
+- **5.** Machine output declares its version and time (`schema`, `observed_at`, `source`)…
+- **6.** Missing stays missing
+- **7.** Every machine-relevant surface offers a machine format
+- **8.** Errors carry a stable identifier, context, and retryability in machine form
+- **9.** Bulk output is paginated or bounded with explicit totals
 - **11.** Machine-readable output carries no secret values (see the floor, rule 11).
-- **12.** Parity is tested: run one operation through each surface and check the truth matches. Record any surface that deliberately lacks a capability, with the reason.
+- **12.** Parity is tested
 
 ## Plain Language
 
@@ -119,17 +119,17 @@ Rules marked MUST:
 
 Say what happened, then what to do next, in words a person would use. Keep every human-facing sentence the shortest one that stays accurate. For unfamiliar ideas, give the reader something familiar to think with without replacing the literal truth. A character may have a voice; hiding the truth may not.
 
-Rules marked MUST:
+Rules marked MUST, in short ([all the rules](PLAIN_LANGUAGE.md#rules)):
 
-- **1.** Say what a thing does in a person's words: "Backups", not "cron-runner-v2". Provider names are history, not navigation.
-- **2.** Every message has two parts, in order: what happened, then the next step. Never "Something went wrong."
-- **3.** Name destructive actions by verb and consequence: "Delete these 3 snapshots — permanent". Never a vague OK / Yes / Proceed.
-- **4.** Pick the shortest wording that stays accurate: familiar words, easy to scan, easy to remember. Don't add words to sound formal or technical.
-- **5.** Before calling human-facing text finished, cut repeated explanations, throat-clearing openings, and paragraphs that could be one sentence. Keep what correctness, safety, or operation needs.
-- **6.** Truth before tone: never make the system sound more certain or capable than the evidence says (see the floor, rule 1), and don't polish wording over broken behaviour — record the product problem instead.
-- **8.** No manufactured urgency: no guilt, countdowns, streaks, or "don't leave!" patterns.
-- **9.** Empty states are honest and helpful: "No journal entries yet", not fake data or a blank mystery. Say in words when something is not set up, unreachable, or broken.
-- **11.** Keep machine identifiers stable behind the human wording, so the words can improve without breaking anything (see one-truth-two-views).
+- **1.** Say what a thing does in a person's words
+- **2.** Every message has two parts, in order
+- **3.** Name destructive actions by verb and consequence
+- **4.** Pick the shortest wording that stays accurate
+- **5.** Before calling human-facing text finished, cut repeated explanations, throat-clearing openings…
+- **6.** Truth before tone
+- **8.** No manufactured urgency
+- **9.** Empty states are honest and helpful
+- **11.** Keep machine identifiers stable behind the human wording…
 
 ## Room
 
@@ -137,22 +137,22 @@ Rules marked MUST:
 
 A room is any service that serves five fixed endpoints under `/room`. One front door learns the shapes once and can display, link, and act on every room generically, with a hard floor under risky actions.
 
-Rules marked MUST:
+Rules marked MUST, in short ([all the rules](ROOM.md#rules)):
 
-- **1.** A room serves five required endpoints; the path stays `/room` and never versions — the `contract` field does that. A room may also serve optional extras, each listed by name in the descriptor's `offers` and served under `/room/<extra>`; a front door uses only the extras a room lists (rule 15). (MAY)
-- **2.** `GET /room` is the descriptor: its name, icon, own code version and commit, an `updated_at` time, and a status limited to `healthy`, `degraded`, `unhealthy`, or `unknown`. These are the room/0 wire words: `unhealthy` means the shared `unavailable` or `needs_attention`; changing the set needs room/1. A room that cannot verify itself says `unknown`, never `healthy`.
-- **3.** `GET /room/cards` lists cards. Each card's `observed_at` is the underlying item's own time — when the thing was created or last changed, never the request time — with `stale_after_s`; past that, present the card as stale, never as current.
-- **4.** Card `tone` is optional and only `good_news`, `update`, or `when_ready`: a display hint, never priority. Treat an unrecognized tone as `update` and log it; never crash or drop the card. Urgency belongs in needs-you, not in cards.
-- **5.** `GET /room/needs-you` lists what a person must handle: the title, why it waits, and the action ids that resolve it. A need that is a choice may list up to six short `choices`; the front door offers them as buttons and posts `{"need": <need id>, "choice": <the pick>}` to the need's first action, which accepts that input. (MAY) A need with `allow_text: true` also takes an answer in the person's own words, posted as `{"need": <need id>, "text": <their words>}` the same way. (MAY)
-- **6.** Links are same-origin paths: starting with `/`, no scheme, not `//`. Consumers reject anything else rather than following it.
-- **7.** `GET /room/actions` lists actions with an input JSON Schema, whether they write state, and a default autonomy: `auto`, `check_in`, or `ask_first`.
-- **8.** `POST /room/actions/{id}` is idempotent: the caller sends an `Idempotency-Key`; a repeated key returns the stored receipt and never applies the change twice.
-- **9.** Every action call returns a receipt — success, refusal, or failure — with `ok`, an honest summary, exactly what changed, and when. Never a silent success, never an unlabelled error.
-- **10.** Autonomy is the strictest of caller policy, room default, and a class floor. Deploys, secret access or change, pushes to a default branch, deletes, and spending are always `ask_first`; no policy, preference, or remembered consent lowers them.
-- **11.** An `ask_first` action without a valid approval token fails closed. Tokens are opaque, scoped to one action and requester, single purpose, expiring, and never echoed back.
-- **12.** The front door renders an unreachable room as unreachable, with a last-seen time, and never blanks or stalls the rest of the estate over one failed room.
-- **13.** The front door authenticates the person; room-to-room calls use scoped bearer tokens, never the human's session token. No response field ever carries a secret value (see the floor, rule 11).
-- **14.** `contract` declares the interface version (`room/0` today). Compatible additions keep the value; a breaking change takes a new value and a migration path; an unknown value fails clearly rather than guessing.
+- **1.** A room serves five required endpoints
+- **2.** `GET /room` is the descriptor
+- **3.** `GET /room/cards` lists cards.
+- **4.** Card `tone` is optional and only `good_news`, `update`, or `when_ready`
+- **5.** `GET /room/needs-you` lists what a person must handle
+- **6.** Links are same-origin paths
+- **7.** `GET /room/actions` lists actions with an input JSON Schema, whether they write state…
+- **8.** `POST /room/actions/{id}` is idempotent
+- **9.** Every action call returns a receipt
+- **10.** Autonomy is the strictest of caller policy, room default, and a class floor.
+- **11.** An `ask_first` action without a valid approval token fails closed.
+- **12.** The front door renders an unreachable room as unreachable, with a last-seen time…
+- **13.** The front door authenticates the person
+- **14.** `contract` declares the interface version (`room/0` today).
 
 ## Setup Checks Itself
 
@@ -160,15 +160,15 @@ Rules marked MUST:
 
 Every setup screen or command offers a check using the person's own details, and says plainly what worked and what to fix. Nothing is marked working until its check passed. Nobody needs a config file to get there.
 
-Rules marked MUST:
+Rules marked MUST, in short ([all the rules](SETUP_CHECKS_ITSELF.md#rules)):
 
-- **1.** Every setup path ends in a check the person runs right there, against their own key, account, or server — not instructions for proving it later.
-- **2.** The check answers in plain words: what worked, what didn't, and what to do next — written for the same reader at any tech level.
-- **3.** Show real data back, not a tick: the models the key can actually call, the version you connected to, one sample record, the room's first card.
-- **4.** Nothing counts as configured, working, or complete until its check passed; before that it reads `not_configured` or `unknown` (the floor, rule 8).
-- **5.** A failed check names the fix, and the setup stays open for a retry after the person changes something; never send them hunting for a docs page.
-- **6.** Settings the setup needs are offered in the screen or command itself; editing a config file is an expert shortcut, never the only path.
-- **8.** The same check works machine-side (`--json` or API), so an agent or script can confirm what a human clicked (see one-truth-two-views).
+- **1.** Every setup path ends in a check the person runs right there…
+- **2.** The check answers in plain words
+- **3.** Show real data back, not a tick
+- **4.** Nothing counts as configured, working, or complete until its check passed
+- **5.** A failed check names the fix…
+- **6.** Settings the setup needs are offered in the screen or command itself
+- **8.** The same check works machine-side (`--json` or API)…
 
 ## Web UI
 
@@ -176,14 +176,14 @@ Rules marked MUST:
 
 Render real state, never invent it. Every section shows its own honest loading, empty, and error state. Anything you can do on screen, you can do without the screen.
 
-Rules marked MUST:
+Rules marked MUST, in short ([all the rules](WEB_UI.md#rules)):
 
-- **1.** The UI is a view, not the source of truth: every displayed value comes from a real response field or is labeled unknown or loading. Nothing on screen is fabricated.
-- **2.** No UI-only truth: every concept operable on screen is understandable and operable without the UI (see one-truth-two-views, cli). The UI may be easier, never the only way.
-- **3.** Show shared status words only, rendered as plain language, with honest empty states ("No journal entries yet") and explicit loading and error states per section.
-- **4.** A failing section degrades alone; one broken widget never blanks the page.
-- **5.** The accessibility floor applies in full: keyboard, visible focus, labels, zoom and reflow, reduced motion (People pack).
+- **1.** The UI is a view, not the source of truth
+- **2.** No UI-only truth
+- **3.** Show shared status words only, rendered as plain language, with honest empty states…
+- **4.** A failing section degrades alone
+- **5.** The accessibility floor applies in full
 - **7.** Theme, density, and motion come from stored user preferences, never invented per screen.
-- **8.** Self-host what you can: no runtime requests to third parties for assets you could ship; a deployed UI works inside its own network.
-- **9.** Follow the design contracts: semantic tokens, the approved composition, no hand-invented values (design-fidelity).
-- **10.** Demo data never ships: no hardcoded content that pretends to be real.
+- **8.** Self-host what you can
+- **9.** Follow the design contracts
+- **10.** Demo data never ships

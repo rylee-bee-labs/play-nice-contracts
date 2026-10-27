@@ -4,7 +4,7 @@
 
 Websites that people and agents can both use.
 
-1 contract, each in short with the rules it marks MUST. The full text of each contract governs; this card is generated from it. Nothing in a pack may go below [the floor](../everyone/FLOOR.md). All packs: [the index](../../CONTRACT_INDEX.md).
+1 contract, each in short with the headlines of the rules it marks MUST. This card only routes: **read the full contract** (each title links to it) before you rely on a rule. It is generated from the contracts. Nothing in a pack may go below [the floor](../everyone/FLOOR.md). All packs: [the index](../../CONTRACT_INDEX.md).
 
 | Contract | ID | Version | Rules marked MUST |
 |---|---|---|---|
@@ -16,15 +16,15 @@ Websites that people and agents can both use.
 
 A website that people and agents can both read: real HTML, content that works without scripts, and one public file that says what the site claims and what agents may do.
 
-Rules marked MUST:
+Rules marked MUST, in short ([all the rules](FRIENDLY_SITE.md#rules)):
 
-- **1.** Use semantic HTML: real headings, lists, and links; every form control has a `<label>` naming what it's for.
-- **2.** Put the content in the delivered HTML. Interactive extras may need scripts; the text, links, and forms stay usable without them wherever the site can manage it.
-- **3.** Where the site offers a machine-readable view (API, feed, export), it carries the same facts as the human page, from the same source. See the floor, rule 13.
-- **4.** A site that claims Play-Nice publishes `/.well-known/play-nice.json` with `version`, `packs`, `contact`, and `expires`, valid against `schema/play-nice-site.schema.json` (Machine notes).
-- **5.** The claim stays honest: list only packs the site actually follows, and let `expires` pass rather than keep a stale claim up.
-- **6.** If the site is itself an agent (it speaks the A2A protocol), its play-nice file links its agent card at `/.well-known/agent-card.json`.
-- **8.** Say what agents may do: keep `robots.txt` accurate, and publish rate limits where they apply.
-- **9.** No hidden prompt text: nothing in invisible styling, alt text, comments, or metadata meant to steer a model's output.
-- **10.** No dark patterns: no pre-checked boxes, hidden costs, or cancel paths placed to be hard to find.
-- **12.** Meet the accessibility floor: works by keyboard and screen reader, states in words not colour, reduced motion respected. See the floor, rule 14.
+- **1.** Use semantic HTML
+- **2.** Put the content in the delivered HTML.
+- **3.** Where the site offers a machine-readable view (API, feed, export)…
+- **4.** A site that claims Play-Nice publishes `/.well-known/play-nice.json` with `version`, `packs`, `contact`…
+- **5.** The claim stays honest
+- **6.** If the site is itself an agent (it speaks the A2A protocol)…
+- **8.** Say what agents may do
+- **9.** No hidden prompt text
+- **10.** No dark patterns
+- **12.** Meet the accessibility floor
