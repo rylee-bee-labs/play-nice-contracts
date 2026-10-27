@@ -1,9 +1,22 @@
 # Estate dependabot template (agent-platform docs/ops/dependabot.md, 2026-10-27):
-# - minor + patch arrive as ONE grouped PR per ecosystem; a major is its own PR, held for a look;
+# - minor + patch arrive as ONE grouped PR per ecosystem; a major arrives as its own PR;
 # - security updates are grouped too, and are not delayed by the cooldown;
 # - a 3-day cooldown (14 for majors) lets a bad release get yanked before it reaches us;
 # - docs/archive/** is frozen history and never gets a bump;
-# - monthly on wednesday, so the estate's runners do not all get every PR at the same hour.
+# - monthly (not a live service), on wednesday: each repo has its own weekday,
+#   so the estate's shared runners do not get every repo's PRs on the same morning.
+#
+# From the previous file (repo-specific, still true unless the template above says otherwise):
+# Dependabot configuration for Play Nice Contracts
+#
+# The library is stdlib-only at runtime. The test-only tools
+# (pytest, pytest-xdist, pyyaml) are declared in pyproject.toml's
+# `dev` extra with lower bounds only, not pinned, and CI installs
+# them with `pip install`. Dependabot tracks only GitHub Actions
+# here (including the ci-harness pin in secret-scan.yml).
+#
+# If the test tools are ever pinned, add a pip updater with the
+# same grouping style as the GitHub Actions updater below.
 version: 2
 updates:
   - package-ecosystem: github-actions
