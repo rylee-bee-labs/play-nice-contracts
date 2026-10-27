@@ -1,0 +1,48 @@
+name: release
+
+# Publishes the library version named in VERSION. A release is prepared in a
+# pull request with `contractctl release X.Y.Z` (moves [Unreleased] under
+# [X.Y.Z] in CHANGELOG.md and writes VERSION); merging it to main runs this,
+# which tags vX.Y.Z and publishes that changelog section as the release notes.
+# Nothing to do when the tag already exists.
+
+on:
+  push:
+    branches: [main]
+    paths: [VERSION]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+
+      - name: Tag and publish the version in VERSION
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="$(tr -d '[:space:]' < VERSION)"
+          tag="v$version"
+          if git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
+            echo "$tag already exists; nothing to publish"
+            exit 0
+          fi
+          python3 tools/contractctl/contractctl.py release-notes "$version" > "$RUNNER_TEMP/notes.md"
+          gh release create "$tag" --target "$GITHUB_SHA" \
+            --title "Play-Nice $version" --notes-file "$RUNNER_TEMP/notes.md"
+          echo "published $tag"
