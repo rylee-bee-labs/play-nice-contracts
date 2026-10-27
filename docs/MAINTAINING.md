@@ -101,6 +101,34 @@ Hand-written changelog entries go under the hand-written `## [Unreleased]`
 heading, below the generated block, never under the generated
 `## Unreleased`.
 
+## The website
+
+`tools/site/build_site.py` builds the site from `contracts/` into `_site/`
+(not committed): the home page (the floor and a three-line start), one page
+per pack (the card) and per contract, a page that checks proof lines, and
+`/.well-known/play-nice.json`, `llms.txt`, `robots.txt` and `404.html`. Each
+page has its facts as JSON beside it. Standard library only.
+
+```bash
+python3 tools/site/build_site.py && python3 -m http.server --directory _site 8000
+python3 tools/playnice/playnice.py check http://127.0.0.1:8000   # in another shell
+```
+
+- `tests/test_site.py` builds it on every run of the suite: HTML basics on
+  every page, every internal link and anchor, the JSON beside each page,
+  `playnice check` against the served site, and the proof-line page giving
+  the same answers as `playnice verify` (needs `node`; skipped without it).
+- The page's proof-line logic is `tools/site/verify.js`. When
+  `parse_verify_line` or `cmd_verify` in `playnice.py` changes, change it
+  too; the test names any line where they disagree.
+- `.github/workflows/site.yml` publishes it to GitHub Pages on every merge
+  to `main` and weekly. The weekly run renews the claim's `expires` date
+  (90 days after a build) only after `playnice check` passes again.
+  Publishing needs Settings → Pages → Source: **GitHub Actions**; until then
+  the workflow builds, checks and says it did not publish.
+- The site claims only the `sites` pack (`SITE_PACKS` in the generator).
+  Add a pack there only when the site meets all of its rules.
+
 ## Outside this repo
 
 These live in Rylee's wider workspace and are not installed in cloud

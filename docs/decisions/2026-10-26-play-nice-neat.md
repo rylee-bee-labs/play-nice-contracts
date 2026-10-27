@@ -100,7 +100,8 @@ owner only reviews). No contract rule changes to get there.
 
 - **Turning on GitHub Pages** is a repository setting. The owner flips it,
   or approves it being flipped, when the site PR is ready. It is free for
-  a public repository.
+  a public repository. *2026-10-27: the site PR is up; the workflow
+  publishes once Settings → Pages → Source is "GitHub Actions".*
 - **How the uv/pipx install finds the contracts:** ship them inside the
   tool, or fetch them into `~/.cache/play-nice` as `playnice` already does
   for adopters? Recommendation: fetch, so a tool install never pins stale

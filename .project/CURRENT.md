@@ -42,8 +42,9 @@ wording and triggers, one default set, status words, shared helpers).
   Its one failure that day (`HTTP 403` creating v2.0.0) came while a
   v2.0.0 release was also being made by hand; it has not recurred.
 - **Plan questions** in docs/decisions/2026-10-26-play-nice-neat.md: GitHub
-  Pages, how a uv/pipx install finds the contracts, when to cut 3.0.0,
-  milestone issues.
+  Pages (the site workflow publishes once Settings → Pages → Source is
+  "GitHub Actions"), how a uv/pipx install finds the contracts, when to cut
+  3.0.0, milestone issues.
 - **Small follow-ups seen in review, not yet asked:** `human`/`service` role
   sets could include the four everyone basics; `playnice work` still prints
   its own status words; `playnice check` reads only `.contracts/adoption.yaml`

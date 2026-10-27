@@ -1,0 +1,88 @@
+name: site
+
+# Builds the website from contracts/ (tools/site/build_site.py), checks it the
+# way a visitor would (`playnice check` against the built site, served
+# locally), and publishes it to GitHub Pages. Pull requests build and check
+# the site through the test suite (tests/test_site.py) instead.
+#
+# The weekly run renews the site's claim (/.well-known/play-nice.json expires
+# 90 days after a build) only after the check passes again.
+#
+# Publishing needs GitHub Pages turned on with "GitHub Actions" as its source
+# (Settings > Pages). Until then the site is built and checked, a notice says
+# it was not published, and nothing fails.
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 7 * * 1" # Mondays 07:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: site
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: read
+    outputs:
+      pages: ${{ steps.pages.outputs.on }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+
+      - name: Build the site
+        run: python3 tools/site/build_site.py --out _site
+
+      - name: Check the built site (playnice check, served locally)
+        run: |
+          python3 -m http.server --directory _site 8000 >/dev/null 2>&1 &
+          for _ in 1 2 3 4 5 6 7 8 9 10; do
+            curl -fsS -o /dev/null http://127.0.0.1:8000/ && break
+            sleep 1
+          done
+          python3 tools/playnice/playnice.py check http://127.0.0.1:8000
+
+      - name: Is GitHub Pages on?
+        id: pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh api "repos/${{ github.repository }}/pages" --jq .build_type 2>/dev/null | grep -qx workflow; then
+            echo "on=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "on=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::The site was built and checked but not published: GitHub Pages is off, or its source is not GitHub Actions. Turn it on in Settings > Pages > Source: GitHub Actions."
+          fi
+
+      - name: Upload the site
+        if: steps.pages.outputs.on == 'true'
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: _site/
+          include-hidden-files: true # keeps .well-known/play-nice.json and .nojekyll
+
+  deploy:
+    needs: build
+    if: needs.build.outputs.pages == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publish to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
