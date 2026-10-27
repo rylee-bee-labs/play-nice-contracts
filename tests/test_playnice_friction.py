@@ -11,59 +11,23 @@ Fully offline: the authoritative remote is a local bare repo; GitHub is off.
 
 import json
 import os
-import shutil
 import subprocess
-import sys
 from pathlib import Path
 
 import pytest
 
-REPO = Path(__file__).resolve().parent.parent
-PLAYNICE = REPO / "tools" / "playnice" / "playnice.py"
-
-git0 = lambda repo, *a: subprocess.run(  # noqa: E731
-    ["git", "-C", str(repo), *a], capture_output=True, text=True, timeout=60
-)
+from conftest import PLAYNICE, bare_clone, git0, head, run_py
 
 
 @pytest.fixture()
-def lib(tmp_path):
+def lib(tmp_path, library_git_copy):
     """A git-initialized copy of the library checkout (the contract source)."""
-    target = tmp_path / "lib"
-    shutil.copytree(
-        REPO,
-        target,
-        symlinks=True,
-        ignore=shutil.ignore_patterns(
-            ".git", ".venv", "__pycache__", ".pytest_cache", ".contract-commitments"
-        ),
-    )
-    git0(target, "init", "-q", "-b", "main")
-    git0(target, "config", "user.email", "test@example.invalid")
-    git0(target, "config", "user.name", "Test")
-    assert git0(target, "add", "-A").returncode == 0
-    assert git0(target, "commit", "-qm", "baseline", "--no-gpg-sign").returncode == 0
-    return target
-
-
-def bare_clone(src, dest):
-    r = subprocess.run(
-        ["git", "clone", "--quiet", "--bare", str(src), str(dest)],
-        capture_output=True,
-        text=True,
-        timeout=120,
-    )
-    assert r.returncode == 0, r.stderr
-    return Path(dest)
+    return library_git_copy(tmp_path / "lib")
 
 
 @pytest.fixture()
 def pn_remote(lib, tmp_path):
     return bare_clone(lib, tmp_path / "pn_remote.git")
-
-
-def head(path) -> str:
-    return git0(path, "rev-parse", "HEAD").stdout.strip()
 
 
 def manifest_text(remote, sha) -> str:
@@ -116,14 +80,7 @@ def pn_env(tmp_path, lib) -> dict:
 
 
 def run_pn(args, env, cwd) -> subprocess.CompletedProcess:
-    return subprocess.run(
-        [sys.executable, str(PLAYNICE), *args],
-        capture_output=True,
-        text=True,
-        env=env,
-        cwd=str(cwd),
-        timeout=180,
-    )
+    return run_py(PLAYNICE, args, cwd=cwd, env=env, timeout=180)
 
 
 # ------------------------------------------------------- 7. status: fail closed

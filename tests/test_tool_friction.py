@@ -22,33 +22,15 @@ All tests run offline against this checkout; no network, no GitHub.
 """
 
 import re
-import subprocess
-import sys
 from pathlib import Path
 
-import pytest
+from conftest import CT, REPO, run_py
 
-REPO = Path(__file__).resolve().parent.parent
-CT = REPO / "tools" / "contractctl" / "contractctl.py"
+# `lib` (contractctl imported from this checkout) comes from conftest.py.
 
 
 def run_ct(args, cwd=None):
-    return subprocess.run(
-        [sys.executable, str(CT), *args],
-        capture_output=True,
-        text=True,
-        cwd=str(cwd or REPO),
-        timeout=60,
-    )
-
-
-@pytest.fixture()
-def lib():
-    sys.path.insert(0, str(REPO / "tools" / "contractctl"))
-    import contractctl as ct
-
-    yield ct
-    sys.path.pop(0)
+    return run_py(CT, args, cwd=cwd or REPO)
 
 
 # --------------------------------------------------------- 1. parser + scaffold

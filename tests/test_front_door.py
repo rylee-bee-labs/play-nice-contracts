@@ -7,15 +7,13 @@ badge link agrees with its docs; the wrapper works through a symlink.
 """
 
 import json
-import os
 import re
 import subprocess
 import sys
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parent.parent
-PLAYNICE = REPO / "tools" / "playnice" / "playnice.py"
-CONTRACTCTL = REPO / "tools" / "contractctl" / "contractctl.py"
+from conftest import CT as CONTRACTCTL
+from conftest import PLAYNICE, REPO, run_py, with_env
 
 sys.path.insert(0, str(REPO / "tools" / "contractctl"))
 sys.path.insert(0, str(REPO / "tools" / "playnice"))
@@ -30,11 +28,8 @@ LIB_V = (REPO / "VERSION").read_text().strip()
 
 
 def run(tool, args, cwd):
-    env = {**os.environ, "PLAY_NICE_LIBRARY": str(REPO)}
-    return subprocess.run(
-        [sys.executable, str(tool), *args],
-        capture_output=True, text=True, cwd=str(cwd), env=env, timeout=120,
-    )
+    env = with_env(PLAY_NICE_LIBRARY=str(REPO))
+    return run_py(tool, args, cwd=cwd, env=env, timeout=120)
 
 
 def git_repo(path):
