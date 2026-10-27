@@ -1,22 +1,30 @@
-# Dependabot configuration for Play Nice Contracts
-#
-# The library is stdlib-only at runtime. The test-only tools
-# (pytest, pytest-xdist, pyyaml) are declared in pyproject.toml's
-# `dev` extra with lower bounds only, not pinned, and CI installs
-# them with `pip install`. Dependabot tracks only GitHub Actions
-# here (including the ci-harness pin in secret-scan.yml).
-#
-# If the test tools are ever pinned, add a pip updater with the
-# same grouping style as the GitHub Actions updater below.
-
+# Estate dependabot template (agent-platform docs/ops/dependabot.md, 2026-10-27):
+# - minor + patch arrive as ONE grouped PR per ecosystem; a major is its own PR, held for a look;
+# - security updates are grouped too, and are not delayed by the cooldown;
+# - a 3-day cooldown (14 for majors) lets a bad release get yanked before it reaches us;
+# - docs/archive/** is frozen history and never gets a bump;
+# - monthly on wednesday, so the estate's runners do not all get every PR at the same hour.
 version: 2
 updates:
-  - package-ecosystem: "github-actions"
+  - package-ecosystem: github-actions
     directory: "/"
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: monthly
+      day: wednesday
+      time: "05:30"
+      timezone: America/Chicago
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+    cooldown:
+      default-days: 3
+      semver-major-days: 14
+    exclude-paths:
+      - "docs/archive/**"
     groups:
-      actions:
-        patterns:
-          - "*"
+      actions-security:
+        applies-to: security-updates
+        patterns: ["*"]
+      actions-minor-patch:
+        update-types: [minor, patch]
+        patterns: ["*"]
