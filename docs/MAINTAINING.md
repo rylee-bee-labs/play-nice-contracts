@@ -134,7 +134,7 @@ governance body: contract changes are proposals that Rylee reviews.
   a library release.
 - **This repo is public.** No real tokens, hostnames, private IPs, family
   details or personal medical history, anywhere. `contractctl scan` and the
-  secret-scan workflow check for them. Keep `profiles/examples/` shaped as
+  secret-scan workflow check for them. Keep `examples/profiles/` shaped as
   preferences, not personal records.
 - **Commit emails are checked.** Only `*+*@users.noreply.github.com` or
   `*@*.invalid` author and committer emails may enter history; the CI
@@ -152,8 +152,9 @@ governance body: contract changes are proposals that Rylee reviews.
 
 ## Licensing map
 
-Contract text and docs: **CC BY-SA 4.0**. Tools, schemas, lockfile and
-tests: **MIT**. Name and identity: `TRADEMARKS.md` (the bee acknowledgement
+Contract text and docs (including `docs/background/harness/`): **CC BY-SA
+4.0**. Tools, schemas, lockfile, tests and examples (including
+`examples/profiles/`): **MIT**. Name and identity: `TRADEMARKS.md` (the bee acknowledgement
 is optional credit, never endorsement). `tests/test_license_map.py` checks it.
 
 ## What governs what
@@ -166,9 +167,9 @@ is optional credit, never endorsement). `tests/test_license_map.py` checks it.
 | `tools/` | `contractctl`, `playnice` ([PLAYNICE.md](PLAYNICE.md)), `pin-sync` | code; tests accompany it |
 | `tests/` | hermetic suite | with every change |
 | `docs/` | non-normative guides and decision records | prose; never above `contracts/` |
-| `docs/background/` | the Opus, principles, roles, research; old paths keep one-line pointers | prose; never above `contracts/` |
-| `harness/` | **experimental** research: hypotheses with evidence, not rules | evidence only |
-| `profiles/`, `examples/` | preference layer and real adoption manifests | keep schema-valid |
+| `docs/background/` | the Opus, principles, roles, research ([index](background/README.md)) | prose; never above `contracts/` |
+| `docs/background/harness/` | **experimental** research: hypotheses with evidence, not rules | evidence only |
+| `examples/` | real adoption manifests; `examples/profiles/` is the preference layer | keep schema-valid |
 | `LICENSE`, `contracts/LICENSE.md`, `docs/LICENSE.md`, `SECURITY.md`, `TRADEMARKS.md`, `CONTRIBUTING.md`, `.github/CODEOWNERS` | licensing, threat model, identity, review | Rylee reviews |
 
 ## Running the tools and tests

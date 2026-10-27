@@ -171,7 +171,7 @@ The design value can be written as a quiet motto:
 
 Where this lives in the contracts: the layering model in the
 [README](../../README.md) treats Rylee's preferred experience as one first-class
-[profile](../../profiles/), never a hidden global requirement; the
+[profile](../../examples/profiles/), never a hidden global requirement; the
 [Accessibility Floor](../../contracts/people/ACCESSIBILITY.md) makes
 "architecturally accessible" a default, not a mode; and
 [Participation and Contribution](../../contracts/everyone/WORKING_TOGETHER.md)
@@ -707,7 +707,7 @@ A participant profile in Play-Nice is a description of what a participant
 has *been observed to do*, under what conditions, on what date — not a
 verdict on what it *is*.
 
-The [Hermes profile](../../profiles/) opens with the sentence that should hang
+The [Hermes profile](../../examples/profiles/) opens with the sentence that should hang
 above every profile ever written:
 
 > The brain is runtime state, not permanent identity. The currently selected
@@ -724,7 +724,7 @@ and its body marks every single claim:
 - **KNOWN FAILURE MODES** — with mitigations, because a profile that hides
   its subject's failure modes is not a profile, it is propaganda.
 
-The [Granite 4.1 3B profile](../../profiles/granite-4.1-3b.md) demonstrates the
+The [Granite 4.1 3B profile](../../examples/profiles/granite-4.1-3b.md) demonstrates the
 pattern at its most useful: it says the model is excellent at bounded
 structured tasks, *stable* at preserving UNKNOWN, and **unpredictable at the
 one judgment that is load-bearing** — deciding whether a genuinely ambiguous
@@ -758,7 +758,7 @@ because no human should be reduced to an entry in their own file.
 Where this lives: [Participation and Contribution](../../contracts/everyone/WORKING_TOGETHER.md),
 [Project Context and Participant Packs](../../contracts/everyone/PROJECT_CONTEXT.md),
 [Model Routing](../../contracts/work/AGENT_BEHAVIOR.md), and the profiles
-themselves under [`../profiles/`](../../profiles/).
+themselves under [`examples/profiles/`](../../examples/profiles/).
 
 ---
 
@@ -877,7 +877,7 @@ HUMAN EXPERIENCE / ACCESSIBILITY FLOOR         (contracts/human)
         ↓
 PROJECT CONTRACTS                              (adoption manifests)
         ↓
-USER / ORGANIZATION PREFERENCES                 (profiles/)
+USER / ORGANIZATION PREFERENCES                 (examples/profiles/)
         ↓
 THEME / PERSONALITY / DECORATION
 ```
@@ -1092,7 +1092,7 @@ world the measurements are made in.
 
 Where this lives: the olympics run in the VEFR repository — the
 `bench/reports/` directory is **not** part of this repository — and its
-reports feed participant [profiles](../../profiles/) and research
+reports feed participant [profiles](../../examples/profiles/) and research
 [evidence](research/).
 
 ---
@@ -1368,7 +1368,7 @@ contract, the contract would win and this document would need a correction.
 - [docs/QUICK_REFERENCE.md](../QUICK_REFERENCE.md) — the reminder card.
 - [docs/principles/trusted-translation.md](principles/trusted-translation.md) — the five-minute mental model this document expands.
 - [docs/roles/trusted-steward.md](roles/trusted-steward.md) — the generic role Hermod implements.
-- [`profiles/`](../../profiles/) — evidence-shaped participant descriptions (Hermes, Granite 4.1 3B, and others).
+- [`examples/profiles/`](../../examples/profiles/) — evidence-shaped participant descriptions (Hermes, Granite 4.1 3B, and others).
 - [docs/research/hermes-granite-evidence.md](research/hermes-granite-evidence.md) — a benchmark case study predating the Olympics.
 - The Small Model Olympics campaign and diagnosis reports live in the VEFR
   repository (`bench/reports/`); the numbers quoted in Section 15 are taken

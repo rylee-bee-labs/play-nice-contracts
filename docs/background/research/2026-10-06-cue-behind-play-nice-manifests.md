@@ -750,8 +750,8 @@ work does not need a new language.
   schema, no validator was readable.
 - **Mission / job manifests** — no such artifacts here. `contracts/work/ORCHINATION.md` and
   `contracts/work/BOUNDED_WORK.md` describe the concepts in prose only.
-- **Source / dashboard manifests** — no such artifacts here. `harness/EVIDENCE-LEDGER.md` and
-  `harness/README.md` are prose; there is no dashboard manifest format.
+- **Source / dashboard manifests** — no such artifacts here. `docs/background/harness/EVIDENCE-LEDGER.md` and
+  `docs/background/harness/README.md` are prose; there is no dashboard manifest format.
 - **`bin/offload` and its `EXCLUDED_REPOS`** — this clone has no `bin/` directory and no file
   matching `*offload*`, so I could not read the excluded set. I read only this repository, and no
   other estate repository was opened.

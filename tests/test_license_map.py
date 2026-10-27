@@ -55,6 +55,17 @@ def test_docs_license_is_cc_by_sa():
     assert "CC BY-SA 4.0" in text
 
 
+def test_docs_license_scope_matches_layout():
+    """harness/ moved under docs/ in 2.1.0 and is CC BY-SA; profiles moved
+    to examples/profiles/ and stay MIT under the root LICENSE."""
+    text = (REPO / "docs" / "LICENSE.md").read_text()
+    scope = text.split("## Scope", 1)[1].split("\n## ", 1)[0]
+    assert "`docs/background/harness/`" in scope
+    assert (REPO / "docs" / "background" / "harness").is_dir()
+    assert "profiles" not in scope, "examples/profiles/ is MIT, not docs scope"
+    assert not (REPO / "harness").exists() and not (REPO / "profiles").exists()
+
+
 def test_readme_license_section_matches_map():
     text = (REPO / "README.md").read_text()
     m = re.search(r"^## License\n(.*?)(?=^## |\Z)", text, re.M | re.S)
