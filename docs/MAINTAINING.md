@@ -204,7 +204,11 @@ is optional credit, never endorsement). `tests/test_license_map.py` checks it.
 | `docs/background/` | the Opus, principles, roles, research ([index](background/README.md)) | prose; never above `contracts/` |
 | `docs/background/harness/` | **experimental** research: hypotheses with evidence, not rules | evidence only |
 | `examples/` | real adoption manifests; `examples/profiles/` is the preference layer | keep schema-valid |
-| `LICENSE`, `contracts/LICENSE.md`, `docs/LICENSE.md`, `SECURITY.md`, `TRADEMARKS.md`, `CONTRIBUTING.md`, `.github/CODEOWNERS` | licensing, threat model, identity, review | Rylee reviews |
+| `LICENSE`, `contracts/LICENSE.md`, `docs/LICENSE.md`, `SECURITY.md`, `TRADEMARKS.md`, `.github/CODEOWNERS` | licensing, threat model, identity, review | Rylee reviews |
+
+`.github/CODEOWNERS` lists the gate files: the files above, the contract text, `schema/`,
+`contracts.lock.json`, `.contracts/`, `tools/contractctl/`, `tools/playnice/` and the workflows. Docs,
+tests and dependency bumps are not listed; they merge on green CI plus an independent review.
 
 ## Running the tools and tests
 
