@@ -1,27 +1,29 @@
 # CODEOWNERS for Play Nice Contracts
 #
-# CODEOWNERS is informational here: the repository has a single
-# maintainer (Rylee). The pattern below expresses "any change in
-# these areas wants explicit human review" so future co-maintainers
-# inherit the intent.
+# Only the gate files and trust anchors are listed: license and identity
+# files, the normative contract text with its schema and lock, the checkers
+# other repos run, and the CI and release workflows. Prose, docs, tests and
+# dependency bumps are not listed; they merge on green CI plus an
+# independent review (Rylee, 2026-10-30, settings pass).
 #
-# This file is NOT access control. Branch protection rules enforce
-# the actual review requirement.
+# This file only gates a pull request when branch protection asks for
+# code-owner review.
 
-# Licensing, identity, security, contracts, tooling.
-/LICENSE                   @Rylee-Bee
+# Licensing, identity, security.
+/LICENSE                    @Rylee-Bee
 /TRADEMARKS.md              @Rylee-Bee
 /SECURITY.md                @Rylee-Bee
-/CODEOWNERS                 @Rylee-Bee
-/CONTRIBUTING.md            @Rylee-Bee
-/AGENTS.md                  @Rylee-Bee
+/docs/LICENSE.md            @Rylee-Bee
+
+# This file, and CI and release workflows.
+/.github/CODEOWNERS         @Rylee-Bee
+/.github/workflows/         @Rylee-Bee
+
+# Normative contract text, its schema and lock, this repo's own pin, and
+# the checkers other repos run.
 /.contracts/                @Rylee-Bee
-/docs/                      @Rylee-Bee
 /contracts/                 @Rylee-Bee
 /contracts.lock.json        @Rylee-Bee
+/schema/                    @Rylee-Bee
 /tools/contractctl/         @Rylee-Bee
 /tools/playnice/            @Rylee-Bee
-/schema/                    @Rylee-Bee
-/tests/                     @Rylee-Bee
-/.github/workflows/         @Rylee-Bee
-/.github/dependabot.yml     @Rylee-Bee
