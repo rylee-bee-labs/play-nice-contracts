@@ -58,7 +58,7 @@ or [pipx](https://pipx.pypa.io/):
 ```bash
 uv tool install git+https://github.com/rylee-bee-labs/play-nice-contracts
 # or: pipx install git+https://github.com/rylee-bee-labs/play-nice-contracts
-playnice --version    # playnice 0.1.0 · library 2.1.0 · floor 1.0.0
+playnice --version    # playnice 0.1.0 · library 2.2.0 · floor 1.0.0
 ```
 
 The installed command carries no copy of the rules. On first use it clones
@@ -116,7 +116,7 @@ They version different things, so they differ on purpose:
 
 | Number | Where | Versions |
 |---|---|---|
-| Library `2.1.0` | `VERSION` | the contract set as a whole |
+| Library `2.2.0` | `VERSION` | the contract set as a whole |
 | Floor `1.0.0` | `contracts/everyone/FLOOR.md` | the 17 floor rules; the one proof lines name |
 | Contract `x.y.z` | each contract's front matter | that one contract |
 | `playnice 0.1.0` | `--version` | the command-line tool itself |
