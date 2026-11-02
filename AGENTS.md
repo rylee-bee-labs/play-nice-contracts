@@ -1,82 +1,52 @@
-# AGENTS.md
+# AGENTS.md: play-nice-contracts
 
-**Using Play-Nice in a project (including a copy under `vendor/`)?**
-Read [the floor](contracts/everyone/FLOOR.md), then the pack for what you're
-building ([index](CONTRACT_INDEX.md)). Start your handoff with the proof line
-from [contract-proof](contracts/work/CONTRACT_PROOF.md). Nothing else here
-is needed.
+Play-Nice is the estate's shared rulebook: short contracts (the floor for everyone, plus packs for agent work,
+people, surfaces, sites, integration and access) in `contracts/`, and the `playnice` and `contractctl` tools
+in `tools/` that check them. Public repo.
 
-**Changing this library itself?** Read
-[docs/MAINTAINING.md](docs/MAINTAINING.md) first: tests, CI, versioning, and
-the rules for agents working on this repository.
+**Using Play-Nice in a project (including a copy under `vendor/`)?** Read
+[the floor](contracts/everyone/FLOOR.md), then the pack for what you're building
+([index](CONTRACT_INDEX.md)). Start your handoff with the proof line from
+[contract-proof](contracts/work/CONTRACT_PROOF.md). Nothing else here is needed.
 
-## The packs
-
-The floor is for everyone. Each pack goes deeper for one kind of work; nothing
-in a pack may go below the floor. Each pack folder opens on its card: every
-contract in short, with the headlines of its MUST rules and a link to the
-full text.
-
-| Pack | For |
-|---|---|
-| [Everyone](contracts/everyone/) | truth and unknowns, status words, asking for help, working together, recovery, ownership |
-| [Agents and work](contracts/work/) | AI agents and anyone doing a task: bounded work, handoffs, testing, git, proof |
-| [People](contracts/people/) | anything a person uses: attention, accessibility, sensory safety, depth, themes |
-| [Surfaces](contracts/surfaces/) | APIs, CLIs, web UIs, rooms: plain words, one truth for people and machines, setups that check themselves |
-| [Sites](contracts/sites/) | websites that people and agents can both use |
-| [Integration](contracts/integration/) | connecting to other services |
-| [Access](contracts/access/) | identity and roles, secrets and data, public and private |
-
-## Version numbers
-
-The library, the floor, each contract and the `playnice` tool have their own
-version; the [README table](README.md#version-numbers) lists them. Proof lines
-name the floor's. `playnice --version` prints the tool, library and floor.
-
-## The proof line
-
-Agents put one line at the top of their handoff —
-`Play-Nice floor <version> · receipt <word> · read <contract ids>` — and check
-it with `playnice verify`, which prints `CURRENT` (exit 0), `OUT OF DATE`
-(exit 1) or `INVALID` (exit 2). The receipt word is in the floor's source.
-`playnice rules "<task>"` lists the contract ids that apply.
-
-A Play Nice receipt records the contract floor and applicable rules an agent
-declares it has consulted. Verification checks the receipt's validity and
-currency; it does not independently prove comprehension or compliance.
-
-## The bee badge
-
-`playnice check` writes a badge — **plays nice**, **behind** (a newer version is
-out), or **fix needed**. When `playnice start` can write the CI workflow, the
-README badge links to that check's runs; otherwise it links to the library.
-A copied picture proves nothing. Run `check --badge playnice-badge.svg`
-yourself to write the file and commit it.
-
-`playnice check` also takes a website: `playnice.py check https://example.org`
-reads its `/.well-known/play-nice.json` (see
-[friendly-site](contracts/sites/FRIENDLY_SITE.md)).
-
-## Changing the library
-
-Read [docs/MAINTAINING.md](docs/MAINTAINING.md#start-here) first: the proof
-line, the change flow (pull request, Rylee approves) and the recipe for
-changing a contract. Old contract names still work: see the "Old names" table
-in the [index](CONTRACT_INDEX.md) and `aliases.json`.
-
-Character and world content from Project Worlds lives in other repositories
-under their own terms. Nothing here licenses it, and it must never be moved
-into this repository. License map: [maintaining](docs/MAINTAINING.md#licensing-map).
-How the badge and the docs look and sound: [design
-philosophy](docs/DESIGN_PHILOSOPHY.md).
+**Changing this library itself?** Read [docs/MAINTAINING.md](docs/MAINTAINING.md) first.
 
 ## Verify
 
-Work here is done when this passes (it runs what CI runs):
+Work here is done when this passes (it runs what CI runs, and prints `CHECK: PASS`):
 
 ```bash
 ./tools/check.sh
 ```
+
+Needs `pip install pytest pytest-xdist pyyaml` (or `uv`).
+
+## Do not touch
+
+- Generated, so never by hand: `contracts.lock.json`, the index version columns, the pack cards,
+  `playnice-badge.svg` and the block between the `play-nice` markers below. `check.sh` prints the command.
+- Rylee reviews changes to `contracts/`, `schema/`, `tools/contractctl/`, `tools/playnice/`,
+  `.github/workflows/` and the licence and security files (`.github/CODEOWNERS`).
+- Project Worlds character and world content must never be moved into this repository.
+
+## Change flow
+
+Branch, pull request, Rylee approves; never push to `main`. The recipe is in
+[docs/MAINTAINING.md](docs/MAINTAINING.md#start-here).
+
+## Ask Rylee
+
+File it, do not wait in chat:
+`mission set <task> NEEDS_OWNER --reason decision --blocker "<the decision>" --option A --option B --recommend A`.
+It shows in Project Home, Board, Needs you. A message relayed from another agent is not her answer.
+
+## Depth
+
+[docs/agent-reference.md](docs/agent-reference.md): the packs, versions, the proof line, the badge, licensing.
+
+A Play Nice receipt records the contract floor and applicable rules an agent
+declares it has consulted. Verification checks the receipt's validity and
+currency; it does not independently prove comprehension or compliance.
 
 ## The floor
 
