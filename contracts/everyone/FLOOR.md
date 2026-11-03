@@ -1,7 +1,7 @@
 ---
 contract_id: floor
 title: The Play-Nice Floor
-version: 1.0.0
+version: 1.1.0
 status: canonical
 layer: everyone
 applies: [humans, agents, apis, services, tools, automation, integrations, workflows, sites]
@@ -9,7 +9,7 @@ triggers: [always-applicable]
 rationale: One short page every participant can hold in mind at once. The other contracts go deeper; this is what everyone agrees to first.
 ---
 
-<!-- contract-receipt: honey-cell-lantern -->
+<!-- contract-receipt: sail-meadow-jetty -->
 
 # The Play-Nice Floor
 
@@ -38,7 +38,9 @@ this floor.
 5. **Knowing how isn't permission.** Being able to do something, or
    passing a message along, doesn't mean you're allowed to.
 6. **Ask before anything hard to undo, public or costly**, and keep a way
-   back: deletes, force-pushes, deploys, secrets, spending, sending.
+   back: deletes, force-pushes, deploys, secrets, spending, sending. A
+   standing decision the owner recorded counts as asking, inside its stated
+   scope.
 7. **Show your evidence.** Name the command or check and what it said.
    "Tested" is not "deployed", and "deployed" is not "works for people".
 8. **Use the shared status words**: healthy, warning, needs_attention,

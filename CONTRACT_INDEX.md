@@ -10,7 +10,7 @@ All participants: truth, status words, asking, working together, recovery, owner
 
 | ID | Title | Ver | Status | Purpose |
 |---|---|---|---|---|
-| `floor` | The Play-Nice Floor | 1.0.0 | canonical | One short page every participant can hold in mind at once. The other contracts go deeper; this is what everyone agrees to first. |
+| `floor` | The Play-Nice Floor | 1.1.0 | canonical | One short page every participant can hold in mind at once. The other contracts go deeper; this is what everyone agrees to first. |
 | `ask-for-help` | Ask for Help | 2.0.0 | canonical | Asking the participant who owns an answer is safer, cheaper, and kinder than guessing, and a good question is resumable state. |
 | `ownership-and-portability` | Ownership and Portability | 2.0.0 | canonical | Tools are temporary, so the owner's truth must outlive every one of them and stay movable on the owner's terms. |
 | `project-context` | Project Context | 2.0.0 | canonical | A new session should orient from durable files, not rediscover the project and its participants from scratch every time. |

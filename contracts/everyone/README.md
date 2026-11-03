@@ -8,7 +8,7 @@ All participants: truth, status words, asking, working together, recovery, owner
 
 | Contract | ID | Version | Rules marked MUST |
 |---|---|---|---|
-| [The Play-Nice Floor](FLOOR.md) | `floor` | 1.0.0 | none of 17 |
+| [The Play-Nice Floor](FLOOR.md) | `floor` | 1.1.0 | none of 17 |
 | [Ask for Help](ASK_FOR_HELP.md) | `ask-for-help` | 2.0.0 | 11 of 12 |
 | [Ownership and Portability](OWNERSHIP_AND_PORTABILITY.md) | `ownership-and-portability` | 2.0.0 | 8 of 9 |
 | [Project Context](PROJECT_CONTEXT.md) | `project-context` | 2.0.0 | 10 of 12 |
@@ -19,7 +19,7 @@ All participants: truth, status words, asking, working together, recovery, owner
 
 ## The Play-Nice Floor
 
-`floor` · version 1.0.0 · canonical · [full text](FLOOR.md)
+`floor` · version 1.1.0 · canonical · [full text](FLOOR.md)
 
 Say what's true and how you know it. Ask instead of guessing. Get permission before anything hard to undo. Leave things clear for whoever comes next.
 

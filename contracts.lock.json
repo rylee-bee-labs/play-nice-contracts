@@ -110,10 +110,10 @@
     },
     {
       "id": "floor",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "path": "contracts/everyone/FLOOR.md",
-      "sha256": "532d24adc92d6f937c774704a506f25a4373a2085503cfda163892ae2704bf21",
-      "receipt": "honey-cell-lantern",
+      "sha256": "96810a2a62d612826158e42cc427bf6f24d2d4f40a7984a5c52a45914976a056",
+      "receipt": "sail-meadow-jetty",
       "status": "canonical"
     },
     {
