@@ -4,7 +4,7 @@
 > [handoff-and-continuity](../contracts/work/HANDOFF_AND_CONTINUITY.md).
 
 ```text
-Play-Nice floor 1.0.0 · receipt <word from the floor> · read api, web-ui, accessibility, plain-language
+Play-Nice floor 1.1.0 · receipt <word from the floor> · read api, web-ui, accessibility, plain-language
 
 CURRENT
   repo garden-notes, branch feat/settings, revision 4f2a1c0; not deployed.

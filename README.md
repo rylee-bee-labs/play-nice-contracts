@@ -86,7 +86,7 @@ the same thing.
 playnice start                      # set a repo up: AGENTS.md block, badge, CI (no questions)
 playnice check .                    # do the baseline checks pass? (or: playnice check https://site)
 playnice rules "add a settings page"   # which contracts apply to this task, and why
-playnice verify "Play-Nice floor 1.1.0 · receipt <current receipt>"   # is a proof line current?
+playnice verify "Play-Nice floor 1.1.0 · receipt <word from the floor>"   # is a proof line current?
 playnice status                     # checks, contract adoption, and work readiness in one view
 ```
 

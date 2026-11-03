@@ -1,7 +1,7 @@
 ---
 contract_id: contract-proof
 title: Contract Proof
-version: 2.0.2
+version: 2.0.3
 status: canonical
 layer: work
 applies: [agents, projects, sites, tools]
@@ -75,7 +75,7 @@ apply to a task (the resolver and the packs say).
 
 ## Examples
 
-- Good: `Play-Nice floor 1.0.0 · receipt honey-cell-lantern · read
+- Good: `Play-Nice floor 1.1.0 · receipt sail-meadow-jetty · read
   floor, contract-proof` — written after reading the floor and this
   page; `playnice verify` returns current.
 - Bad: an agent copies yesterday's line without re-reading after a

@@ -85,11 +85,12 @@ owner only reviews). No contract rule changes to get there.
    lock, index, diff, scan, …).
 2. **`contractctl` becomes a thin alias** so pinned adopters keep working.
 3. **The legacy attest/commit gate is removed.** Projects that need it stay
-   on 2.x. This is the only breaking change, and the reason for the major
-   version. The legacy work-tracking commands (`playnice work`,
-   `playnice status`, `playnice reconcile`) and `docs/PLAYNICE.md` are removed
-   with the attest/commit gate (Rylee, 2026-11-03); the one known mention
-   (`burrito-journalism AGENTS.md` line 11) is fixed in that change.
+   on 2.x. With it go the legacy work-tracking commands (`playnice work`,
+   `playnice status`, `playnice reconcile`) and `docs/PLAYNICE.md` (Rylee,
+   2026-11-03; agent-platform decisions-in-force entry 44, agent-platform#1402);
+   the one known mention (`burrito-journalism AGENTS.md` line 11) is fixed in that
+   change. These removals are the breaking changes, and the reason for the major
+   version.
 
 ## Not doing (chosen against, 2026-10-26)
 
