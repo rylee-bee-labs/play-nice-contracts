@@ -78,9 +78,9 @@
     },
     {
       "id": "contract-proof",
-      "version": "2.0.2",
+      "version": "2.0.3",
       "path": "contracts/work/CONTRACT_PROOF.md",
-      "sha256": "b4deb618bc2b6d1f352c619d453b6dde9064118a015c7157caa41d9af66f60a1",
+      "sha256": "7f25afb7102b0f888a878dd3910466175b50fa056331ccad987298b61c606721",
       "receipt": "aspen-nimbus-reef",
       "status": "canonical"
     },
@@ -110,10 +110,10 @@
     },
     {
       "id": "floor",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "path": "contracts/everyone/FLOOR.md",
-      "sha256": "532d24adc92d6f937c774704a506f25a4373a2085503cfda163892ae2704bf21",
-      "receipt": "honey-cell-lantern",
+      "sha256": "96810a2a62d612826158e42cc427bf6f24d2d4f40a7984a5c52a45914976a056",
+      "receipt": "sail-meadow-jetty",
       "status": "canonical"
     },
     {

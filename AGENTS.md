@@ -52,7 +52,7 @@ currency; it does not independently prove comprehension or compliance.
 
 <!-- play-nice:start -->
 <!-- written by `playnice start` — refresh with the same command, not by hand -->
-This project follows Play-Nice (floor 1.0.0).
+This project follows Play-Nice (floor 1.1.0).
 
 1. **Say what's true, and how you know.** Mark what you saw, what you
    think, and what you don't know. "Unknown" is a real answer; never turn
@@ -66,7 +66,9 @@ This project follows Play-Nice (floor 1.0.0).
 5. **Knowing how isn't permission.** Being able to do something, or
    passing a message along, doesn't mean you're allowed to.
 6. **Ask before anything hard to undo, public or costly**, and keep a way
-   back: deletes, force-pushes, deploys, secrets, spending, sending.
+   back: deletes, force-pushes, deploys, secrets, spending, sending. A
+   standing decision the owner recorded counts as asking, inside its stated
+   scope.
 7. **Show your evidence.** Name the command or check and what it said.
    "Tested" is not "deployed", and "deployed" is not "works for people".
 8. **Use the shared status words**: healthy, warning, needs_attention,
@@ -100,5 +102,5 @@ Packs that apply to this repo:
 - Integration — https://github.com/rylee-bee-labs/play-nice-contracts/tree/main/contracts/integration
 - Access — https://github.com/rylee-bee-labs/play-nice-contracts/tree/main/contracts/access
 
-Start each handoff with: Play-Nice floor 1.0.0 · receipt honey-cell-lantern
+Start each handoff with: Play-Nice floor 1.1.0 · receipt sail-meadow-jetty
 <!-- play-nice:end -->

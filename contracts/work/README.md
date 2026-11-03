@@ -10,7 +10,7 @@ AI agents and anyone doing the work: bounded work, handoffs, testing, git, proof
 |---|---|---|---|
 | [Agent Behavior](AGENT_BEHAVIOR.md) | `agent-behavior` | 2.0.0 | 4 of 13 |
 | [Bounded Work](BOUNDED_WORK.md) | `bounded-work` | 2.0.0 | 4 of 13 |
-| [Contract Proof](CONTRACT_PROOF.md) | `contract-proof` | 2.0.2 | 2 of 10 |
+| [Contract Proof](CONTRACT_PROOF.md) | `contract-proof` | 2.0.3 | 2 of 10 |
 | [Git and Worktrees](GIT_AND_WORKTREES.md) | `git-and-worktrees` | 2.1.0 | 3 of 10 |
 | [Handoff and Continuity](HANDOFF_AND_CONTINUITY.md) | `handoff-and-continuity` | 2.1.1 | 8 of 14 |
 | [Observability](OBSERVABILITY.md) | `observability` | 2.0.0 | 4 of 9 |
@@ -46,7 +46,7 @@ Rules marked MUST, in short ([all the rules](BOUNDED_WORK.md#rules)):
 
 ## Contract Proof
 
-`contract-proof` · version 2.0.2 · canonical · [full text](CONTRACT_PROOF.md)
+`contract-proof` · version 2.0.3 · canonical · [full text](CONTRACT_PROOF.md)
 
 Agents start with one receipt line. Projects show a bee badge drawn by their own check. Sites publish one public file. Each is checkable in seconds; none is permission.
 
